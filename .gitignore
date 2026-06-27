@@ -1,0 +1,11 @@
+build/
+DerivedData/
+.DS_Store
+**/.DS_Store
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.xcscmblueprint
+*.xccheckout
+.swiftpm/
+.build/

@@ -449,6 +449,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// panel, meetings and screenshots-to-shelf.
     private func startExtrasIfNeeded() {
         _ = CaffeinateService.shared // starts evaluating keep-awake rules
+        FinderServicesProvider.shared.register()
         AudioRouteWatcher.shared.onDefaultOutputChanged = {
             if #available(macOS 14.2, *) { AudioProcessMixerService.shared.defaultOutputChanged() }
         }

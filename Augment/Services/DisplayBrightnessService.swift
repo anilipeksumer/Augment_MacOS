@@ -126,7 +126,7 @@ final class DisplayBrightnessService: ObservableObject {
         displays[index].brightness = clamped
         switch displays[index].method {
         case .native:
-            _ = Self.setNative(id, Float(clamped))
+            glideNative(to: clamped, for: id)
         case .ddc:
             Self.storeLevel(clamped, for: id)
             scheduleDDCWrite(clamped, for: id)
@@ -152,6 +152,11 @@ final class DisplayBrightnessService: ObservableObject {
     func animateBrightness(to target: Double, for id: CGDirectDisplayID, duration: Double = 0.22) {
         guard let display = displays.first(where: { $0.id == id }) else { return }
         let clamped = min(max(target, 0), 1)
+        // Built-in panels already glide in setBrightness.
+        if display.method == .native {
+            setBrightness(clamped, for: id)
+            return
+        }
         let start = display.brightness
         targets[id] = clamped
         animations[id]?.invalidate()
@@ -210,6 +215,51 @@ final class DisplayBrightnessService: ObservableObject {
         ddcQueue.async { DDC.write(service: box.value, code: 0x8D, value: muted ? 1 : 2) }
     }
 
+    // MARK: - Native glide
+
+    private var nativeTarget: [CGDirectDisplayID: Double] = [:]
+    private var nativeCurrent: [CGDirectDisplayID: Double] = [:]
+    private var nativeTimer: Timer?
+    private var lastGlideTick = CACurrentMediaTime()
+
+    /// Built-in panels follow the requested level on a smooth curve (about
+    /// 0.3 s to settle, like macOS's brightness keys) instead of jumping —
+    /// slider drags, key steps and schedules all feel the same.
+    private func glideNative(to value: Double, for id: CGDirectDisplayID) {
+        if nativeCurrent[id] == nil {
+            nativeCurrent[id] = Self.nativeBrightness(id).map(Double.init) ?? value
+        }
+        nativeTarget[id] = value
+        guard nativeTimer == nil else { return }
+        lastGlideTick = CACurrentMediaTime()
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { _ in
+            MainActor.assumeIsolated { DisplayBrightnessService.shared.glideTick() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        nativeTimer = timer
+    }
+
+    private func glideTick() {
+        let now = CACurrentMediaTime()
+        let dt = min(now - lastGlideTick, 0.05)
+        lastGlideTick = now
+        let alpha = 1 - exp(-dt / 0.085) // time constant ≈ 85 ms
+        var active = false
+        for (id, target) in nativeTarget {
+            let current = nativeCurrent[id] ?? target
+            var next = current + (target - current) * alpha
+            if abs(target - next) < 0.002 { next = target } else { active = true }
+            nativeCurrent[id] = next
+            _ = Self.setNative(id, Float(next))
+        }
+        if !active {
+            nativeTimer?.invalidate()
+            nativeTimer = nil
+            nativeTarget.removeAll()
+            nativeCurrent.removeAll() // re-read next time (keys / Control Center may change it)
+        }
+    }
+
     /// Puts every software-dimmed screen back to normal (on quit).
     func restoreSoftwareDimming() {
         guard !softwareLevels.isEmpty else { return }
@@ -255,6 +305,7 @@ final class DisplayBrightnessService: ObservableObject {
         .flatMap { dlsym($0, "DisplayServicesGetBrightness") }.map { unsafeBitCast($0, to: GetFn.self) }
     private static let setFn: SetFn? = displayServices
         .flatMap { dlsym($0, "DisplayServicesSetBrightness") }.map { unsafeBitCast($0, to: SetFn.self) }
+
 
     private static func canChangeNative(_ id: CGDirectDisplayID) -> Bool {
         canChangeFn?(id) ?? (CGDisplayIsBuiltin(id) != 0)

@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 import Foundation
 
 /// Renders a `DirectoryNode` into self-contained HTML suitable for a
@@ -164,9 +165,8 @@ enum DirectoryTreeFormatter {
         let cacheKey = ext.isEmpty ? "__noext__" : ext
         if let cached = fileIconCache[cacheKey] { return cached }
 
-        let icon = ext.isEmpty
-            ? NSWorkspace.shared.icon(forFileType: "")
-            : NSWorkspace.shared.icon(forFileType: ext)
+        let type = ext.isEmpty ? UTType.data : (UTType(filenameExtension: ext) ?? .data)
+        let icon = NSWorkspace.shared.icon(for: type)
         icon.size = NSSize(width: 32, height: 32)
 
         var base64 = ""

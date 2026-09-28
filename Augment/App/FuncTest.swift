@@ -156,6 +156,42 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--native-fade") {
+                let service = DisplayBrightnessService.shared
+                service.refresh()
+                if let builtIn = service.displays.first(where: { $0.method == .native }) {
+                    let original = builtIn.brightness
+                    service.setBrightness(max(0.05, original - 0.25), for: builtIn.id)
+                    var samples: [String] = []
+                    for _ in 0..<8 {
+                        try? await Task.sleep(nanoseconds: 60_000_000)
+                        samples.append(String(format: "%.3f", DisplayBrightnessService.nativeBrightness(builtIn.id) ?? -1))
+                    }
+                    lines.append("INFO  fade samples (60ms apart) from \(String(format: "%.3f", original)): \(samples.joined(separator: " "))")
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                    service.setBrightness(original, for: builtIn.id)
+                    try? await Task.sleep(nanoseconds: 900_000_000)
+                    lines.append("INFO  restored to \(String(format: "%.3f", DisplayBrightnessService.nativeBrightness(builtIn.id) ?? -1))")
+                }
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--services") {
+                let file = FileManager.default.temporaryDirectory.appendingPathComponent("augment-service-test.txt")
+                try? "x".write(to: file, atomically: true, encoding: .utf8)
+                let saved = NSPasteboard.general.string(forType: .string)
+                let pb = NSPasteboard(name: NSPasteboard.Name("AugmentServiceTest-\(UUID().uuidString)"))
+                pb.clearContents()
+                pb.writeObjects([file as NSURL])
+                let ok = NSPerformService("Copy Path", pb)
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                let copied = NSPasteboard.general.string(forType: .string) ?? ""
+                record("Copy Path service works (any folder, incl. iCloud)", ok && copied == file.path, "performed=\(ok) clipboard=\(copied)")
+                if let saved { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(saved, forType: .string) }
+                try? FileManager.default.removeItem(at: file)
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-menu") {
                 await readFinderContextMenu()
                 finish()

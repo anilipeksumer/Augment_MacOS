@@ -210,6 +210,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--demo-gifs") {
+                await recordReadmeClips()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-menu") {
                 await readFinderContextMenu()
                 finish()
@@ -693,6 +698,118 @@ enum FuncTest {
         try? task.run(); task.waitUntilExit()
         let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         return out.contains("Augment: keep awake")
+    }
+
+    /// A neutral gradient window used behind recordings.
+    /// `level` must sit below whatever is being filmed (the notch panel
+    /// is just above the menu bar; the quick panel is a pop-up menu).
+    private static func makeBackdrop(_ frame: CGRect, level: NSWindow.Level = NSWindow.Level(rawValue: NSWindow.Level.popUpMenu.rawValue - 1)) -> NSWindow {
+        let backdrop = NSWindow(contentRect: frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        backdrop.level = level
+        let gradient = NSImage(size: frame.size, flipped: false) { rect in
+            NSGradient(colors: [NSColor(calibratedRed: 0.20, green: 0.33, blue: 0.62, alpha: 1),
+                                NSColor(calibratedRed: 0.55, green: 0.36, blue: 0.70, alpha: 1),
+                                NSColor(calibratedRed: 0.93, green: 0.55, blue: 0.47, alpha: 1)])!
+                .draw(in: rect, angle: -60)
+            return true
+        }
+        let imageView = NSImageView(image: gradient)
+        imageView.imageScaling = .scaleAxesIndependently
+        backdrop.contentView = imageView
+        backdrop.orderFrontRegardless()
+        return backdrop
+    }
+
+    /// Asks the shell (which has Screen Recording) to record `rect` by
+    /// writing it to a file, then gives it a moment to start.
+    private static func requestRecording(_ name: String, rect: CGRect, seconds: Int) async {
+        let dir = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
+        let spec = "\(Int(rect.minX)),\(Int(rect.minY)),\(Int(rect.width)),\(Int(rect.height)) \(seconds)"
+        try? spec.write(to: dir.appendingPathComponent("\(name).rec"), atomically: true, encoding: .utf8)
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+    }
+
+    /// Short clips for the README: the notch opening with sample content,
+    /// and the quick panel with live stats — over a neutral backdrop.
+    /// Needs no permissions: the notch is opened directly and the pointer
+    /// is only moved for the picture.
+    private static func recordReadmeClips() async {
+        if let screen = NSScreen.screens.first(where: { $0.hasNotch }) {
+            let notch = screen.notchRect
+            // Between the menu bar (hidden behind it) and the notch panel.
+            let backdrop = makeBackdrop(CGRect(x: notch.midX - 330, y: screen.frame.maxY - 700, width: 660, height: 700),
+                                        level: NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) + 2))
+            let service = NotchService()
+            service.start(preferences: SharedPreferences.shared)
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            let samples = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentSamples")
+            let shelf = ["Moodboard.png", "Welcome.png", "Typeface.ttf"].map { samples.appendingPathComponent($0) }
+                .filter { FileManager.default.fileExists(atPath: $0.path) }
+            service.startDemo(
+                media: MediaInfo(title: "Midnight City", artist: "M83", appName: "Music",
+                                 appIcon: NSWorkspace.shared.icon(forFile: "/System/Applications/Music.app"),
+                                 albumArt: nil, isPlaying: true, duration: 243, elapsedTime: 61,
+                                 appBundleID: "com.apple.Music", isJSDisabled: false),
+                meeting: UpcomingEvent(id: "d", title: "Weekly product sync", start: Date().addingTimeInterval(9 * 60),
+                                       end: Date().addingTimeInterval(39 * 60), color: .systemPurple,
+                                       joinURL: URL(string: "https://meet.google.com/abc")),
+                shelf: shelf)
+            let recordRect = CGRect(origin: ScreenGeometry.convertToCG(CGPoint(x: notch.midX - 300, y: screen.frame.maxY)),
+                                    size: CGSize(width: 600, height: 640))
+            let away = ScreenGeometry.convertToCG(CGPoint(x: notch.midX + 230, y: screen.frame.maxY - 600))
+            let top = CGPoint(x: ScreenGeometry.convertToCG(CGPoint(x: notch.midX, y: 0)).x,
+                              y: ScreenGeometry.convertToCG(CGPoint(x: 0, y: screen.frame.maxY)).y + 4)
+            CGWarpMouseCursorPosition(away)
+            await requestRecording("clip-notch", rect: recordRect, seconds: 8)
+            func glide(_ from: CGPoint, _ to: CGPoint, steps: Int) async {
+                for step in 1...steps {
+                    let t = CGFloat(step) / CGFloat(steps)
+                    let e = t * t * (3 - 2 * t)
+                    CGWarpMouseCursorPosition(CGPoint(x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e))
+                    try? await Task.sleep(nanoseconds: 16_000_000)
+                }
+            }
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            await glide(away, top, steps: 36)
+            let vm = service.viewModelForTesting
+            withAnimation(.interpolatingSpring(stiffness: 340, damping: 30)) { vm.isExpanded = true }
+            try? await Task.sleep(nanoseconds: 1_300_000_000)
+            let inside = ScreenGeometry.convertToCG(CGPoint(x: notch.midX + 60, y: screen.frame.maxY - 330))
+            await glide(top, inside, steps: 45)
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            withAnimation(.easeInOut(duration: 0.15)) { vm.lowerTab = .note }
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            withAnimation(.easeInOut(duration: 0.15)) { vm.lowerTab = .files }
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            await glide(inside, away, steps: 30)
+            withAnimation(.interpolatingSpring(stiffness: 340, damping: 32)) { vm.isExpanded = false }
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            service.stop()
+            backdrop.orderOut(nil)
+            lines.append("INFO  notch clip done")
+        }
+
+        if let screen = NSScreen.main {
+            let backdrop = makeBackdrop(CGRect(x: screen.frame.maxX - 900, y: screen.frame.maxY - 1100, width: 900, height: 1100))
+            let anchor = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+            anchor.button?.image = NSImage(systemSymbolName: "square", accessibilityDescription: nil)
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            SystemControlsService.shared.outputDeviceNameOverride = "MacBook Pro Speakers"
+            QuickPanelController.shared.toggle(below: anchor.button)
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            lines.append("INFO  panel open=\(QuickPanelController.shared.isOpen)"); flushLog()
+            try? await Task.sleep(nanoseconds: 7_000_000_000) // let the graph fill in
+            if let panel = NSApp.windows.first(where: { $0.isVisible && $0.level == .popUpMenu && $0.frame.width >= 300 }) {
+                let f = panel.frame.insetBy(dx: -30, dy: -30)
+                let rect = CGRect(origin: ScreenGeometry.convertToCG(CGPoint(x: f.minX, y: f.maxY)), size: f.size)
+                await requestRecording("clip-panel", rect: rect, seconds: 6)
+                try? await Task.sleep(nanoseconds: 6_500_000_000)
+                lines.append("INFO  panel clip done")
+            }
+            QuickPanelController.shared.close()
+            NSStatusBar.system.removeStatusItem(anchor)
+            backdrop.orderOut(nil)
+        }
     }
 
     /// The quick panel on real glass, over a neutral gradient backdrop (so

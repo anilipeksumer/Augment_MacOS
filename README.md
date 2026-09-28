@@ -1,141 +1,163 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="128" alt="Augment icon">
+  <img src="docs/images/icon.png" width="112" alt="Augment icon">
 </p>
 
 <h1 align="center">Augment</h1>
 
 <p align="center">
-  A minimalist macOS utility designed to elevate your desktop experience with a native aesthetic.
+  <b>A minimalist macOS utility designed to elevate your desktop experience with a native aesthetic.</b>
 </p>
 
 <p align="center">
-  <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-black?logo=apple">
-  <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI%20%2B%20AppKit-orange?logo=swift">
-  <img alt="Apple Silicon & Intel" src="https://img.shields.io/badge/Apple%20Silicon%20%26%20Intel-universal-blue">
-  <img alt="Notarized" src="https://img.shields.io/badge/Developer%20ID-notarized-success">
+  <a href="https://github.com/anilipeksumer/Augment_MacOS/releases/latest"><img alt="Download for macOS" src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <img alt="macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-lightgrey">
+  <img alt="Apple Silicon & Intel" src="https://img.shields.io/badge/Apple%20Silicon%20%26%20Intel-universal-lightgrey">
+  <img alt="Notarized by Apple" src="https://img.shields.io/badge/notarized-by%20Apple-brightgreen">
+</p>
+
+<p align="center">
+  <img src="docs/images/notch.gif" width="520" alt="Augment's notch opening with music, a meeting and the file shelf">
 </p>
 
 ---
 
-Augment fills in the small things macOS leaves out — for the Dock, windows, Finder, the notch, sound and displays — in a design that feels like part of the system: Liquid Glass surfaces, System Settings–style preferences, light and dark mode.
+The notch, the menu bar, the Dock, your windows and Finder — the everyday places macOS leaves a little unfinished. Augment fills those gaps with Liquid Glass surfaces and settings that feel like they came with the system.
 
-**Everything starts switched off.** Turn on what you want; Augment asks for a permission only at the moment a feature actually needs it.
+- **Native, not bolted on.** Glass panels, System Settings–style preferences, light and dark mode.
+- **Off until you want it.** Every feature starts switched off; a permission is asked for only when a feature needs it.
+- **Private.** No accounts, no analytics — everything happens on your Mac.
 
-<p align="center">
-  <img src="docs/images/notch.png" width="420" alt="The notch: meeting, music, file shelf and controls">
-  &nbsp;&nbsp;
-  <img src="docs/images/quick-panel.png" width="300" alt="The quick panel under the menu bar icon">
-</p>
+## The notch, put to work
 
-## Features
+Move the pointer to the notch and it opens into a small control center.
 
-### The notch
-Move the pointer to the notch (or the top-center of any screen):
-- **Now Playing** — artwork, progress and controls for Music, Spotify and browser media, with the colour of the artwork glowing through.
-- **File shelf** — drop files to keep them at hand, with real thumbnails and **Quick Look**. Drag files onto the notch to **keep them, AirDrop them or zip them** in one move.
-- **Clipboard, Note & Pomodoro** — recent copies with previews, a quick note, and a focus timer with an adjustable length.
-- **Mirror** — a mirrored camera preview to check yourself before a call (camera on only while the tab is open).
-- **Upcoming meetings** — your next event, and five minutes before it starts the notch opens with a **Join** button for Zoom, Meet and Teams links.
-- **Screenshots to the shelf** — new screenshots land on the shelf, ready to drag into a chat.
-- **Brightness, volume and Keep Awake** right in the notch.
+- **Now Playing** for Music, Spotify and browser media, tinted by the artwork.
+- **File shelf** with real thumbnails and Quick Look — drop files on the notch to keep them, **AirDrop** them or **zip** them.
+- **Clipboard, Note and Pomodoro** a click away, plus a **Mirror** to check yourself before a call.
+- **Upcoming meeting** with a **Join** button, five minutes before it starts.
+- **Screenshots** land on the shelf automatically.
+- Brightness, volume and **Keep Awake** at the bottom.
 
-### Quick panel (menu bar)
-Click Augment's menu bar icon — right-click for its menu:
-- **System** — CPU with a live graph, memory, network speed and chip temperature.
-- **Displays** — brightness for every screen: the built-in panel and Apple displays natively, other monitors over **DDC/CI**, software dimming as a fallback.
-- **Sound** — output volume, **per-app volume and per-app output device**, microphone mute.
-- **Keep Awake** — until you turn it off or for 15 min – 5 h.
+<table>
+<tr>
+<td width="55%" valign="top">
 
-### Displays
-- The keyboard's **brightness and volume keys control the monitor under the pointer** (MonitorControl-style), with an on-screen level indicator.
-- **Day / night brightness** schedule that fades between levels.
-- Built-in brightness glides the way the macOS keys do.
+## Everything else, one click away
 
-### Keep Awake (Amphetamine-style)
-- Manual or timed sessions.
-- Automatically **while chosen apps are open, while on power, or while a download is in progress**.
-- Let the display sleep while the Mac keeps working; stay awake with the lid closed (on power).
+Click Augment in the menu bar:
 
-### Sound
-- **Volume mixer** — per-app volume and mute using Core Audio process taps (macOS 14.2+).
-- **Per-app output** — send one app to the speakers and another to your AirPods.
-- Pause playback when headphones are removed.
+- **System** — CPU with a live graph, memory, network, chip temperature.
+- **Displays** — brightness for every screen, including external monitors over DDC/CI.
+- **Sound** — output volume, **volume per app**, and **which speaker each app plays on**.
+- **Microphone** mute and **Keep Awake** with durations.
 
-### Dock & windows
-- **Dock previews** — live window thumbnails on hover, including minimized windows, with close / minimize / zoom controls.
-- **Click to minimize** a frontmost app's windows from its Dock icon, and **Dock lock** to a chosen screen.
-- **⌥Tab switcher** with thumbnails — every window and every open app, Liquid Glass, keyboard and mouse.
-- **Snapping** with ⌘ + arrow keys and a **layout picker** (⌃⌥Space).
+</td>
+<td width="45%" align="center">
+  <img src="docs/images/quick-panel.gif" width="300" alt="The quick panel with live system stats">
+</td>
+</tr>
+</table>
 
-### Finder
-- Right-click › **New File / Folder** from templates (code, Office, data, text).
-- **Copy Path** and **Open in Terminal** — also available under *Services*, so they work in iCloud Drive and an iCloud-synced Desktop.
-- A real **Cut (⌘X) → Paste (⌘V)** with a badge on cut items and **⌘Z to undo** the move.
-- **Folder Quick Look** — press Space on a folder to see its contents as a tree.
+## Windows & Dock
 
-### Productivity
-- **Clipboard panel (⇧⌘V)** — search your history, pin favourites, paste with Return or ⌘1–⌘9.
+- **Dock previews** — hover an icon to see its windows, minimized ones included; close, minimize or zoom right there.
+- **⌥Tab switcher** with live thumbnails of every window and every open app.
+- **Snap** windows with ⌘ + arrow keys, or pick a layout with ⌃⌥Space.
+- **Click to minimize** from the Dock, and keep the Dock on the screen you choose.
 
-<p align="center">
-  <img src="docs/images/settings.png" width="560" alt="Settings">
-</p>
+## Finder
 
-## Installation
+- Right-click › **New File or Folder** from templates — code, Office documents, data, text.
+- **Copy Path** and **Open in Terminal**, in iCloud folders too.
+- A real **Cut ⌘X / Paste ⌘V** for files, with **⌘Z** to put them back.
+- Press Space on a **folder** to preview what's inside.
 
-1. Download the latest **`Augment-x.y.z.dmg`** from [Releases](https://github.com/anilipeksumer/Augment_MacOS/releases).
-2. Open it and drag **Augment** into **Applications**.
-3. Launch Augment from Applications. A short tour appears, then Settings.
+## Displays, sound & staying awake
 
-The app is signed with a Developer ID and notarized by Apple.
+- Your keyboard's **brightness and volume keys work on external monitors** — whichever screen the pointer is on.
+- **Day and night brightness** that fades on schedule.
+- **Keep Awake** like Amphetamine: for a while, while certain apps are open, on power, or until a download finishes — even with the lid closed on power.
+- **Pause music when headphones are removed**, even while the mixer is in use.
+- **Clipboard history** with search and pins — ⇧⌘V.
 
-<p align="center">
-  <img src="docs/images/install.png" width="460" alt="Installer window">
-</p>
+<details>
+<summary><b>All features</b></summary>
 
-### Permissions
-Requested only when you switch on a feature that needs them:
-
-| Permission | Used by |
+| Area | Feature |
 | --- | --- |
-| Accessibility | Dock previews & click, window switcher, snapping, layouts, Finder cut, display keys, clipboard panel |
-| Screen & System Audio Recording | Window thumbnails; the volume mixer (system audio only) |
+| Notch | Now Playing, file shelf with Quick Look, drop to shelf / AirDrop / zip, clipboard, quick note, Pomodoro (adjustable), mirror, upcoming meetings, screenshots to shelf, brightness, volume, Keep Awake, calendar & battery styles |
+| Quick panel | System stats, per-display brightness, all-displays slider, output volume, per-app volume & output, microphone, meetings, Keep Awake — each section can be hidden |
+| Displays | Native / DDC/CI / software brightness, brightness & volume keys on monitors, on-screen level indicator, day/night schedule |
+| Sound | Volume mixer (macOS 14.2+), per-app output device, pause on headphone removal |
+| Keep Awake | Manual, timed, while apps run, on power, while downloading; display may sleep; lid closed on power |
+| Dock | Window previews (incl. minimized), window controls, click to minimize, Dock lock to a screen |
+| Windows | ⌥Tab switcher, ⌘-arrow snapping, layout picker |
+| Finder | New file & folder templates, Copy Path, Open in Terminal (menu + Services), Cut & Paste with undo, folder Quick Look |
+| Clipboard | History panel with search, pins, ⌘1–⌘9 |
+
+</details>
+
+<p align="center">
+  <img src="docs/images/settings.png" width="620" alt="Augment settings">
+</p>
+
+## Install
+
+1. [Download the latest release](https://github.com/anilipeksumer/Augment_MacOS/releases/latest) (`Augment-x.y.z.dmg`).
+2. Open it and drag **Augment** into **Applications**.
+3. Open Augment. A short tour shows you around, then Settings opens — switch on what you like.
+
+Augment is signed with a Developer ID and notarized by Apple.
+
+## FAQ
+
+<details>
+<summary><b>Why does Augment ask for permissions?</b></summary>
+
+Only the features you switch on ask, and only for what they need:
+
+| Permission | For |
+| --- | --- |
+| Accessibility | Dock previews and clicks, window switcher, snapping, layouts, Finder cut & paste, display keys, clipboard panel |
+| Screen & System Audio Recording | Window thumbnails; the volume mixer |
 | Automation → Finder | Finder cut & paste |
 | Calendars | Upcoming meetings |
 | Camera | Mirror |
 
-### Finder extension
-The right-click items come from Augment's Finder extension, which **macOS installs switched off**. Augment shows its state on the Finder settings page with a button that opens the right place in System Settings (*General › Login Items & Extensions › Finder*). macOS doesn't consult Finder extensions inside iCloud folders — the *Services* versions of Copy Path, Open in Terminal and New Text File cover those.
+</details>
 
-## Building from source
+<details>
+<summary><b>The right-click items don't show up in Finder.</b></summary>
 
-Requirements: Xcode 26 or later.
+macOS installs Finder extensions switched off. Open Augment's **Finder** settings and click **Turn On…** — it takes you to the right place in System Settings. Inside **iCloud Drive** or an iCloud-synced Desktop/Documents, macOS doesn't show extension items at all; use right-click › **Services** there instead.
 
-```bash
-git clone https://github.com/anilipeksumer/Augment_MacOS.git
-cd Augment_MacOS
-open Augment.xcodeproj
-```
+</details>
 
-Build and run the **Augment** scheme. The project has three targets:
+<details>
+<summary><b>Does it work with my external monitor?</b></summary>
 
-| Target | What it is |
-| --- | --- |
-| `Augment` | The menu bar app (not sandboxed — it needs Accessibility, event taps and Core Audio taps). |
-| `AugmentFinder` | Finder Sync extension — right-click menu and the cut badge. |
-| `AugmentQL` | Quick Look extension for folders. |
+Most monitors support DDC/CI, which Augment uses for brightness and speaker volume. If yours doesn't, Augment dims the picture in software instead. Apple displays and the built-in screen use macOS's own brightness.
 
-The app and its extensions share settings through a small plist in `~/Library/Application Support/Augment/Shared/`.
+</details>
 
-### Tests
-Augment has a built-in functional test runner that drives features the way a user would and writes results to `~/Library/Application Support/Augment/functest.log`:
+<details>
+<summary><b>How do I uninstall it?</b></summary>
 
-```bash
-open -n /Applications/Augment.app --args --functest            # full suite (moves the mouse, uses the keyboard)
-open -g -n /Applications/Augment.app --args --functest --extras  # non-interactive checks
-```
+Quit Augment (right-click the menu bar icon › Quit), then move it from Applications to the Trash. Its settings live in `~/Library/Application Support/Augment`.
 
-## Privacy
-Augment works entirely on your Mac. It has no analytics or accounts and sends nothing about you anywhere. The only network requests download album artwork for what's playing (for example Spotify or a browser video's thumbnail).
+</details>
 
-## Credits
-Made by **Anıl İpeksümer**.
+## Requirements
+
+macOS 13 Ventura or later on Apple Silicon or Intel. The volume mixer needs macOS 14.2 or later.
+
+## For developers
+
+See [BUILDING.md](BUILDING.md) to build from source and run the tests.
+
+## License
+
+Copyright © 2026 Anıl İpeksümer. All rights reserved — see [LICENSE](LICENSE). Augment is free to download and use.

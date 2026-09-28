@@ -294,6 +294,7 @@ final class NotchService {
         MediaManager.shared.$currentMedia
             .receive(on: DispatchQueue.main)
             .sink { [weak self] info in
+                guard self?.demoMode != true else { return }
                 self?.viewModel.mediaInfo = info
                 self?.updateAmbientColor(for: info?.albumArt)
             }
@@ -302,6 +303,7 @@ final class NotchService {
         MediaManager.shared.$availableSources
             .receive(on: DispatchQueue.main)
             .sink { [weak self] sources in
+                guard self?.demoMode != true else { return }
                 self?.viewModel.availableSources = sources
             }
             .store(in: &cancellables)
@@ -321,6 +323,7 @@ final class NotchService {
             .sink { [weak self] events, alert, enabled in
                 guard let self else { return }
                 let upcoming = events.first { $0.isInProgress || $0.minutesUntilStart <= 60 }
+                guard !self.demoMode else { return }
                 self.viewModel.nextMeeting = enabled ? (alert ?? upcoming) : nil
                 self.viewModel.meetingIsAlert = enabled && alert != nil
                 if enabled, alert != nil { self.peek(seconds: 8) }
@@ -522,6 +525,28 @@ final class NotchService {
         }
         peekWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
+    }
+
+    /// Screenshots / README recordings: show fixed sample content and
+    /// ignore live media, meetings and files.
+    private(set) var demoMode = false
+
+    func startDemo(media: MediaInfo, meeting: UpcomingEvent?, shelf: [URL]) {
+        demoMode = true
+        viewModel.showMusic = true
+        viewModel.showShelf = true
+        viewModel.showProductivity = true
+        viewModel.clipboardHistoryEnabled = true
+        viewModel.showCaffeinate = true
+        viewModel.showBattery = true
+        viewModel.calendarEnabled = true
+        viewModel.calendarStyle = "text"
+        viewModel.batteryStyle = "symbol"
+        viewModel.mediaInfo = media
+        viewModel.availableSources = [media]
+        viewModel.nextMeeting = meeting
+        viewModel.meetingIsAlert = false
+        viewModel.shelfItems = shelf.map { ShelfItem(url: $0) }
     }
 
     var passesClicksThroughForTesting: Bool { overlayWindow?.ignoresMouseEvents ?? false }

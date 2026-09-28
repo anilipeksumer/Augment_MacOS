@@ -146,6 +146,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startVolumeMixerIfNeeded()
         startClipboardHistoryIfNeeded()
         startExtrasIfNeeded()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self else { return }
+            FinderExtensionStatus.promptIfNeeded(preferences: self.preferences)
+        }
         startNotchIfNeeded()
         observeNewFeaturePreferences()
     }

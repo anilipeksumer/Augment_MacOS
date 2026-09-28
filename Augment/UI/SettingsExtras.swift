@@ -222,6 +222,36 @@ struct NotchExtrasSections: View {
     }
 }
 
+/// Shows whether the Finder extension is on, with a button to turn it on —
+/// without it none of the right-click items appear.
+struct FinderExtensionStatusSection: View {
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 2)) { _ in
+            let enabled = FinderExtensionStatus.isEnabled
+            Section {
+                HStack(spacing: 10) {
+                    Image(systemName: enabled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .foregroundStyle(enabled ? .green : .orange)
+                        .font(.system(size: 16))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Localizer.string(enabled ? "finderext.on" : "finderext.off"))
+                        if !enabled {
+                            Text(Localizer.string("finderext.off_desc"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if !enabled {
+                        Button(Localizer.string("finderext.enable")) { FinderExtensionStatus.openSettings() }
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+}
+
 /// Copy path / Terminal menu items.
 struct FinderExtrasSections: View {
     @EnvironmentObject private var preferences: SharedPreferences

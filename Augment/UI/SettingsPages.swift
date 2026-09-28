@@ -58,6 +58,7 @@ struct FinderPage: View {
                 PaneHeader(title: Localizer.string("page.finder"), subtitle: Localizer.string("page.finder_sub"),
                            systemImage: "folder.fill", tint: .green)
             }
+            FinderExtensionStatusSection()
             FinderSettingsSections()
             Section {
                 ToggleRow(

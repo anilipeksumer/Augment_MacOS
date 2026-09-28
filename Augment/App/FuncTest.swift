@@ -55,6 +55,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--finderext") {
+                lines.append("INFO  finder extension enabled=\(FinderExtensionStatus.isEnabled)")
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--extras") {
                 await testExtras()
                 finish()

@@ -117,6 +117,11 @@ private struct QuickPanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
+            if preferences.quickPanelStats {
+                module(title: Localizer.string("stats.title"), icon: "cpu") {
+                    SystemStatsModule()
+                }
+            }
             if preferences.quickPanelMeetings && preferences.meetingsEnabled && !meetings.events.isEmpty {
                 module(title: Localizer.string("meetings.today"), icon: "calendar") {
                     ForEach(meetings.events.prefix(3)) { event in
@@ -421,6 +426,102 @@ private extension QuickMixerList {
     func outputName(for app: MixerAppInfo) -> String {
         guard let uid = app.outputDeviceUID else { return Localizer.string("mixer.default_output") }
         return mixer.outputDevices.first { $0.uid == uid }?.name ?? Localizer.string("mixer.default_output")
+    }
+}
+
+/// CPU, memory, network and temperature as four compact tiles.
+private struct SystemStatsModule: View {
+    @ObservedObject private var stats = SystemStatsService.shared
+
+    var body: some View {
+        let s = stats.snapshot
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+            tile(Localizer.string("stats.cpu"), value: "\(Int((s.cpu * 100).rounded()))%") {
+                Sparkline(values: s.cpuHistory).stroke(Color.accentColor, lineWidth: 1.5).frame(height: 16)
+            }
+            tile(Localizer.string("stats.memory"),
+                 value: "\(Self.gb(s.memoryUsed)) / \(Self.gb(s.memoryTotal)) GB") {
+                LevelBar(fraction: s.memoryTotal > 0 ? Double(s.memoryUsed) / Double(s.memoryTotal) : 0)
+            }
+            tile(Localizer.string("stats.network"), value: nil) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Label(Self.rate(s.downBytesPerSecond), systemImage: "arrow.down")
+                    Label(Self.rate(s.upBytesPerSecond), systemImage: "arrow.up")
+                }
+                .font(.system(size: 11, weight: .medium).monospacedDigit())
+                .labelStyle(.titleAndIcon)
+            }
+            tile(Localizer.string("stats.temperature"), value: s.temperature.map { "\(Int($0.rounded()))°C" } ?? Self.thermal(s.thermalState)) {
+                LevelBar(fraction: s.temperature.map { min(max(($0 - 30) / 70, 0), 1) } ?? Self.thermalFraction(s.thermalState),
+                         tint: (s.temperature ?? 0) > 85 || s.thermalState.rawValue >= 2 ? .orange : .green)
+            }
+        }
+        .onAppear { stats.retain() }
+        .onDisappear { stats.release() }
+    }
+
+    private func tile<Content: View>(_ title: String, value: String?, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+            if let value {
+                Text(value).font(.system(size: 13, weight: .semibold).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            content()
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, minHeight: 62, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.primary.opacity(0.05)))
+    }
+
+    static func gb(_ bytes: UInt64) -> String { String(format: "%.1f", Double(bytes) / 1_073_741_824) }
+
+    static func rate(_ bytesPerSecond: Double) -> String {
+        let kb = bytesPerSecond / 1024
+        if kb < 1 { return "0 KB/s" }
+        if kb < 1024 { return "\(Int(kb)) KB/s" }
+        return String(format: "%.1f MB/s", kb / 1024)
+    }
+
+    static func thermal(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal: return Localizer.string("stats.thermal_nominal")
+        case .fair: return Localizer.string("stats.thermal_fair")
+        case .serious: return Localizer.string("stats.thermal_serious")
+        case .critical: return Localizer.string("stats.thermal_critical")
+        @unknown default: return "—"
+        }
+    }
+
+    static func thermalFraction(_ state: ProcessInfo.ThermalState) -> Double {
+        [0.2, 0.5, 0.8, 1.0][min(max(state.rawValue, 0), 3)]
+    }
+}
+
+private struct Sparkline: Shape {
+    let values: [Double]
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        guard values.count > 1 else { return p }
+        let step = rect.width / CGFloat(max(values.count - 1, 1))
+        for (i, v) in values.enumerated() {
+            let pt = CGPoint(x: CGFloat(i) * step, y: rect.maxY - CGFloat(min(max(v, 0), 1)) * rect.height)
+            i == 0 ? p.move(to: pt) : p.addLine(to: pt)
+        }
+        return p
+    }
+}
+
+private struct LevelBar: View {
+    let fraction: Double
+    var tint: Color = .accentColor
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.primary.opacity(0.1))
+                Capsule().fill(tint).frame(width: geo.size.width * min(max(fraction, 0), 1))
+            }
+        }
+        .frame(height: 5)
     }
 }
 

@@ -118,6 +118,7 @@ struct MenuBarPage: View {
                            systemImage: "menubar.rectangle", tint: .indigo)
             }
             Section {
+                moduleToggle("stats.title", icon: "cpu", tint: .teal, isOn: $preferences.quickPanelStats)
                 moduleToggle("quick.displays", icon: "sun.max.fill", tint: .yellow, isOn: $preferences.quickPanelDisplays)
                 moduleToggle("quick.sound", icon: "speaker.wave.2.fill", tint: .red, isOn: $preferences.quickPanelSound)
                 moduleToggle("quick.microphone", icon: "mic.fill", tint: .pink, isOn: $preferences.quickPanelMic)

@@ -280,6 +280,7 @@ public enum AppGroupKey {
     public static let notchMirrorEnabled = "augment.notchMirrorEnabled"
     public static let pauseOnHeadphonesRemoved = "augment.pauseOnHeadphonesRemoved"
     public static let quickPanelDisplays = "augment.quickPanelDisplays"
+    public static let quickPanelStats = "augment.quickPanelStats"
     public static let quickPanelSound = "augment.quickPanelSound"
     public static let quickPanelMic = "augment.quickPanelMic"
     public static let quickPanelMeetings = "augment.quickPanelMeetings"

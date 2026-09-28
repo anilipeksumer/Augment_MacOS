@@ -360,6 +360,9 @@ public final class SharedPreferences: ObservableObject {
     @Published public var finderExtraMenuEnabled: Bool {
         didSet { write(finderExtraMenuEnabled, AppGroupKey.finderExtraMenuEnabled) }
     }
+    @Published public var quickPanelStats: Bool {
+        didSet { write(quickPanelStats, AppGroupKey.quickPanelStats) }
+    }
     @Published public var quickPanelDisplays: Bool {
         didSet { write(quickPanelDisplays, AppGroupKey.quickPanelDisplays) }
     }
@@ -462,6 +465,7 @@ public final class SharedPreferences: ObservableObject {
         self.notchMirrorEnabled = Self.loadBool(AppGroupKey.notchMirrorEnabled, reg)
         self.pauseOnHeadphonesRemoved = Self.loadBool(AppGroupKey.pauseOnHeadphonesRemoved, reg)
         self.quickPanelDisplays = Self.loadBool(AppGroupKey.quickPanelDisplays, reg)
+        self.quickPanelStats = Self.loadBool(AppGroupKey.quickPanelStats, reg)
         self.quickPanelSound = Self.loadBool(AppGroupKey.quickPanelSound, reg)
         self.quickPanelMic = Self.loadBool(AppGroupKey.quickPanelMic, reg)
         self.quickPanelMeetings = Self.loadBool(AppGroupKey.quickPanelMeetings, reg)

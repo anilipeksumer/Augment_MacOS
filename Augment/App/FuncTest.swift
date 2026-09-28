@@ -192,6 +192,19 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--stats") {
+                let stats = SystemStatsService.shared
+                stats.retain()
+                try? await Task.sleep(nanoseconds: 6_500_000_000)
+                let s = stats.snapshot
+                lines.append(String(format: "INFO  cpu=%.1f%% mem=%.2f/%.2f GB down=%.0f B/s up=%.0f B/s temp=%@ thermal=%d history=%d",
+                                    s.cpu * 100, Double(s.memoryUsed) / 1_073_741_824, Double(s.memoryTotal) / 1_073_741_824,
+                                    s.downBytesPerSecond, s.upBytesPerSecond, s.temperature.map { String(format: "%.1f", $0) } ?? "nil",
+                                    s.thermalState.rawValue, s.cpuHistory.count))
+                stats.release()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-menu") {
                 await readFinderContextMenu()
                 finish()

@@ -13,6 +13,7 @@
 		8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */; };
 		0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */; };
 		61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */; };
+		1F17DCCFEE7D9596E04918ED /* SystemStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB2266B94E2A8656939FB11 /* SystemStatsService.swift */; };
 		32F8FEA3E77FB676C77780B3 /* FinderServicesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDC8670CE194855D81868CC /* FinderServicesProvider.swift */; };
 		9F5708230B809EF21C46EB51 /* AudioRouteWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */; };
 		55B828C3ED3B8CEA41D27B46 /* FinderExtensionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */; };
@@ -146,6 +147,7 @@
 		F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapLayoutsService.swift; sourceTree = "<group>"; };
 		EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSwitcherService.swift; sourceTree = "<group>"; };
 		BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemControlsService.swift; sourceTree = "<group>"; };
+		BDB2266B94E2A8656939FB11 /* SystemStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsService.swift; sourceTree = "<group>"; };
 		8BDC8670CE194855D81868CC /* FinderServicesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderServicesProvider.swift; sourceTree = "<group>"; };
 		79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRouteWatcher.swift; sourceTree = "<group>"; };
 		9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderExtensionStatus.swift; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
 				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
 				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
+				BDB2266B94E2A8656939FB11 /* SystemStatsService.swift */,
 				8BDC8670CE194855D81868CC /* FinderServicesProvider.swift */,
 				79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */,
 				9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */,
@@ -668,6 +671,7 @@
 				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
 				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
 				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
+				1F17DCCFEE7D9596E04918ED /* SystemStatsService.swift in Sources */,
 				32F8FEA3E77FB676C77780B3 /* FinderServicesProvider.swift in Sources */,
 				9F5708230B809EF21C46EB51 /* AudioRouteWatcher.swift in Sources */,
 				55B828C3ED3B8CEA41D27B46 /* FinderExtensionStatus.swift in Sources */,
@@ -883,7 +887,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -894,7 +898,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -912,7 +916,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -923,7 +927,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -936,7 +940,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -946,7 +950,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -961,7 +965,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -971,7 +975,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -987,7 +991,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -997,7 +1001,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1013,7 +1017,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1023,7 +1027,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1037,7 +1041,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1045,7 +1049,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1059,7 +1063,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1067,7 +1071,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

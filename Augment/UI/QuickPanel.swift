@@ -328,7 +328,7 @@ private struct QuickPanelView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(title, systemImage: icon)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.6))
             content()
         }
         .padding(12)
@@ -436,35 +436,48 @@ private struct SystemStatsModule: View {
     var body: some View {
         let s = stats.snapshot
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-            tile(Localizer.string("stats.cpu"), value: "\(Int((s.cpu * 100).rounded()))%") {
-                Sparkline(values: s.cpuHistory).stroke(Color.accentColor, lineWidth: 1.5).frame(height: 16)
+            tile(Localizer.string("stats.cpu"), value: "\(Int((s.cpu * 100).rounded()))%", number: s.cpu) {
+                ScrollingSparkline(values: s.cpuHistory, updatedAt: s.updatedAt).frame(height: 18)
             }
             tile(Localizer.string("stats.memory"),
-                 value: "\(Self.gb(s.memoryUsed)) / \(Self.gb(s.memoryTotal)) GB") {
+                 value: "\(Self.gb(s.memoryUsed)) / \(Self.gb(s.memoryTotal)) GB", number: Double(s.memoryUsed)) {
                 LevelBar(fraction: s.memoryTotal > 0 ? Double(s.memoryUsed) / Double(s.memoryTotal) : 0)
             }
-            tile(Localizer.string("stats.network"), value: nil) {
+            tile(Localizer.string("stats.network"), value: nil, number: 0) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Label(Self.rate(s.downBytesPerSecond), systemImage: "arrow.down")
-                    Label(Self.rate(s.upBytesPerSecond), systemImage: "arrow.up")
+                    rateRow("arrow.down", s.downBytesPerSecond)
+                    rateRow("arrow.up", s.upBytesPerSecond)
                 }
-                .font(.system(size: 11, weight: .medium).monospacedDigit())
-                .labelStyle(.titleAndIcon)
             }
-            tile(Localizer.string("stats.temperature"), value: s.temperature.map { "\(Int($0.rounded()))°C" } ?? Self.thermal(s.thermalState)) {
+            tile(Localizer.string("stats.temperature"), value: s.temperature.map { "\(Int($0.rounded()))°C" } ?? Self.thermal(s.thermalState),
+                 number: s.temperature ?? 0) {
                 LevelBar(fraction: s.temperature.map { min(max(($0 - 30) / 70, 0), 1) } ?? Self.thermalFraction(s.thermalState),
                          tint: (s.temperature ?? 0) > 85 || s.thermalState.rawValue >= 2 ? .orange : .green)
             }
         }
+        // Every change eases in over most of the 1 s sample interval, so
+        // bars and numbers glide instead of jumping.
+        .animation(.easeInOut(duration: 0.8), value: s)
         .onAppear { stats.retain() }
         .onDisappear { stats.release() }
     }
 
-    private func tile<Content: View>(_ title: String, value: String?, @ViewBuilder content: () -> Content) -> some View {
+    private func rateRow(_ icon: String, _ rate: Double) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.system(size: 9, weight: .bold)).foregroundStyle(Color.primary.opacity(0.55))
+            Text(Self.rate(rate)).modifier(RollingNumber(value: rate))
+        }
+        .font(.system(size: 11, weight: .medium).monospacedDigit())
+    }
+
+    private func tile<Content: View>(_ title: String, value: String?, number: Double, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title).font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
             if let value {
-                Text(value).font(.system(size: 13, weight: .semibold).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.8)
+                Text(value)
+                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .modifier(RollingNumber(value: number))
             }
             content()
         }
@@ -497,17 +510,56 @@ private struct SystemStatsModule: View {
     }
 }
 
-private struct Sparkline: Shape {
-    let values: [Double]
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        guard values.count > 1 else { return p }
-        let step = rect.width / CGFloat(max(values.count - 1, 1))
-        for (i, v) in values.enumerated() {
-            let pt = CGPoint(x: CGFloat(i) * step, y: rect.maxY - CGFloat(min(max(v, 0), 1)) * rect.height)
-            i == 0 ? p.move(to: pt) : p.addLine(to: pt)
+/// Digits roll to their new value (macOS 14+), like Control Center.
+private struct RollingNumber: ViewModifier {
+    let value: Double
+    func body(content: Content) -> some View {
+        if #available(macOS 14.0, *) {
+            content.contentTransition(.numericText(value: value))
+        } else {
+            content
         }
-        return p
+    }
+}
+
+/// A smooth, filled CPU graph that scrolls continuously between samples
+/// instead of redrawing in one-second steps.
+private struct ScrollingSparkline: View {
+    let values: [Double]
+    let updatedAt: Date
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+            Canvas { ctx, size in
+                guard values.count > 1 else { return }
+                let visible = 30
+                let step = size.width / CGFloat(visible - 1)
+                let progress = min(max(context.date.timeIntervalSince(updatedAt) / 1.0, 0), 1)
+                let shift = step * CGFloat(1 - progress)
+                let points = values.suffix(visible + 1).enumerated().map { i, v -> CGPoint in
+                    let count = min(values.count, visible + 1)
+                    let x = size.width - CGFloat(count - 1 - i) * step + shift
+                    return CGPoint(x: x, y: size.height - CGFloat(min(max(v, 0), 1)) * (size.height - 2) - 1)
+                }
+                var line = Path()
+                line.move(to: points[0])
+                for i in 1..<points.count {
+                    let a = points[i - 1], b = points[i]
+                    let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                    line.addQuadCurve(to: mid, control: a)
+                    if i == points.count - 1 { line.addQuadCurve(to: b, control: b) }
+                }
+                var fill = line
+                fill.addLine(to: CGPoint(x: points.last!.x, y: size.height))
+                fill.addLine(to: CGPoint(x: points.first!.x, y: size.height))
+                fill.closeSubpath()
+                ctx.clip(to: Path(CGRect(origin: .zero, size: size)))
+                ctx.fill(fill, with: .linearGradient(
+                    Gradient(colors: [Color.accentColor.opacity(0.35), Color.accentColor.opacity(0.02)]),
+                    startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                ctx.stroke(line, with: .color(.accentColor), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+            }
+        }
     }
 }
 
@@ -527,6 +579,7 @@ private struct LevelBar: View {
 
 /// Control Center–style slider for the quick panel.
 private struct QuickSlider: View {
+    @Environment(\.colorScheme) private var scheme
     let value: Double
     let icon: String
     var height: CGFloat = 28
@@ -539,17 +592,20 @@ private struct QuickSlider: View {
         GeometryReader { geo in
             let shown = dragValue ?? value
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.primary.opacity(0.12))
+                // Control Center style in both appearances: a darker track in
+                // light mode so the white fill never blends into the glass.
+                Capsule().fill(Color.primary.opacity(scheme == .dark ? 0.14 : 0.2))
                 Capsule()
                     .fill(Color.white)
                     .frame(width: max(geo.size.height, geo.size.width * shown))
-                    .shadow(color: .black.opacity(0.15), radius: 1, y: 0.5)
+                    .shadow(color: .black.opacity(scheme == .dark ? 0.25 : 0.18), radius: 1.5, y: 0.5)
                 Image(systemName: icon)
                     .font(.system(size: height * 0.42, weight: .semibold))
                     .foregroundStyle(Color.black.opacity(0.7))
                     .frame(width: geo.size.height)
             }
             .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(Color.primary.opacity(scheme == .dark ? 0.1 : 0.12), lineWidth: 0.5))
             .contentShape(Capsule())
             .gesture(
                 DragGesture(minimumDistance: 0)

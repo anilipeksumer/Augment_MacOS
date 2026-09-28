@@ -54,7 +54,7 @@ struct WindowThumbnailCell: View {
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .strokeBorder(Color.white.opacity(isHovered ? 0.35 : 0.08),
+                            .strokeBorder(Color.primary.opacity(isHovered ? 0.3 : 0.1),
                                           lineWidth: isHovered ? 1 : 0.5)
                     )
 

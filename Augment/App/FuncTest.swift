@@ -742,12 +742,17 @@ enum FuncTest {
 
         // Quick panel and clipboard panel, same off-screen approach.
         DisplayBrightnessService.shared.refresh()
-        for (name, view, size) in [("quick-render", QuickPanelController.previewView(), CGSize(width: 340, height: 640)),
-                                   ("clipboard-render", ClipboardPanelController.shared.previewView(), CGSize(width: 440, height: 460))] {
+        for (name, view, size, dark) in [("quick-light", QuickPanelController.previewView(), CGSize(width: 340, height: 900), false),
+                                         ("quick-dark", QuickPanelController.previewView(), CGSize(width: 340, height: 900), true),
+                                         ("clipboard-light", ClipboardPanelController.shared.previewView(), CGSize(width: 440, height: 460), false),
+                                         ("clipboard-dark", ClipboardPanelController.shared.previewView(), CGSize(width: 440, height: 460), true)] {
             let window = NSWindow(contentRect: CGRect(x: -5000, y: -5000, width: size.width, height: size.height),
                                   styleMask: [.borderless], backing: .buffered, defer: false)
-            window.backgroundColor = NSColor(white: 0.3, alpha: 1)
+            // Roughly what the glass looks like over a typical desktop.
+            window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            window.backgroundColor = dark ? NSColor(white: 0.17, alpha: 1) : NSColor(white: 0.93, alpha: 1)
             let host = NSHostingView(rootView: view)
+            host.appearance = window.appearance
             host.frame = CGRect(origin: .zero, size: size)
             window.contentView = host
             window.orderFrontRegardless()

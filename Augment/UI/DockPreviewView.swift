@@ -109,7 +109,7 @@ struct DockPreviewView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5)
         )
         .fixedSize()
     }

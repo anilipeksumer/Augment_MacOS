@@ -18,6 +18,8 @@ final class SystemStatsService: ObservableObject {
         var upBytesPerSecond: Double = 0
         var temperature: Double?            // °C, when sensors are readable
         var thermalState: ProcessInfo.ThermalState = .nominal
+        /// When the last sample landed (drives the sparkline's scroll).
+        var updatedAt: Date = .distantPast
     }
 
     @Published private(set) var snapshot = Snapshot()
@@ -32,7 +34,7 @@ final class SystemStatsService: ObservableObject {
         users += 1
         guard timer == nil else { return }
         sample()
-        let t = Timer(timeInterval: 2, repeats: true) { _ in
+        let t = Timer(timeInterval: 1, repeats: true) { _ in
             Task { @MainActor in SystemStatsService.shared.sample() }
         }
         RunLoop.main.add(t, forMode: .common)
@@ -54,13 +56,15 @@ final class SystemStatsService: ObservableObject {
                 MainActor.assumeIsolated {
                     let service = SystemStatsService.shared
                     var next = service.snapshot
-                    next.cpu = reading.cpu
-                    next.cpuHistory = Array((next.cpuHistory + [reading.cpu]).suffix(30))
+                    // Light smoothing so the number doesn't twitch every second.
+                    next.cpu = next.updatedAt == .distantPast ? reading.cpu : next.cpu * 0.4 + reading.cpu * 0.6
+                    next.cpuHistory = Array((next.cpuHistory + [next.cpu]).suffix(60))
                     next.memoryUsed = reading.memoryUsed
                     next.downBytesPerSecond = reading.down
                     next.upBytesPerSecond = reading.up
                     next.temperature = reading.temperature
                     next.thermalState = ProcessInfo.processInfo.thermalState
+                    next.updatedAt = Date()
                     service.snapshot = next
                 }
             }

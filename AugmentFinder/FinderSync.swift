@@ -1,6 +1,7 @@
 import Cocoa
 import CoreFoundation
 import FinderSync
+import os
 
 /// Principal class for the Augment Finder Sync extension.
 ///
@@ -24,6 +25,7 @@ final class FinderSync: FIFinderSync {
 
     override init() {
         super.init()
+        Self.log.notice("FinderSync extension started")
         let controller = FIFinderSyncController.default()
         controller.directoryURLs = [URL(fileURLWithPath: "/")]
         controller.setBadgeImage(Self.makeCutBadgeImage(), label: Self.cutBadgeLabel, forBadgeIdentifier: Self.cutBadge)
@@ -96,7 +98,15 @@ final class FinderSync: FIFinderSync {
         }
     }
 
+    private static let log = Logger(subsystem: "com.anilipeksumer.augment.findersync", category: "menu")
+
     override func menu(for menuKind: FIMenuKind) -> NSMenu {
+        let menu = buildMenu(for: menuKind)
+        Self.log.notice("menu(for: \(menuKind.rawValue, privacy: .public)) -> \(menu.items.count, privacy: .public) items")
+        return menu
+    }
+
+    private func buildMenu(for menuKind: FIMenuKind) -> NSMenu {
         currentMenuKind = menuKind
         let menu = NSMenu(title: "Augment")
 

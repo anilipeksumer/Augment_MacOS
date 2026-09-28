@@ -55,6 +55,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--finder-menu") {
+                await readFinderContextMenu()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finderext") {
                 lines.append("INFO  finder extension enabled=\(FinderExtensionStatus.isEnabled)")
                 finish()
@@ -586,6 +591,67 @@ enum FuncTest {
             }
             window.orderOut(nil)
         }
+    }
+
+    /// Right-clicks an empty spot in a Finder window and reads the context
+    /// menu's items through Accessibility (does the extension add its items?).
+    private static func readFinderContextMenu() async {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentMenuTest")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? "x".write(to: dir.appendingPathComponent("dosya.txt"), atomically: true, encoding: .utf8)
+        _ = runScript("""
+        tell application "Finder"
+            activate
+            open (POSIX file "\(dir.path)" as alias)
+            delay 0.8
+            set current view of front window to icon view
+            set bounds of front window to {300, 200, 1000, 700}
+        end tell
+        """)
+        try? await Task.sleep(nanoseconds: 1_200_000_000)
+        lines.append("INFO  extension enabled=\(FinderExtensionStatus.isEnabled)")
+        let point = CGPoint(x: 900, y: 640) // empty area near the bottom-right of the window
+        moveCursor(to: point)
+        for type in [CGEventType.rightMouseDown, .rightMouseUp] {
+            CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .right)?.post(tap: .cghidEventTap)
+            try? await Task.sleep(nanoseconds: 60_000_000)
+        }
+        try? await Task.sleep(nanoseconds: 1_200_000_000)
+        if let image = CGWindowListCreateImage(CGRect(x: 250, y: 150, width: 1000, height: 800), .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]) {
+            let shots = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
+            try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: shots.appendingPathComponent("finder-menu.png"))
+        }
+        var titles: [String] = []
+        if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
+            let app = AXUIElementCreateApplication(finder.processIdentifier)
+            func collect(_ element: AXUIElement, depth: Int) {
+                guard depth < 6 else { return }
+                var role: AnyObject?
+                AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &role)
+                if (role as? String) == kAXMenuItemRole {
+                    var t: AnyObject?
+                    AXUIElementCopyAttributeValue(element, kAXTitleAttribute as CFString, &t)
+                    if let t = t as? String, !t.isEmpty { titles.append(t) }
+                }
+                var children: AnyObject?
+                AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &children)
+                for c in (children as? [AXUIElement]) ?? [] where (role as? String) != kAXMenuItemRole || depth == 0 {
+                    collect(c, depth: depth + 1)
+                }
+            }
+            var children: AnyObject?
+            AXUIElementCopyAttributeValue(app, kAXChildrenAttribute as CFString, &children)
+            for c in (children as? [AXUIElement]) ?? [] {
+                var role: AnyObject?
+                AXUIElementCopyAttributeValue(c, kAXRoleAttribute as CFString, &role)
+                if (role as? String) == kAXMenuRole { collect(c, depth: 0) }
+            }
+        }
+        lines.append("INFO  context menu items: \(titles)")
+        await postKey(keyCode: UInt16(kVK_Escape), down: true, flags: [])
+        await postKey(keyCode: UInt16(kVK_Escape), down: false, flags: [])
+        _ = runScript("tell application \"Finder\" to close front window")
+        try? FileManager.default.removeItem(at: dir)
     }
 
     private static func snapFrontFinderWindow(_ name: String) {

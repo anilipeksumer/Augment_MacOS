@@ -48,6 +48,10 @@ final class DockPreviewPanelController {
         let viewModel = DockPreviewViewModel()
         self.viewModel = viewModel
         self.hostingView = NSHostingView(rootView: DockPreviewView(viewModel: viewModel))
+        // Keep intrinsic size (the panel is sized from `fittingSize`) but stop
+        // the hosting view from driving the window's min/max content size —
+        // the same constraint-loop crash the notch panel hit.
+        self.hostingView.sizingOptions = [.intrinsicContentSize]
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 180),

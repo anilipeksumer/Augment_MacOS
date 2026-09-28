@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// Renders a `DirectoryNode` into self-contained HTML suitable for a
@@ -27,7 +28,12 @@ enum DirectoryTreeFormatter {
                 <span class="brand-mark">Augment</span>
                 <span class="toolbar-subtitle">Klasör önizlemesi</span>
             </div>
-            <h1 class="toolbar-title">\(escape(root.name))</h1>
+            <div class="toolbar-title-row">
+                <h1 class="toolbar-title">\(escape(root.name))</h1>
+                <a class="reveal-btn root-reveal-btn" href="\(escape(originalURL.absoluteString))">
+                    <span class="btn-icon"></span>Finder’da göster
+                </a>
+            </div>
             <p class="toolbar-path">\(escape(originalURL.path))</p>
             <div class="meta-chips">
                 <span class="chip"><strong>\(immediateEntries)</strong> öğe</span>
@@ -87,7 +93,7 @@ enum DirectoryTreeFormatter {
             let href = escape(fileURL.absoluteString)
             let size = "<span class=\"cell size\">\(formatBytes(node.byteSize))</span>"
             let modified = renderModifiedCell(node.modifiedAt)
-            let glyph = "<span class=\"glyph\" aria-hidden=\"true\">\(fileGlyph(for: node.name))</span>"
+            let glyph = "<img class=\"glyph-icon\" src=\"\(fileIconDataURI(for: node.name))\" alt=\"\">"
             let title = escape(node.name)
             return """
             <li class="file row" role="treeitem"><div class="name-cell">\(glyph)<a class="name-link" href="\(href)" title="\(title)">\(title)</a></div>\(modified)\(size)</li>
@@ -143,29 +149,35 @@ enum DirectoryTreeFormatter {
         return "<span class=\"cell date\">\(escape(formatDate(date)))</span>"
     }
 
-    private static func fileGlyph(for name: String) -> String {
+    /// Extension → data-URI cache. `NSWorkspace.icon(forFileType:)` is a
+    /// generic per-type icon lookup (no disk read of the actual file), so a
+    /// folder with hundreds of `.swift`/`.png` files only pays the icon +
+    /// PNG-encode cost once per distinct extension, not once per row.
+    private static var fileIconCache: [String: String] = [:]
+
+    /// Real system file-type icons instead of a hand-picked emoji table —
+    /// matches what Finder itself shows, covers every extension (not just
+    /// the ones we bothered to special-case), and looks native rather than
+    /// like a text-tree glyph column.
+    private static func fileIconDataURI(for name: String) -> String {
         let ext = (name as NSString).pathExtension.lowercased()
-        switch ext {
-        case "json": return "{}"
-        case "md": return "📝"
-        case "txt": return "📄"
-        case "swift": return "S"
-        case "ts", "js", "jsx", "tsx": return "JS"
-        case "py": return "🐍"
-        case "go": return "Go"
-        case "cs": return "C#"
-        case "html", "htm": return "🌐"
-        case "css", "scss": return "🎨"
-        case "png", "jpg", "jpeg", "gif", "webp", "heic", "tiff": return "🖼"
-        case "mp4", "mov", "m4v", "avi": return "🎬"
-        case "mp3", "wav", "flac", "m4a": return "🎵"
-        case "zip", "gz", "bz2", "tgz", "xz", "7z", "rar": return "📦"
-        case "pdf": return "📕"
-        case "docx", "doc": return "📘"
-        case "xlsx", "xls": return "📗"
-        case "pptx", "ppt": return "📙"
-        default: return "•"
+        let cacheKey = ext.isEmpty ? "__noext__" : ext
+        if let cached = fileIconCache[cacheKey] { return cached }
+
+        let icon = ext.isEmpty
+            ? NSWorkspace.shared.icon(forFileType: "")
+            : NSWorkspace.shared.icon(forFileType: ext)
+        icon.size = NSSize(width: 32, height: 32)
+
+        var base64 = ""
+        if let tiff = icon.tiffRepresentation,
+           let bitmap = NSBitmapImageRep(data: tiff),
+           let png = bitmap.representation(using: .png, properties: [:]) {
+            base64 = png.base64EncodedString()
         }
+        let uri = "data:image/png;base64,\(base64)"
+        fileIconCache[cacheKey] = uri
+        return uri
     }
 
     // MARK: - Aggregates
@@ -392,6 +404,21 @@ enum DirectoryTreeFormatter {
         opacity: 0.85;
     }
     .glyph.dim { opacity: 0.45; }
+    .glyph-icon {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+    }
+    .toolbar-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .root-reveal-btn {
+        flex-shrink: 0;
+    }
     .name-link {
         color: var(--link);
         text-decoration: none;

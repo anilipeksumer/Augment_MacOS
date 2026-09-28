@@ -2,51 +2,44 @@ import AppKit
 import Foundation
 
 enum MediaScriptRunner {
-    private static let processTimeout: TimeInterval = 3.0
+    private static let scriptTimeout: TimeInterval = 3.0
 
     static func string(_ source: String) -> String? {
-        if let s = runViaOsascript(source), !s.isEmpty { return s }
-        return nil
+        guard let value = run(source)?.stringValue, !value.isEmpty else { return nil }
+        return value
     }
 
+    /// Raw binary result of a script, e.g. `data of artwork 1` for embedded
+    /// album art. `NSAppleScript` hands this back as a proper `Data` blob on
+    /// the descriptor — no hex/`«data JPEGxxxx»` text parsing required, which
+    /// is what made this unusable through the old `osascript` subprocess.
     static func data(_ source: String) -> Data? {
-        _ = source
-        // Avoid NSAppleScript here: it has no cancellation/timeout surface and
-        // can pin an Automation thread if a target app stops responding.
-        return nil
+        run(source)?.data
     }
 
-    private static func runViaOsascript(_ source: String) -> String? {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        task.arguments = ["-l", "AppleScript", "-"]
-        let stdinPipe = Pipe()
-        let stdoutPipe = Pipe()
-        task.standardInput = stdinPipe
-        task.standardOutput = stdoutPipe
-        task.standardError = Pipe()
+    /// Runs AppleScript in-process via `NSAppleScript` rather than spawning
+    /// `/usr/bin/osascript` per call. Two benefits: it drops the process-spawn
+    /// churn from polling several media apps every few seconds, and it keeps
+    /// Automation TCC attribution tied directly to Augment's own signed
+    /// process instead of an intermediary subprocess.
+    ///
+    /// `executeAndReturnError` is synchronous with no native cancellation, so
+    /// a target app that stops responding could otherwise pin the calling
+    /// thread indefinitely. Each call runs on its own dispatch work item
+    /// (never a shared serial queue) and is abandoned past the timeout
+    /// instead of awaited — a hang leaks one background thread rather than
+    /// blocking every future call behind it.
+    private static func run(_ source: String) -> NSAppleEventDescriptor? {
+        guard let script = NSAppleScript(source: source) else { return nil }
         let group = DispatchGroup()
         group.enter()
-        task.terminationHandler = { _ in group.leave() }
-        do {
-            try task.run()
-            if let data = source.data(using: .utf8) {
-                try stdinPipe.fileHandleForWriting.write(contentsOf: data)
-            }
-            try stdinPipe.fileHandleForWriting.close()
-
-            if group.wait(timeout: .now() + processTimeout) == .timedOut {
-                task.terminate()
-                return nil
-            }
-
-            let out = try stdoutPipe.fileHandleForReading.readToEnd() ?? Data()
-            guard task.terminationStatus == 0 else { return nil }
-            let text = String(data: out, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            return (text?.isEmpty == false) ? text : nil
-        } catch {
-            return nil
+        var result: NSAppleEventDescriptor?
+        DispatchQueue.global(qos: .userInitiated).async {
+            var errorInfo: NSDictionary?
+            result = script.executeAndReturnError(&errorInfo)
+            group.leave()
         }
+        return group.wait(timeout: .now() + scriptTimeout) == .success ? result : nil
     }
 }
 

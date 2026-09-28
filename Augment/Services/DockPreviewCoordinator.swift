@@ -15,6 +15,7 @@ final class DockPreviewCoordinator {
     private var pendingHoverBundleID: String?
     private var hoverOpenTimer: Timer?
     private var previewGeneration: UInt64 = 0
+    private var cacheWarmTimer: Timer?
     private let previewRenderQueue = DispatchQueue(label: "com.augment.preview-render", qos: .userInitiated)
 
     init(
@@ -39,7 +40,11 @@ final class DockPreviewCoordinator {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] enabled in
                 guard let self else { return }
-                if !enabled {
+                if enabled {
+                    self.startCacheWarming()
+                } else {
+                    self.cacheWarmTimer?.invalidate()
+                    self.cacheWarmTimer = nil
                     self.previewPanel.hideImmediately()
                     self.windowDiscovery.purgeCache()
                     self.cancelHoverOpen()
@@ -80,14 +85,6 @@ final class DockPreviewCoordinator {
             self.previewPanel.spaceMagnifyEnabled = spaceMagnify
         }
         .store(in: &cancellables)
-
-        preferences.$minimizeEffect
-            .dropFirst()
-            .receive(on: DispatchQueue.main)
-            .sink { effect in
-                DockEffectApplier.apply(effect)
-            }
-            .store(in: &cancellables)
 
         Publishers.CombineLatest(
             preferences.$dockLockEnabled,
@@ -294,6 +291,20 @@ final class DockPreviewCoordinator {
                 )
             }
         }
+    }
+
+    /// Keeps recent images of on-screen windows so a window the user minimizes
+    /// later still has a real preview (see `warmThumbnailCache`).
+    private func startCacheWarming() {
+        guard cacheWarmTimer == nil else { return }
+        let discovery = windowDiscovery
+        let queue = previewRenderQueue
+        queue.async { discovery.warmThumbnailCache() }
+        let timer = Timer(timeInterval: 20, repeats: true) { _ in
+            queue.async { discovery.warmThumbnailCache() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        cacheWarmTimer = timer
     }
 
     private func cancelHoverOpen() {

@@ -23,15 +23,15 @@ final class AboutWindowController: NSWindowController, NSWindowDelegate {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 420),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 400),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = Localizer.string("menu.about")
-        window.titleVisibility = .visible
-        window.titlebarAppearsTransparent = false
-        window.isMovableByWindowBackground = false
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         window.isOpaque = true
         window.backgroundColor = .windowBackgroundColor
@@ -69,9 +69,10 @@ final class AboutWindowController: NSWindowController, NSWindowDelegate {
     }
 }
 
+/// A compact About panel in the spirit of macOS's own: icon, name,
+/// version, one line on what Augment is, what it covers, and the credits.
 struct AboutView: View {
     let onClose: () -> Void
-    @ObservedObject private var preferences = SharedPreferences.shared
 
     private var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
@@ -80,61 +81,53 @@ struct AboutView: View {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
     }
 
+    private let areas: [SettingsTab] = [.dock, .windows, .finder, .notch, .sound]
+
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                appIcon
-                    .frame(width: 88, height: 88)
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .shadow(color: .black.opacity(0.16), radius: 12, y: 5)
+            Spacer(minLength: 34)
+            appIcon
+                .frame(width: 104, height: 104)
+                .shadow(color: .black.opacity(0.18), radius: 14, y: 6)
 
-                VStack(spacing: 4) {
-                    Text("Augment")
-                        .font(.system(size: 28, weight: .bold))
-                    Text(Localizer.string("about.description"))
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
+            Text("Augment")
+                .font(.system(size: 24, weight: .bold))
+                .padding(.top, 14)
+            Text("\(Localizer.string("about.version")) \(version) (\(build))")
+                .font(.system(size: 12).monospacedDigit())
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+                .textSelection(.enabled)
 
-                Text("\(Localizer.string("about.version")) \(version) (\(build))")
-                    .font(.system(size: 12).monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 30)
-            .padding(.bottom, 24)
+            Text(Localizer.string("about.description"))
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 32)
+                .padding(.top, 14)
 
-            Divider()
-
-            HStack(spacing: 0) {
-                CapabilityCard(title: Localizer.string("about.dock_previews"), icon: "rectangle.stack.fill")
-                Divider().frame(height: 46)
-                CapabilityCard(title: Localizer.string("about.finder_tools"), icon: "folder.fill.badge.plus")
-                Divider().frame(height: 46)
-                CapabilityCard(title: Localizer.string("about.interactive_notch"), icon: "platter.filled.top.iphone")
-            }
-            .padding(.vertical, 18)
-            .padding(.horizontal, 18)
-
-            Divider()
-
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Anıl İpeksümer")
+            HStack(spacing: 14) {
+                ForEach(areas, id: \.self) { tab in
+                    Image(systemName: tab.systemImage)
                         .font(.system(size: 12, weight: .semibold))
-                    Text("Copyright © \(String(Calendar.current.component(.year, from: Date())))")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(tab.tintColor.gradient))
+                        .help(tab.title)
                 }
-                Spacer()
-                Button(Localizer.string("about.close"), action: onClose)
-                    .keyboardShortcut(.cancelAction)
             }
-            .padding(18)
+            .padding(.top, 18)
+
+            Spacer(minLength: 20)
+
+            Text("© \(String(Calendar.current.component(.year, from: Date()))) Anıl İpeksümer")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .padding(.bottom, 18)
         }
-        .frame(width: 460, height: 420)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(width: 340, height: 400)
+        .background(.regularMaterial)
     }
 
     @ViewBuilder
@@ -146,39 +139,6 @@ struct AboutView: View {
         } else {
             Image(systemName: "rectangle.stack.fill")
                 .font(.system(size: 38, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.accentColor)
-        }
-    }
-}
-
-struct CapabilityCard: View {
-    let title: String
-    let icon: String
-    @State private var isHovered = false
-
-    var body: some View {
-        VStack(spacing: 7) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(Color.accentColor)
-                .scaleEffect(isHovered ? 1.12 : 1.0)
-                .animation(.spring(response: 0.25, dampingFraction: 0.55), value: isHovered)
-            Text(title)
-                .font(.system(size: 11, weight: .medium))
-                .lineLimit(1)
-                .foregroundStyle(isHovered ? .primary : .secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(isHovered ? Color.primary.opacity(0.04) : Color.clear)
-        )
-        .contentShape(Rectangle())
-        .onHover { hovering in
-            isHovered = hovering
         }
     }
 }

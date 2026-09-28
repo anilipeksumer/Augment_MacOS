@@ -38,7 +38,9 @@ enum MediaRemoteProvider {
         completion: @escaping (_ bundleID: String?, _ info: [String: Any]?, _ isPlaying: Bool?, _ gotPlaying: Bool) -> Void
     ) {
         guard !readsUnavailable else {
-            completion(nil, nil, nil, false)
+            // Always answer on `queue`: callers run AppleScript in the
+            // completion, which must never happen on the main thread.
+            queue.async { completion(nil, nil, nil, false) }
             return
         }
 

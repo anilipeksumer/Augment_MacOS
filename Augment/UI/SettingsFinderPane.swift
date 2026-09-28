@@ -3,19 +3,11 @@ import SwiftUI
 
 // MARK: - Finder
 
-struct FinderSettingsPane: View {
+struct FinderSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("finder.title"),
-                    subtitle: Localizer.string("finder.subtitle"),
-                    systemImage: "folder.fill.badge.plus",
-                    tint: .green
-                )
-            }
+        Group {
 
             Section {
                 ToggleRow(
@@ -50,7 +42,6 @@ struct FinderSettingsPane: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
     }
 }
 

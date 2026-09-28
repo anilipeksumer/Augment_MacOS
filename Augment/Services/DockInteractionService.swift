@@ -81,7 +81,14 @@ final class DockInteractionService {
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var hoverTap: CFMachPort?
+    private var hoverRunLoopSource: CFRunLoopSource?
     private var dockPID: pid_t = 0
+    private var dockElement: AXUIElement?
+    /// The Dock can be at most this deep (fully magnified icons included),
+    /// so points further from its screen edge are never Dock icons and
+    /// need no Accessibility round trip at all.
+    private let dockZoneDepth: CGFloat = 280
     private var lastHoveredBundle: String?
     private var lastHoverProcessTime: CFTimeInterval = 0
     /// Throttle hover lookups to ~25 Hz to keep the AX traffic bounded even
@@ -99,11 +106,14 @@ final class DockInteractionService {
 
         resolveDockPID()
 
-        let mask: CGEventMask =
-            (1 << CGEventType.mouseMoved.rawValue) |
+        // Clicks and Space may need swallowing, so they go through an
+        // active tap. Hover only observes, so it uses a listen-only tap,
+        // which never holds up the user's mouse even for a moment.
+        let clickMask: CGEventMask =
             (1 << CGEventType.leftMouseDown.rawValue) |
             (1 << CGEventType.otherMouseDown.rawValue) |
             (1 << CGEventType.keyDown.rawValue)
+        let hoverMask: CGEventMask = (1 << CGEventType.mouseMoved.rawValue)
 
         let context = Unmanaged.passUnretained(self).toOpaque()
 
@@ -111,7 +121,7 @@ final class DockInteractionService {
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
-            eventsOfInterest: mask,
+            eventsOfInterest: clickMask,
             callback: { _, type, event, refcon in
                 guard let refcon else { return Unmanaged.passUnretained(event) }
                 let service = Unmanaged<DockInteractionService>
@@ -139,24 +149,55 @@ final class DockInteractionService {
             return .tapCreationFailed
         }
 
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        let hoverTap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .tailAppendEventTap,
+            options: .listenOnly,
+            eventsOfInterest: hoverMask,
+            callback: { _, type, event, refcon in
+                guard let refcon else { return Unmanaged.passUnretained(event) }
+                let service = Unmanaged<DockInteractionService>
+                    .fromOpaque(refcon)
+                    .takeUnretainedValue()
+                if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                    if let tap = service.hoverTap {
+                        CGEvent.tapEnable(tap: tap, enable: true)
+                    }
+                    return Unmanaged.passUnretained(event)
+                }
+                _ = service.handle(type: type, event: event)
+                return Unmanaged.passUnretained(event)
+            },
+            userInfo: context
+        )
 
+        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)!
+        EventTapThread.shared.add(source)
+        CGEvent.tapEnable(tap: tap, enable: true)
         self.eventTap = tap
         self.runLoopSource = source
+
+        if let hoverTap {
+            let hoverSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, hoverTap, 0)!
+            EventTapThread.shared.add(hoverSource)
+            CGEvent.tapEnable(tap: hoverTap, enable: true)
+            self.hoverTap = hoverTap
+            self.hoverRunLoopSource = hoverSource
+        }
         return .started
     }
 
     func stop() {
-        if let runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        for source in [runLoopSource, hoverRunLoopSource].compactMap({ $0 }) {
+            EventTapThread.shared.remove(source)
         }
-        if let eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
+        for tap in [eventTap, hoverTap].compactMap({ $0 }) {
+            CGEvent.tapEnable(tap: tap, enable: false)
         }
         runLoopSource = nil
         eventTap = nil
+        hoverRunLoopSource = nil
+        hoverTap = nil
         lastHoveredBundle = nil
     }
 
@@ -185,7 +226,39 @@ final class DockInteractionService {
             .runningApplications(withBundleIdentifier: "com.apple.dock")
             .first {
             dockPID = dock.processIdentifier
+            let element = AXUIElementCreateApplication(dock.processIdentifier)
+            // Never let a busy Dock hold up an input event for long.
+            AXUIElementSetMessagingTimeout(element, 0.1)
+            dockElement = element
         }
+    }
+
+    /// Cheap geometric check: is the point near the screen edge the Dock
+    /// lives on? Runs before any Accessibility call.
+    private func isInDockZone(_ point: CGPoint) -> Bool {
+        let orientation = cachedOrientation
+        for screen in NSScreen.screens {
+            let appKit = ScreenGeometry.convertFromCG(point)
+            let frame = screen.frame
+            guard frame.insetBy(dx: -1, dy: -1).contains(appKit) else { continue }
+            switch orientation {
+            case "left": return appKit.x - frame.minX <= dockZoneDepth
+            case "right": return frame.maxX - appKit.x <= dockZoneDepth
+            default: return appKit.y - frame.minY <= dockZoneDepth
+            }
+        }
+        return false
+    }
+
+    private var orientationCheckedAt: CFTimeInterval = 0
+    private var orientationValue = "bottom"
+    private var cachedOrientation: String {
+        let now = CACurrentMediaTime()
+        if now - orientationCheckedAt > 5 {
+            orientationCheckedAt = now
+            orientationValue = dockOrientation()
+        }
+        return orientationValue
     }
 
     /// Returns `true` when the event should be swallowed before the system
@@ -275,13 +348,18 @@ final class DockInteractionService {
     /// supplied screen location, or `nil` if the cursor is not over a Dock
     /// element owned by `com.apple.dock`.
     private func bundleIDForDockIcon(at point: CGPoint) -> String? {
-        if dockPID == 0 { resolveDockPID() }
-        guard dockPID != 0 else { return nil }
+        guard isInDockZone(point) else { return nil }
+        if dockPID == 0 || dockElement == nil || NSRunningApplication(processIdentifier: dockPID) == nil {
+            resolveDockPID()
+        }
+        guard dockPID != 0, let dockElement else { return nil }
 
-        let systemWide = AXUIElementCreateSystemWide()
+        // Asking the Dock process directly (instead of the system-wide
+        // element) never involves whichever app is under the cursor, so a
+        // busy app can't stall the hit test.
         var element: AXUIElement?
         let status = AXUIElementCopyElementAtPosition(
-            systemWide,
+            dockElement,
             Float(point.x),
             Float(point.y),
             &element
@@ -366,7 +444,7 @@ final class DockInteractionService {
         // 12 px is wide enough to catch macOS's auto-show trigger band
         let triggerMargin: CGFloat = 12
         let pushAmount: CGFloat = 28
-        let orientation = dockOrientation()
+        let orientation = cachedOrientation
 
         var warpRequired = false
         var targetMouse = mouse

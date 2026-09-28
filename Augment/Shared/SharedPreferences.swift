@@ -70,73 +70,6 @@ public enum TrafficLightSide: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// Action invoked when the user clicks the focused app's Dock icon.
-public enum DockClickAction: String, CaseIterable, Identifiable, Codable {
-    case toggleMinimize
-    case closeAllWindows
-    case quitApp
-    case systemDefault
-
-    public var id: String { rawValue }
-
-    public var displayName: String {
-        switch self {
-        case .toggleMinimize: return Localizer.string("click.toggle_minimize")
-        case .closeAllWindows: return Localizer.string("click.close_all_windows")
-        case .quitApp: return Localizer.string("click.quit_app")
-        case .systemDefault: return Localizer.string("click.system_default")
-        }
-    }
-
-    public var subtitle: String {
-        switch self {
-        case .toggleMinimize:
-            return Localizer.string("click.toggle_minimize_subtitle")
-        case .closeAllWindows:
-            return Localizer.string("click.close_all_windows_subtitle")
-        case .quitApp:
-            return Localizer.string("click.quit_app_subtitle")
-        case .systemDefault:
-            return Localizer.string("click.system_default_subtitle")
-        }
-    }
-}
-
-/// Animation used by macOS when minimizing windows into the Dock.
-///
-/// Values map directly onto the `mineffect` key the Dock reads from
-/// `com.apple.dock` user defaults, so persisting and applying the
-/// preference is a 1:1 translation.
-public enum DockMinimizeEffect: String, CaseIterable, Identifiable, Codable {
-    /// Mirror whatever the system Dock currently has set – Augment will not
-    /// override `mineffect`. This is the default so the app respects the
-    /// macOS-wide animation choice.
-    case system
-    case genie
-    case scale
-    case suck
-
-    public var id: String { rawValue }
-
-    public var displayName: String {
-        switch self {
-        case .system: return Localizer.string("effect.system")
-        case .genie: return Localizer.string("effect.genie")
-        case .scale: return Localizer.string("effect.scale")
-        case .suck: return Localizer.string("effect.suck")
-        }
-    }
-
-    public var subtitle: String {
-        switch self {
-        case .system: return Localizer.string("effect.system_subtitle")
-        case .genie: return Localizer.string("effect.genie_subtitle")
-        case .scale: return Localizer.string("effect.scale_subtitle")
-        case .suck: return Localizer.string("effect.suck_subtitle")
-        }
-    }
-}
-
 /// Typed access to user preferences that live inside the App Group container.
 ///
 /// The store is intentionally focused on app-surface options rather than
@@ -252,10 +185,6 @@ public final class SharedPreferences: ObservableObject {
 
     // MARK: - Minimize effect
 
-    @Published public var minimizeEffect: DockMinimizeEffect {
-        didSet { write(minimizeEffect.rawValue, AppGroupKey.minimizeEffect) }
-    }
-
     // MARK: - Multi-display dock lock
 
     /// User-selected screens that the dock interaction stays anchored to.
@@ -278,6 +207,45 @@ public final class SharedPreferences: ObservableObject {
     @Published public var windowSnappingShortcuts: String {
         didSet { write(windowSnappingShortcuts, AppGroupKey.windowSnappingShortcuts) }
     }
+
+    // MARK: - Window cut & paste
+
+    /// Master toggle for ⌃⌘X (cut focused window) / ⌃⌘V (paste it under the cursor).
+    @Published public var windowCutPasteEnabled: Bool {
+        didSet { write(windowCutPasteEnabled, AppGroupKey.windowCutPasteEnabled) }
+    }
+
+    // MARK: - File cut & paste
+
+    /// Master toggle for a real Finder "Cut" via ⌘X / ⌘V.
+    @Published public var fileCutPasteEnabled: Bool {
+        didSet { write(fileCutPasteEnabled, AppGroupKey.fileCutPasteEnabled) }
+    }
+
+    // MARK: - Snap Layouts
+
+    /// Master toggle for the ⌃⌥Space snap-zone picker.
+    @Published public var snapLayoutsEnabled: Bool {
+        didSet { write(snapLayoutsEnabled, AppGroupKey.snapLayoutsEnabled) }
+    }
+
+    // MARK: - Window switcher
+
+    /// Master toggle for the ⌥Tab thumbnail window switcher.
+    @Published public var windowSwitcherEnabled: Bool {
+        didSet { write(windowSwitcherEnabled, AppGroupKey.windowSwitcherEnabled) }
+    }
+
+    // MARK: - Menu bar organizer
+
+    // MARK: - Volume mixer
+
+    /// Master toggle for the per-app volume mixer.
+    @Published public var volumeMixerEnabled: Bool {
+        didSet { write(volumeMixerEnabled, AppGroupKey.volumeMixerEnabled) }
+    }
+
+    // MARK: - External display control
 
     // MARK: - Notch (BoringNotch)
 
@@ -339,6 +307,92 @@ public final class SharedPreferences: ObservableObject {
         didSet { write(notchShelfURLs, AppGroupKey.notchShelfURLs) }
     }
 
+    /// Master toggle for the clipboard history feature.
+    @Published public var clipboardHistoryEnabled: Bool {
+        didSet { write(clipboardHistoryEnabled, AppGroupKey.clipboardHistoryEnabled) }
+    }
+
+    /// Whether the keep-awake toggle button is shown in the notch top bar.
+    @Published public var notchCaffeinateWidget: Bool {
+        didSet { write(notchCaffeinateWidget, AppGroupKey.notchCaffeinateWidget) }
+    }
+
+    /// Whether the quick note + Pomodoro timer widget is shown.
+    @Published public var displayKeysEnabled: Bool {
+        didSet { write(displayKeysEnabled, AppGroupKey.displayKeysEnabled) }
+    }
+    @Published public var brightnessScheduleEnabled: Bool {
+        didSet { write(brightnessScheduleEnabled, AppGroupKey.brightnessScheduleEnabled) }
+    }
+    @Published public var brightnessDayStart: Double {
+        didSet { write(brightnessDayStart, AppGroupKey.brightnessDayStart) }
+    }
+    @Published public var brightnessNightStart: Double {
+        didSet { write(brightnessNightStart, AppGroupKey.brightnessNightStart) }
+    }
+    @Published public var brightnessDayLevel: Double {
+        didSet { write(brightnessDayLevel, AppGroupKey.brightnessDayLevel) }
+    }
+    @Published public var brightnessNightLevel: Double {
+        didSet { write(brightnessNightLevel, AppGroupKey.brightnessNightLevel) }
+    }
+    @Published public var awakeDisplayMaySleep: Bool {
+        didSet { write(awakeDisplayMaySleep, AppGroupKey.awakeDisplayMaySleep) }
+    }
+    @Published public var awakeWhileApps: [String] {
+        didSet { write(awakeWhileApps, AppGroupKey.awakeWhileApps) }
+    }
+    @Published public var awakeOnPower: Bool {
+        didSet { write(awakeOnPower, AppGroupKey.awakeOnPower) }
+    }
+    @Published public var awakeWhileDownloading: Bool {
+        didSet { write(awakeWhileDownloading, AppGroupKey.awakeWhileDownloading) }
+    }
+    @Published public var awakeLidClosed: Bool {
+        didSet { write(awakeLidClosed, AppGroupKey.awakeLidClosed) }
+    }
+    @Published public var clipboardPanelEnabled: Bool {
+        didSet { write(clipboardPanelEnabled, AppGroupKey.clipboardPanelEnabled) }
+    }
+    @Published public var meetingsEnabled: Bool {
+        didSet { write(meetingsEnabled, AppGroupKey.meetingsEnabled) }
+    }
+    @Published public var screenshotShelfEnabled: Bool {
+        didSet { write(screenshotShelfEnabled, AppGroupKey.screenshotShelfEnabled) }
+    }
+    @Published public var finderExtraMenuEnabled: Bool {
+        didSet { write(finderExtraMenuEnabled, AppGroupKey.finderExtraMenuEnabled) }
+    }
+    @Published public var quickPanelDisplays: Bool {
+        didSet { write(quickPanelDisplays, AppGroupKey.quickPanelDisplays) }
+    }
+    @Published public var quickPanelSound: Bool {
+        didSet { write(quickPanelSound, AppGroupKey.quickPanelSound) }
+    }
+    @Published public var quickPanelMic: Bool {
+        didSet { write(quickPanelMic, AppGroupKey.quickPanelMic) }
+    }
+    @Published public var quickPanelMeetings: Bool {
+        didSet { write(quickPanelMeetings, AppGroupKey.quickPanelMeetings) }
+    }
+    @Published public var quickPanelAwake: Bool {
+        didSet { write(quickPanelAwake, AppGroupKey.quickPanelAwake) }
+    }
+    @Published public var notchMirrorEnabled: Bool {
+        didSet { write(notchMirrorEnabled, AppGroupKey.notchMirrorEnabled) }
+    }
+    @Published public var notchPomodoroMinutes: Double {
+        didSet { write(notchPomodoroMinutes, AppGroupKey.notchPomodoroMinutes) }
+    }
+    @Published public var notchProductivityWidget: Bool {
+        didSet { write(notchProductivityWidget, AppGroupKey.notchProductivityWidget) }
+    }
+
+    /// Persisted text of the notch quick-note scratchpad.
+    @Published public var notchQuickNoteText: String {
+        didSet { write(notchQuickNoteText, AppGroupKey.notchQuickNoteText) }
+    }
+
     // MARK: - Init
 
     public init() {
@@ -376,14 +430,18 @@ public final class SharedPreferences: ObservableObject {
         self.trafficLightSide = TrafficLightSide(rawValue: sideRaw) ?? .trailing
         self.killButtonVisible = Self.loadBool(AppGroupKey.killButtonVisible, reg)
 
-        let effectRaw = Self.loadString(AppGroupKey.minimizeEffect, reg) ?? DockMinimizeEffect.system.rawValue
-        self.minimizeEffect = DockMinimizeEffect(rawValue: effectRaw) ?? .system
 
         self.lockedScreenIdentifiers = Self.loadStringArray(AppGroupKey.lockedScreenIDs, reg)
 
         // Window snapping
         self.windowSnappingEnabled = Self.loadBool(AppGroupKey.windowSnappingEnabled, reg)
         self.windowSnappingShortcuts = Self.loadString(AppGroupKey.windowSnappingShortcuts, reg) ?? ""
+
+        self.windowCutPasteEnabled = Self.loadBool(AppGroupKey.windowCutPasteEnabled, reg)
+        self.fileCutPasteEnabled = Self.loadBool(AppGroupKey.fileCutPasteEnabled, reg)
+        self.snapLayoutsEnabled = Self.loadBool(AppGroupKey.snapLayoutsEnabled, reg)
+        self.windowSwitcherEnabled = Self.loadBool(AppGroupKey.windowSwitcherEnabled, reg)
+        self.volumeMixerEnabled = Self.loadBool(AppGroupKey.volumeMixerEnabled, reg)
 
         // Notch
         self.notchEnabled = Self.loadBool(AppGroupKey.notchEnabled, reg)
@@ -398,6 +456,32 @@ public final class SharedPreferences: ObservableObject {
         self.notchBatteryStyle = Self.loadString(AppGroupKey.notchBatteryStyle, reg) ?? "gauge"
         self.notchHoverDelay = Self.loadDouble(AppGroupKey.notchHoverDelay, reg)
         self.notchShelfURLs = Self.loadStringArray(AppGroupKey.notchShelfURLs, reg)
+        self.clipboardHistoryEnabled = Self.loadBool(AppGroupKey.clipboardHistoryEnabled, reg)
+        self.notchCaffeinateWidget = Self.loadBool(AppGroupKey.notchCaffeinateWidget, reg)
+        self.notchProductivityWidget = Self.loadBool(AppGroupKey.notchProductivityWidget, reg)
+        self.notchPomodoroMinutes = Self.loadDouble(AppGroupKey.notchPomodoroMinutes, reg)
+        self.notchMirrorEnabled = Self.loadBool(AppGroupKey.notchMirrorEnabled, reg)
+        self.quickPanelDisplays = Self.loadBool(AppGroupKey.quickPanelDisplays, reg)
+        self.quickPanelSound = Self.loadBool(AppGroupKey.quickPanelSound, reg)
+        self.quickPanelMic = Self.loadBool(AppGroupKey.quickPanelMic, reg)
+        self.quickPanelMeetings = Self.loadBool(AppGroupKey.quickPanelMeetings, reg)
+        self.quickPanelAwake = Self.loadBool(AppGroupKey.quickPanelAwake, reg)
+        self.displayKeysEnabled = Self.loadBool(AppGroupKey.displayKeysEnabled, reg)
+        self.brightnessScheduleEnabled = Self.loadBool(AppGroupKey.brightnessScheduleEnabled, reg)
+        self.brightnessDayStart = Self.loadDouble(AppGroupKey.brightnessDayStart, reg)
+        self.brightnessNightStart = Self.loadDouble(AppGroupKey.brightnessNightStart, reg)
+        self.brightnessDayLevel = Self.loadDouble(AppGroupKey.brightnessDayLevel, reg)
+        self.brightnessNightLevel = Self.loadDouble(AppGroupKey.brightnessNightLevel, reg)
+        self.awakeDisplayMaySleep = Self.loadBool(AppGroupKey.awakeDisplayMaySleep, reg)
+        self.awakeWhileApps = Self.loadStringArray(AppGroupKey.awakeWhileApps, reg)
+        self.awakeOnPower = Self.loadBool(AppGroupKey.awakeOnPower, reg)
+        self.awakeWhileDownloading = Self.loadBool(AppGroupKey.awakeWhileDownloading, reg)
+        self.awakeLidClosed = Self.loadBool(AppGroupKey.awakeLidClosed, reg)
+        self.clipboardPanelEnabled = Self.loadBool(AppGroupKey.clipboardPanelEnabled, reg)
+        self.meetingsEnabled = Self.loadBool(AppGroupKey.meetingsEnabled, reg)
+        self.screenshotShelfEnabled = Self.loadBool(AppGroupKey.screenshotShelfEnabled, reg)
+        self.finderExtraMenuEnabled = Self.loadBool(AppGroupKey.finderExtraMenuEnabled, reg)
+        self.notchQuickNoteText = Self.loadString(AppGroupKey.notchQuickNoteText, reg) ?? ""
     }
 
     private static func loadBool(_ key: String, _ registration: [String: Any]) -> Bool {

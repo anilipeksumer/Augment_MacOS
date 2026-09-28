@@ -4,6 +4,18 @@ import CoreGraphics
 import Foundation
 import QuartzCore
 
+/// Returns the window server ID behind an Accessibility window. Private but
+/// long-stable (exported by HIServices since 10.x) and the standard way
+/// AltTab, Rectangle and DockDoor map AX windows to real window IDs —
+/// the public `AXWindowNumber` attribute is unsupported by most apps.
+@_silgen_name("_AXUIElementGetWindow")
+private func _AXUIElementGetWindow(_ element: AXUIElement, _ id: UnsafeMutablePointer<CGWindowID>) -> AXError
+
+func windowServerID(of element: AXUIElement) -> CGWindowID? {
+    var id: CGWindowID = 0
+    return _AXUIElementGetWindow(element, &id) == .success && id != 0 ? id : nil
+}
+
 /// Snapshot describing a single on-screen window owned by another process.
 struct DiscoveredWindow: Identifiable, Hashable {
     let id: CGWindowID
@@ -12,6 +24,7 @@ struct DiscoveredWindow: Identifiable, Hashable {
     let title: String?
     let frame: CGRect
     let layer: Int
+    var isMinimized: Bool = false
 }
 
 /// A `DiscoveredWindow` paired with an optional captured thumbnail. Used by
@@ -94,10 +107,12 @@ final class WindowDiscoveryService {
         // Fetch standard AX windows of the app for filtering helper windows/previews
         var standardFrames: [CGRect] = []
         var standardTitles: [String] = []
+        var standardIDs = Set<CGWindowID>()
         if let pid = filterPID {
             let appElement = AXUIElementCreateApplication(pid)
             let axWins = standardAXWindows(of: appElement)
             for ax in axWins {
+                if let id = windowServerID(of: ax) { standardIDs.insert(id) }
                 if let frame = axFrame(for: ax) {
                     standardFrames.append(frame)
                 }
@@ -137,8 +152,8 @@ final class WindowDiscoveryService {
 
             // Apply standard AX window filtering if a filter PID is active to avoid junk windows
             if filterPID != nil {
-                if !standardFrames.isEmpty || !standardTitles.isEmpty {
-                    var matched = false
+                if !standardFrames.isEmpty || !standardTitles.isEmpty || !standardIDs.isEmpty {
+                    var matched = standardIDs.contains(id)
                     
                     if let t = title, !t.isEmpty {
                         if standardTitles.contains(t) {
@@ -258,9 +273,16 @@ final class WindowDiscoveryService {
             var titleValue: AnyObject?
             AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &titleValue)
             let title = titleValue as? String
+            // The old 72x72 minimum could drop a genuine minimized window
+            // that happens to be smaller than that. But dropping the floor
+            // to >0 let real junk through (shadow/border helper surfaces
+            // with tiny but non-zero AX frames), which showed up as garbled
+            // extra tiles in the preview panel. 40pt is a middle ground:
+            // small enough to keep legitimate compact utility windows,
+            // large enough to reject 1-10pt artifacts.
             guard let frame = axFrame(for: window),
-                  frame.width >= 72,
-                  frame.height >= 72 else { return nil }
+                  frame.width >= 40,
+                  frame.height >= 40 else { return nil }
 
             var numberValue: AnyObject?
             let numberStatus = AXUIElementCopyAttributeValue(
@@ -271,7 +293,8 @@ final class WindowDiscoveryService {
             let reportedID = numberStatus == .success
                 ? (numberValue as? NSNumber).map { CGWindowID($0.uint32Value) }
                 : nil
-            let resolvedID = reportedID
+            let resolvedID = windowServerID(of: window)
+                ?? reportedID
                 ?? knownWindowID(pid: app.processIdentifier, title: title, frame: frame)
                 ?? syntheticWindowID(pid: app.processIdentifier, title: title, frame: frame)
 
@@ -281,7 +304,8 @@ final class WindowDiscoveryService {
                 ownerName: app.localizedName ?? bundleID,
                 title: title,
                 frame: frame,
-                layer: 0
+                layer: 0,
+                isMinimized: true
             )
         }
     }
@@ -343,8 +367,24 @@ final class WindowDiscoveryService {
         }
     }
 
-    private func onScreenWindowIDs(forBundleIdentifier bundleID: String) -> Set<CGWindowID> {
-        Set(windows(forBundleIdentifier: bundleID).map { $0.id })
+    // MARK: - Screen Recording permission
+
+    /// `CGWindowListCreateImage` returns `nil` with zero diagnostics when
+    /// Screen Recording access hasn't been granted, which is exactly what a
+    /// genuinely-empty/offscreen window also returns — from the caller's
+    /// side "no thumbnail" and "no permission" look identical. Callers that
+    /// want to tell those apart (e.g. to show a real message instead of a
+    /// blank preview) should check this first.
+    static func hasScreenRecordingPermission() -> Bool {
+        CGPreflightScreenCaptureAccess()
+    }
+
+    /// Triggers the system Screen Recording permission prompt if it hasn't
+    /// been shown yet. Safe to call repeatedly — it's a no-op once access is
+    /// already granted or already denied.
+    @discardableResult
+    static func requestScreenRecordingPermission() -> Bool {
+        CGRequestScreenCaptureAccess()
     }
 
     // MARK: - Thumbnail capture
@@ -392,6 +432,18 @@ final class WindowDiscoveryService {
         cacheLock.lock()
         defer { cacheLock.unlock() }
         return persistentThumbnailCache[window.id]
+    }
+
+    /// Captures every visible app window into the long-lived cache. Minimized
+    /// windows can't be captured (macOS stops rendering them), so the only way
+    /// to show a real image for one is to have grabbed it while it was still
+    /// on screen; running this periodically keeps that cache fresh.
+    func warmThumbnailCache(maxDimension: CGFloat = 640) {
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let candidates = windows().filter { $0.layer == 0 && $0.ownerPID != ownPID }
+        for window in candidates.prefix(40) {
+            _ = captureAndCache(window: window, maxDimension: maxDimension)
+        }
     }
 
     /// Drops every cached thumbnail. Called when the user disables previews
@@ -549,6 +601,10 @@ final class WindowDiscoveryService {
         return !standardAXWindows(of: appElement).isEmpty
     }
 
+    /// User-facing windows: standard windows plus dialog-style ones —
+    /// Calculator, System Information and many utilities report their main
+    /// window as `AXDialog`, and filtering those out made such apps look
+    /// window-less (no Dock preview at all once minimized).
     private func standardAXWindows(of appElement: AXUIElement) -> [AXUIElement] {
         var windowsValue: AnyObject?
         guard AXUIElementCopyAttributeValue(
@@ -557,14 +613,12 @@ final class WindowDiscoveryService {
               let windows = windowsValue as? [AXUIElement] else {
             return []
         }
+        let accepted: Set<String> = [kAXStandardWindowSubrole as String, kAXDialogSubrole as String]
         return windows.filter { window in
             var subroleValue: AnyObject?
             AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleValue)
-            if let subrole = subroleValue as? String,
-               subrole != kAXStandardWindowSubrole as String {
-                return false
-            }
-            return true
+            guard let subrole = subroleValue as? String else { return true }
+            return accepted.contains(subrole)
         }
     }
 

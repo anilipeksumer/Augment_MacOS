@@ -3,21 +3,13 @@ import SwiftUI
 
 // MARK: - Notch Settings
 
-struct NotchSettingsPane: View {
+struct NotchSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     @State private var hasNotchedScreen = false
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("notch.title"),
-                    subtitle: Localizer.string("notch.subtitle"),
-                    systemImage: "platter.filled.top.iphone",
-                    tint: .purple
-                )
-            }
+        Group {
 
             Section {
                 ToggleRow(
@@ -74,6 +66,15 @@ struct NotchSettingsPane: View {
                 .disabled(!preferences.notchEnabled)
 
                 ToggleRow(
+                    title: Localizer.string("notch.caffeinate"),
+                    subtitle: Localizer.string("notch.caffeinate_desc"),
+                    systemImage: "cup.and.saucer.fill",
+                    tint: .yellow,
+                    isOn: $preferences.notchCaffeinateWidget
+                )
+                .disabled(!preferences.notchEnabled)
+
+                ToggleRow(
                     title: Localizer.string("notch.battery"),
                     subtitle: Localizer.string("notch.battery_desc"),
                     systemImage: "battery.75percent",
@@ -121,6 +122,39 @@ struct NotchSettingsPane: View {
                     isOn: $preferences.notchShelfWidget
                 )
                 .disabled(!preferences.notchEnabled)
+
+                if preferences.notchShelfWidget {
+                    ToggleRow(
+                        title: Localizer.string("notch.clipboard"),
+                        subtitle: Localizer.string("notch.clipboard_desc"),
+                        systemImage: "doc.on.clipboard",
+                        tint: .orange,
+                        isOn: $preferences.clipboardHistoryEnabled
+                    )
+                    .padding(.leading, 38)
+                    .disabled(!preferences.notchEnabled)
+                }
+
+                ToggleRow(
+                    title: Localizer.string("notch.productivity"),
+                    subtitle: Localizer.string("notch.productivity_desc"),
+                    systemImage: "timer",
+                    tint: .yellow,
+                    isOn: $preferences.notchProductivityWidget
+                )
+                .disabled(!preferences.notchEnabled)
+                if preferences.notchProductivityWidget {
+                    Stepper(value: $preferences.notchPomodoroMinutes, in: 5...120, step: 5) {
+                        HStack {
+                            Text(Localizer.string("notch.pomodoro_length"))
+                            Spacer()
+                            Text(String(format: Localizer.string("notch.minutes_value"), Int(preferences.notchPomodoroMinutes)))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                    .padding(.leading, 38)
+                }
             } header: {
                 Text(Localizer.string("notch.widgets"))
             } footer: {
@@ -137,7 +171,6 @@ struct NotchSettingsPane: View {
                 Text(Localizer.string("notch.preview"))
             }
         }
-        .formStyle(.grouped)
         .onAppear {
             hasNotchedScreen = NSScreen.screens.contains(where: { $0.hasNotch })
         }

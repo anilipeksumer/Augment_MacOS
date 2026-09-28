@@ -3,21 +3,13 @@ import SwiftUI
 
 // MARK: - Displays / Dock Lock
 
-struct DisplaySettingsPane: View {
+struct DockLockSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     @State private var screens: [ScreenIdentity] = ScreenGeometry.allIdentities()
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("displays.title"),
-                    subtitle: Localizer.string("displays.subtitle"),
-                    systemImage: "display.2",
-                    tint: .pink
-                )
-            }
+        Group {
 
             Section {
                 ToggleRow(
@@ -75,7 +67,6 @@ struct DisplaySettingsPane: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
         .onAppear { screens = ScreenGeometry.allIdentities() }
     }
 

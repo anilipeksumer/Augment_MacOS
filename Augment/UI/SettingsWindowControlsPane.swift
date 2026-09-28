@@ -3,19 +3,11 @@ import SwiftUI
 
 // MARK: - Window Controls
 
-struct WindowControlsSettingsPane: View {
+struct WindowControlsSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("controls.title"),
-                    subtitle: Localizer.string("controls.subtitle"),
-                    systemImage: "macwindow",
-                    tint: .green
-                )
-            }
+        Group {
 
             Section {
                 ToggleRow(
@@ -61,7 +53,6 @@ struct WindowControlsSettingsPane: View {
                 .padding(.top, 8)
             }
         }
-        .formStyle(.grouped)
     }
 }
 

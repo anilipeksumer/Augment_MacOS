@@ -86,6 +86,21 @@ struct WindowThumbnailCell: View {
 
     @ViewBuilder
     private var thumbnail: some View {
+        thumbnailContent
+            .overlay(alignment: .bottom) {
+                if snapshot.window.isMinimized {
+                    Label(Localizer.string("hover.minimized"), systemImage: "arrow.down.right.and.arrow.up.left")
+                        .font(.system(size: 10, weight: .semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 6)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var thumbnailContent: some View {
         if let image = snapshot.thumbnail {
             Image(decorative: image, scale: backingScale, orientation: .up)
                 .resizable()

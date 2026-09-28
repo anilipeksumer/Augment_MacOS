@@ -17,6 +17,15 @@ final class MediaManager: NSObject, ObservableObject {
     private var preferredBundleID: String?
     private var userPinnedSource = false
     private var lastPlayingBundleID: String?
+    /// Consecutive fetches in which the user's pinned source failed to show
+    /// up. A single transient miss (e.g. a slow browser AppleScript/JS call)
+    /// used to drop the pin immediately, snapping the notch back to whatever
+    /// source was playing — so a play/pause tap right after switching sources
+    /// silently landed on the wrong app. Requiring a few consecutive misses
+    /// gives flaky per-source fetches room to recover before we give up on
+    /// the user's choice.
+    private var preferredSourceMissStreak = 0
+    private let preferredSourceMissLimit = 3
     
     private var timer: Timer?
     private var debounceItem: DispatchWorkItem?
@@ -174,15 +183,22 @@ final class MediaManager: NSObject, ObservableObject {
             if let mr = mrSource {
                 if let idx = allSources.firstIndex(where: { $0.appBundleID == mr.appBundleID }) {
                     let existing = allSources[idx]
+                    // For browser tabs, MediaRemote's playback-rate flag lags the
+                    // page's real <video>/<audio> state (that's what made the
+                    // YouTube play/pause button look inverted: the icon reflected
+                    // MediaRemote while the actual toggle acted on live DOM state).
+                    // The AppleScript/JS scrape in BrowserMediaProvider reads that
+                    // state directly, so trust it over MediaRemote for browsers.
+                    let isBrowserSource = mr.appBundleID.map(BrowserMediaProvider.isBrowser) ?? false
                     let merged = MediaInfo(
                         title: mr.title,
                         artist: mr.artist,
                         appName: mr.appName,
                         appIcon: mr.appIcon ?? existing.appIcon,
                         albumArt: mr.albumArt ?? existing.albumArt,
-                        isPlaying: mr.isPlaying,
-                        duration: mr.duration ?? existing.duration,
-                        elapsedTime: mr.elapsedTime ?? existing.elapsedTime,
+                        isPlaying: isBrowserSource ? existing.isPlaying : mr.isPlaying,
+                        duration: (isBrowserSource ? existing.duration : mr.duration) ?? existing.duration,
+                        elapsedTime: (isBrowserSource ? existing.elapsedTime : mr.elapsedTime) ?? existing.elapsedTime,
                         appBundleID: mr.appBundleID,
                         isJSDisabled: existing.isJSDisabled
                     )
@@ -275,10 +291,17 @@ final class MediaManager: NSObject, ObservableObject {
         
         let playingSources = newSources.filter { $0.isPlaying }
         
-        if let preferred = preferredBundleID,
-           !newSources.contains(where: { $0.appBundleID == preferred }) {
-            preferredBundleID = nil
-            userPinnedSource = false
+        if let preferred = preferredBundleID {
+            if newSources.contains(where: { $0.appBundleID == preferred }) {
+                preferredSourceMissStreak = 0
+            } else {
+                preferredSourceMissStreak += 1
+                if preferredSourceMissStreak >= preferredSourceMissLimit {
+                    preferredBundleID = nil
+                    userPinnedSource = false
+                    preferredSourceMissStreak = 0
+                }
+            }
         }
 
         // Auto-switch to newly playing source only until the user explicitly picks one.
@@ -336,21 +359,6 @@ final class MediaManager: NSObject, ObservableObject {
         activeSourceIndex = index
     }
     
-    private func emitIfNeeded(_ info: MediaInfo?, artBytes: Int, bundleID: String?) {
-        let bid = info?.appBundleID ?? bundleID ?? ""
-        let isPlaying = info?.isPlaying ?? false
-        let elapsed = info?.elapsedTime ?? 0.0
-        let dur = info?.duration ?? 0.0
-        
-        // Include progress details in fingerprint so changes update the UI
-        let fp = "\(bid)|\(info?.title ?? "")|\(info?.artist ?? "")|\(isPlaying)|\(artBytes)|\(Int(elapsed))|\(Int(dur))"
-        guard fp != lastFingerprint else { return }
-        lastFingerprint = fp
-        
-        DispatchQueue.main.async {
-            self.currentMedia = info
-        }
-    }
     
     // MARK: - Dictionary Helpers
     

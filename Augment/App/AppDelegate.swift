@@ -27,6 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let dockService = DockInteractionService()
     private let windowDiscovery = WindowDiscoveryService()
     private let windowSnappingService = WindowSnappingService()
+    private let windowCutPasteService = WindowCutPasteService()
+    private let fileCutPasteService = FileCutPasteService()
+    private let snapLayoutsService = SnapLayoutsService()
+    private lazy var windowSwitcherService = WindowSwitcherService(windowDiscovery: windowDiscovery)
     private let notchService = NotchService()
     private let finderBridgeService = FinderBridgeService()
     private lazy var dockPreviewCoordinator = DockPreviewCoordinator(
@@ -72,6 +76,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if CommandLine.arguments.contains(SelfTest.argument) {
+            SelfTest.runAndExit()
+            return
+        }
+        if CommandLine.arguments.contains(FuncTest.argument) {
+            FuncTest.runAndExit()
+            return
+        }
         NSApp.setActivationPolicy(.accessory)
         if let icon = AugmentApplicationIcon.load() {
             NSApp.applicationIconImage = icon
@@ -82,9 +94,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         dockPreviewCoordinator.configure()
         dockPreviewCoordinator.observePreferenceChanges(storeIn: &cancellables)
 
+        // The quick panel's "Settings…" (optionally jumping to a page).
+        NotificationCenter.default.publisher(for: QuickPanelController.openSettingsNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] note in
+                self?.showSettings()
+                if let tab = note.object as? String {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        NotificationCenter.default.post(name: SettingsRootView.selectTabNotification, object: tab)
+                    }
+                }
+            }
+            .store(in: &cancellables)
+
         NotificationCenter.default.publisher(for: Notification.Name("augment.showAbout"))
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.showAbout() }
+            .store(in: &cancellables)
+
+        CaffeinateService.shared.$isActive
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.refreshStatusItemMenu()
+            }
             .store(in: &cancellables)
 
         // Finder Sync may launch us only to drain `FinderCreateQueue` while Augment
@@ -106,6 +139,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // --- New feature services ---
         startWindowSnappingIfNeeded()
+        startWindowCutPasteIfNeeded()
+        startFileCutPasteIfNeeded()
+        startSnapLayoutsIfNeeded()
+        startWindowSwitcherIfNeeded()
+        startVolumeMixerIfNeeded()
+        startClipboardHistoryIfNeeded()
+        startExtrasIfNeeded()
         startNotchIfNeeded()
         observeNewFeaturePreferences()
     }
@@ -123,6 +163,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         permissionCoordinator.stopPolling()
         dockPreviewCoordinator.stop()
         windowSnappingService.stop()
+        windowCutPasteService.stop()
+        fileCutPasteService.stop()
+        snapLayoutsService.stop()
+        windowSwitcherService.stop()
+        QuickPanelController.shared.close()
+        DisplayBrightnessService.shared.restoreSoftwareDimming()
+        if #available(macOS 14.2, *) { AudioProcessMixerService.shared.stop() }
+        ClipboardHistoryService.shared.stop()
         notchService.stop()
         // Belt-and-braces: every individual write already syncs, but if a
         // user toggle was in flight we want the App Group plist on disk
@@ -132,88 +180,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Menu bar
 
+    /// Direction A menu bar glyph: a rounded window outline with the notch
+    /// pill on its top edge. Drawn as a template so macOS tints it for light,
+    /// dark and highlighted menu bars.
     private func createMenuBarImage() -> NSImage? {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            guard let context = NSGraphicsContext.current?.cgContext else { return false }
-            
-            // 1. Draw Left Card (tilted left)
-            context.saveGState()
-            context.translateBy(x: 5.5, y: 10.5)
-            context.rotate(by: 12.0 * .pi / 180.0)
-            let leftCardPath = CGPath(roundedRect: CGRect(x: -3.5, y: -5.0, width: 7.0, height: 10.0), cornerWidth: 1.5, cornerHeight: 1.5, transform: nil)
-            context.addPath(leftCardPath)
-            context.setFillColor(NSColor.black.cgColor)
-            context.fillPath()
-            context.restoreGState()
-            
-            // 2. Draw Right Card (tilted right) with transparent separator
-            context.saveGState()
-            context.translateBy(x: 12.5, y: 10.5)
-            context.rotate(by: -12.0 * .pi / 180.0)
-            let rightCardPath = CGPath(roundedRect: CGRect(x: -3.5, y: -5.0, width: 7.0, height: 10.0), cornerWidth: 1.5, cornerHeight: 1.5, transform: nil)
-            
-            // Draw transparent stroke first to carve separator
-            context.saveGState()
-            context.addPath(rightCardPath)
-            context.setBlendMode(.clear)
-            context.setStrokeColor(NSColor.clear.cgColor)
-            context.setLineWidth(1.5)
-            context.strokePath()
-            context.restoreGState()
-            
-            // Fill right card
-            context.addPath(rightCardPath)
-            context.setFillColor(NSColor.black.cgColor)
-            context.fillPath()
-            context.restoreGState()
-            
-            // 3. Draw Bottom Banner (separated by transparent gap)
-            let bannerPath = CGPath(roundedRect: CGRect(x: 2.0, y: 2.0, width: 14.0, height: 2.5), cornerWidth: 0.75, cornerHeight: 0.75, transform: nil)
-            
-            // Carve transparent separator
-            context.saveGState()
-            context.addPath(bannerPath)
-            context.setBlendMode(.clear)
-            context.setStrokeColor(NSColor.clear.cgColor)
-            context.setLineWidth(1.5)
-            context.strokePath()
-            context.restoreGState()
-            
-            // Fill banner
-            context.saveGState()
-            context.addPath(bannerPath)
-            context.setFillColor(NSColor.black.cgColor)
-            context.fillPath()
-            context.restoreGState()
-            
-            // 4. Draw Center Arrow (caret/chevron)
-            let arrowPath = CGMutablePath()
-            arrowPath.move(to: CGPoint(x: 9.0, y: 13.5))
-            arrowPath.addLine(to: CGPoint(x: 6.5, y: 10.5))
-            arrowPath.addLine(to: CGPoint(x: 7.7, y: 10.5))
-            arrowPath.addLine(to: CGPoint(x: 7.7, y: 7.5))
-            arrowPath.addLine(to: CGPoint(x: 10.3, y: 7.5))
-            arrowPath.addLine(to: CGPoint(x: 10.3, y: 10.5))
-            arrowPath.addLine(to: CGPoint(x: 11.5, y: 10.5))
-            arrowPath.closeSubpath()
-            
-            // Carve transparent separator around arrow
-            context.saveGState()
-            context.addPath(arrowPath)
-            context.setBlendMode(.clear)
-            context.setStrokeColor(NSColor.clear.cgColor)
-            context.setLineWidth(1.5)
-            context.strokePath()
-            context.restoreGState()
-            
-            // Fill arrow
-            context.saveGState()
-            context.addPath(arrowPath)
-            context.setFillColor(NSColor.black.cgColor)
-            context.fillPath()
-            context.restoreGState()
-            
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+            let body = NSBezierPath(roundedRect: NSRect(x: 2.5, y: 3.5, width: 13, height: 11), xRadius: 3, yRadius: 3)
+            body.lineWidth = 1.4
+            NSColor.black.setStroke()
+            body.stroke()
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: NSRect(x: 6.5, y: 12.6, width: 5, height: 2.4), xRadius: 1.2, yRadius: 1.2).fill()
             return true
         }
         image.isTemplate = true
@@ -235,8 +212,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 button.image = image
             }
         }
-        item.menu = makeMenu()
         statusItem = item
+        refreshStatusItemMenu()
+    }
+
+    /// A left click opens the quick panel (displays, sound, keep awake);
+    /// a right (or Control-) click shows Augment's own menu.
+    private func refreshStatusItemMenu() {
+        guard let item = statusItem else { return }
+        item.menu = nil
+        item.button?.target = self
+        item.button?.action = #selector(handleStatusItemClick)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    @objc private func handleStatusItemClick() {
+        guard let button = statusItem?.button else { return }
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+            QuickPanelController.shared.close()
+            let menu = makeMenu()
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 5), in: button)
+        } else {
+            QuickPanelController.shared.toggle(below: button)
+        }
     }
 
     private func makeMenu() -> NSMenu {
@@ -249,6 +248,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: Localizer.string("menu.permissions"),
                      action: #selector(showOnboarding),
                      keyEquivalent: "").target = self
+        menu.addItem(.separator())
+        let caffeinateItem = menu.addItem(
+            withTitle: Localizer.string("menu.caffeinate"),
+            action: #selector(toggleCaffeinate),
+            keyEquivalent: ""
+        )
+        caffeinateItem.target = self
+        caffeinateItem.state = CaffeinateService.shared.isActive ? .on : .off
         menu.addItem(.separator())
         menu.addItem(withTitle: Localizer.string("menu.quit"),
                      action: #selector(NSApplication.terminate(_:)),
@@ -268,6 +275,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.settingsController.show()
         }
+    }
+
+    @objc private func toggleCaffeinate() {
+        CaffeinateService.shared.toggle()
     }
 
     @objc private func showOnboarding() {
@@ -295,24 +306,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Permission flow
 
-    /// Drives the once-per-install Accessibility prompt. After the first
-    /// launch we never re-prompt automatically – the user explicitly chose
-    /// to deny, and silently re-asking on every launch is a UX smell that
-    /// some users reported as the prompt "spamming" them.
+    /// Never prompts at launch. Permissions are requested only when the user
+    /// switches on a feature that needs them (see `requestPermissionsWhenEnabled`);
+    /// here we just watch quietly for Accessibility being granted so the
+    /// features waiting on it can start without a relaunch.
     private func startPermissionFlow() {
         permissionCoordinator.refresh()
-        switch permissionCoordinator.state {
-        case .granted:
+        if permissionCoordinator.state == .granted {
             preferences.didCompleteOnboarding = true
-        case .denied, .unknown:
-            // Only show onboarding automatically if it's the very first time we ask.
-            if !preferences.hasRequestedAccessibilityPrompt {
-                presentOnboardingIfNeeded(force: true)
-                permissionCoordinator.requestAccessAndBeginPolling()
-            } else {
-                // If they've already been asked, just poll quietly in the background.
-                permissionCoordinator.requestAccessAndBeginPolling(force: false)
-            }
+        } else {
+            permissionCoordinator.requestAccessAndBeginPolling(force: false)
         }
     }
 
@@ -327,8 +330,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     self.onboardingController?.dismissOnGrant()
                     self.dockPreviewCoordinator.processPermissionGrant()
                     self.finderBridgeService.processQueues()
+                    // Features switched on while Accessibility was missing
+                    // start now instead of needing an app relaunch.
+                    self.startWindowSnappingIfNeeded()
+                    self.startWindowCutPasteIfNeeded()
+                    self.startFileCutPasteIfNeeded()
+                    self.startSnapLayoutsIfNeeded()
+                    self.startWindowSwitcherIfNeeded()
+                    self.startExtrasIfNeeded()
                 }
             }
+            .store(in: &cancellables)
+
+        requestPermissionsWhenEnabled(preferences.$windowPreviewsEnabled, key: AppGroupKey.windowPreviewsEnabled)
+        requestPermissionsWhenEnabled(preferences.$dockClickBehaviorEnabled, key: AppGroupKey.dockClickBehaviorEnabled)
+        requestPermissionsWhenEnabled(preferences.$windowSnappingEnabled, key: AppGroupKey.windowSnappingEnabled)
+        requestPermissionsWhenEnabled(preferences.$windowCutPasteEnabled, key: AppGroupKey.windowCutPasteEnabled)
+        requestPermissionsWhenEnabled(preferences.$fileCutPasteEnabled, key: AppGroupKey.fileCutPasteEnabled)
+        requestPermissionsWhenEnabled(preferences.$snapLayoutsEnabled, key: AppGroupKey.snapLayoutsEnabled)
+        requestPermissionsWhenEnabled(preferences.$windowSwitcherEnabled, key: AppGroupKey.windowSwitcherEnabled)
+        requestPermissionsWhenEnabled(preferences.$displayKeysEnabled, key: AppGroupKey.displayKeysEnabled)
+        requestPermissionsWhenEnabled(preferences.$clipboardPanelEnabled, key: AppGroupKey.clipboardPanelEnabled)
+    }
+
+    /// Asks for a feature's missing permissions the moment the user turns it
+    /// on — never at launch (`dropFirst` skips the stored value).
+    private func requestPermissionsWhenEnabled(_ publisher: Published<Bool>.Publisher, key: String) {
+        publisher
+            .dropFirst()
+            .removeDuplicates()
+            .filter { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { _ in FeatureRequirements.requestMissing(forPreferenceKey: key) }
             .store(in: &cancellables)
     }
 
@@ -352,6 +385,84 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         guard permissionCoordinator.state == .granted else { return }
         windowSnappingService.start(shortcutsJSON: preferences.windowSnappingShortcuts)
+    }
+
+    private func startWindowCutPasteIfNeeded() {
+        guard preferences.windowCutPasteEnabled else {
+            windowCutPasteService.stop()
+            return
+        }
+        guard permissionCoordinator.state == .granted else { return }
+        windowCutPasteService.start()
+    }
+
+    private func startFileCutPasteIfNeeded() {
+        guard preferences.fileCutPasteEnabled else {
+            fileCutPasteService.stop()
+            return
+        }
+        guard permissionCoordinator.state == .granted else { return }
+        fileCutPasteService.start()
+    }
+
+    private func startSnapLayoutsIfNeeded() {
+        guard preferences.snapLayoutsEnabled else {
+            snapLayoutsService.stop()
+            return
+        }
+        guard permissionCoordinator.state == .granted else { return }
+        snapLayoutsService.start()
+    }
+
+    private func startWindowSwitcherIfNeeded() {
+        guard preferences.windowSwitcherEnabled else {
+            windowSwitcherService.stop()
+            return
+        }
+        guard permissionCoordinator.state == .granted else { return }
+        windowSwitcherService.start()
+    }
+
+    private func startVolumeMixerIfNeeded() {
+        if #available(macOS 14.2, *) {
+            if preferences.volumeMixerEnabled {
+                AudioProcessMixerService.shared.start()
+            } else {
+                AudioProcessMixerService.shared.stop()
+            }
+        }
+    }
+
+    private func startClipboardHistoryIfNeeded() {
+        if preferences.clipboardHistoryEnabled || preferences.clipboardPanelEnabled {
+            ClipboardHistoryService.shared.start()
+        } else {
+            ClipboardHistoryService.shared.stop()
+        }
+    }
+
+    /// Display keys, brightness schedule, keep-awake rules, clipboard
+    /// panel, meetings and screenshots-to-shelf.
+    private func startExtrasIfNeeded() {
+        _ = CaffeinateService.shared // starts evaluating keep-awake rules
+
+        if preferences.displayKeysEnabled && AXIsProcessTrusted() {
+            DisplayKeysService.shared.start()
+        } else {
+            DisplayKeysService.shared.stop()
+        }
+        preferences.brightnessScheduleEnabled ? BrightnessScheduler.shared.start() : BrightnessScheduler.shared.stop()
+        preferences.clipboardPanelEnabled ? ClipboardPanelController.shared.enable() : ClipboardPanelController.shared.disable()
+        preferences.meetingsEnabled ? MeetingsService.shared.start() : MeetingsService.shared.stop()
+
+        if preferences.screenshotShelfEnabled {
+            ScreenshotShelfWatcher.shared.onScreenshot = { [weak self] url in
+                self?.notchService.addToShelf(url, peek: true)
+            }
+            ScreenshotShelfWatcher.shared.start()
+        } else {
+            ScreenshotShelfWatcher.shared.stop()
+        }
     }
 
     private func startNotchIfNeeded() {
@@ -387,6 +498,85 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
+        // Window cut & paste toggle
+        preferences.$windowCutPasteEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled {
+                    self.startWindowCutPasteIfNeeded()
+                } else {
+                    self.windowCutPasteService.stop()
+                }
+            }
+            .store(in: &cancellables)
+
+        // File cut & paste toggle
+        preferences.$fileCutPasteEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled {
+                    self.startFileCutPasteIfNeeded()
+                } else {
+                    self.fileCutPasteService.stop()
+                }
+            }
+            .store(in: &cancellables)
+
+        // Snap Layouts toggle
+        preferences.$snapLayoutsEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled {
+                    self.startSnapLayoutsIfNeeded()
+                } else {
+                    self.snapLayoutsService.stop()
+                }
+            }
+            .store(in: &cancellables)
+
+        // Window switcher toggle
+        preferences.$windowSwitcherEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled {
+                    self.startWindowSwitcherIfNeeded()
+                } else {
+                    self.windowSwitcherService.stop()
+                }
+            }
+            .store(in: &cancellables)
+
+        // Volume mixer toggle
+        preferences.$volumeMixerEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.startVolumeMixerIfNeeded() }
+            .store(in: &cancellables)
+
+        // Clipboard history toggle
+        // Extras: any of these switches re-applies the whole set.
+        Publishers.MergeMany(
+            preferences.$displayKeysEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            preferences.$brightnessScheduleEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            preferences.$clipboardPanelEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            preferences.$meetingsEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            preferences.$screenshotShelfEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher()
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] in
+            self?.startExtrasIfNeeded()
+            self?.startClipboardHistoryIfNeeded()
+        }
+        .store(in: &cancellables)
+
+        preferences.$clipboardHistoryEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.startClipboardHistoryIfNeeded() }
+            .store(in: &cancellables)
+
         // Notch toggle
         preferences.$notchEnabled
             .receive(on: DispatchQueue.main)
@@ -405,7 +595,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.statusItem?.menu = self.makeMenu()
+                self.refreshStatusItemMenu()
             }
             .store(in: &cancellables)
     }

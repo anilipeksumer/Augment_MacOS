@@ -3,19 +3,11 @@ import SwiftUI
 
 // MARK: - Hover
 
-struct HoverSettingsPane: View {
+struct HoverSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("hover.title"),
-                    subtitle: Localizer.string("hover.subtitle"),
-                    systemImage: "rectangle.stack.badge.play",
-                    tint: .blue
-                )
-            }
+        Group {
 
             Section {
                 VStack(alignment: .leading, spacing: 8) {
@@ -39,6 +31,7 @@ struct HoverSettingsPane: View {
                         Image(systemName: "tortoise.fill")
                             .foregroundStyle(.secondary)
                     }
+                    .labelsHidden()
                     Text(Localizer.string("hover.delay_desc"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -100,7 +93,6 @@ struct HoverSettingsPane: View {
                 Text(Localizer.string("hover.interactions"))
             }
         }
-        .formStyle(.grouped)
     }
 
     private var formattedDelay: String {

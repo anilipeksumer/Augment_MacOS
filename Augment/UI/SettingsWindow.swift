@@ -99,6 +99,9 @@ struct SettingsRootView: View {
         "augment.settings.shouldReset"
     )
 
+    /// Posted with a `SettingsTab.rawValue` object to jump to a page.
+    static let selectTabNotification = Notification.Name("augment.settings.selectTab")
+
     @State private var selectedTab: SettingsTab = .general
 
     var body: some View {
@@ -109,21 +112,21 @@ struct SettingsRootView: View {
             Group {
                 switch selectedTab {
                 case .general:
-                    GeneralSettingsPane()
-                case .hover:
-                    HoverSettingsPane()
-                case .windowControls:
-                    WindowControlsSettingsPane()
-                case .dockClick:
-                    DockClickSettingsPane()
-                case .displays:
-                    DisplaySettingsPane()
+                    GeneralSettingsPane(open: { tab in selectedTab = tab })
+                case .dock:
+                    DockPage()
+                case .windows:
+                    WindowsPage()
                 case .finder:
-                    FinderSettingsPane()
-                case .windowSnapping:
-                    WindowSnappingSettingsPane()
+                    FinderPage()
                 case .notch:
-                    NotchSettingsPane()
+                    NotchPage()
+                case .sound:
+                    SoundDisplayPage()
+                case .awake:
+                    AwakePage()
+                case .menuBar:
+                    MenuBarPage()
                 case .permissions:
                     PermissionsSettingsPane()
                 }
@@ -133,6 +136,9 @@ struct SettingsRootView: View {
         .frame(width: 720, height: 560)
         .onReceive(NotificationCenter.default.publisher(for: Self.shouldResetNotification)) { _ in
             selectedTab = .general
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Self.selectTabNotification)) { note in
+            if let raw = note.object as? String, let tab = SettingsTab(rawValue: raw) { selectedTab = tab }
         }
         .onAppear {
             updateWindowTitle()
@@ -228,21 +234,22 @@ private struct SettingsSidebar: View {
     }
 }
 
-private enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, hover, windowControls, dockClick, displays, finder, windowSnapping, notch, permissions
+/// The eight Settings pages, in sidebar order.
+enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
+    case general, dock, windows, finder, notch, sound, awake, menuBar, permissions
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .general: return Localizer.string("tab.general")
-        case .hover: return Localizer.string("tab.hover")
-        case .windowControls: return Localizer.string("tab.windowControls")
-        case .dockClick: return Localizer.string("tab.dockClick")
-        case .displays: return Localizer.string("tab.displays")
-        case .finder: return Localizer.string("tab.finder")
-        case .windowSnapping: return Localizer.string("tab.windowSnapping")
+        case .dock: return Localizer.string("page.dock")
+        case .windows: return Localizer.string("page.windows")
+        case .finder: return Localizer.string("page.finder")
         case .notch: return Localizer.string("tab.notch")
+        case .sound: return Localizer.string("page.sound")
+        case .awake: return Localizer.string("page.awake_title")
+        case .menuBar: return Localizer.string("page.menubar")
         case .permissions: return Localizer.string("tab.permissions")
         }
     }
@@ -250,27 +257,27 @@ private enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var systemImage: String {
         switch self {
         case .general: return "gearshape.fill"
-        case .hover: return "rectangle.stack.badge.play"
-        case .windowControls: return "macwindow.on.rectangle"
-        case .dockClick: return "cursorarrow.click.2"
-        case .displays: return "display.2"
-        case .finder: return "folder.fill.badge.plus"
-        case .windowSnapping: return "rectangle.split.2x1.fill"
+        case .dock: return "dock.rectangle"
+        case .windows: return "macwindow.on.rectangle"
+        case .finder: return "folder.fill"
         case .notch: return "platter.filled.top.iphone"
+        case .sound: return "speaker.wave.2.fill"
+        case .awake: return "cup.and.saucer.fill"
+        case .menuBar: return "menubar.rectangle"
         case .permissions: return "lock.shield.fill"
         }
     }
 
     var tintColor: Color {
         switch self {
-        case .general: return .accentColor
-        case .hover: return .blue
-        case .windowControls: return .green
-        case .dockClick: return .indigo
-        case .displays: return .pink
+        case .general: return .gray
+        case .dock: return .blue
+        case .windows: return .cyan
         case .finder: return .green
-        case .windowSnapping: return .cyan
         case .notch: return .purple
+        case .sound: return .red
+        case .awake: return .orange
+        case .menuBar: return .indigo
         case .permissions: return .orange
         }
     }
@@ -278,47 +285,32 @@ private enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
 
 // MARK: - Reusable building blocks
 
+/// Page header in the style of System Settings: a tinted app-style tile,
+/// the page name and one line on what the page controls.
 struct PaneHeader: View {
     let title: String
     let subtitle: String
     let systemImage: String
     let tint: Color
 
-    @State private var iconBounce = false
-
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [tint.opacity(0.85), tint.opacity(0.45)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 52, height: 52)
-                    .shadow(color: tint.opacity(0.35), radius: 6, y: 2)
-
-                Image(systemName: systemImage)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .scaleEffect(iconBounce ? 1.06 : 1.0)
-                    .animation(
-                        .spring(response: 0.6, dampingFraction: 0.55).repeatCount(3, autoreverses: true),
-                        value: iconBounce
-                    )
-            }
-
+            Image(systemName: systemImage)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(tint.gradient)
+                )
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.title3.weight(.semibold))
-                Text(subtitle)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                Text(title).font(.title3.weight(.semibold))
+                Text(subtitle).font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .padding(.bottom, 6)
-        .onAppear { iconBounce = true }
+        .padding(.vertical, 4)
     }
 }
 
@@ -328,23 +320,59 @@ struct ToggleRow: View {
     let systemImage: String
     let tint: Color
     @Binding var isOn: Bool
+    /// Permissions this feature needs. While the feature is on and any of
+    /// them is missing, an inline notice with a Grant button is shown.
+    var requires: [FeaturePermission] = []
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            toggle
+            if isOn && !requires.isEmpty {
+                PermissionNotice(permissions: requires)
+                    .padding(.leading, 42)
+            }
+        }
+    }
+
+    /// Plain title/subtitle row like System Settings; colour is reserved for
+    /// the sidebar so pages stay calm.
+    private var toggle: some View {
         Toggle(isOn: $isOn) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 30, height: 30)
-                    .background(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(tint)
-                    )
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .toggleStyle(.switch)
+    }
+}
+
+/// Lists a feature's missing permissions with a button to grant each one.
+/// Re-checks every couple of seconds so it disappears once the user flips
+/// the switch in System Settings.
+struct PermissionNotice: View {
+    let permissions: [FeaturePermission]
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 2)) { _ in
+            let missing = permissions.filter { !$0.isGranted }
+            if !missing.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(missing, id: \.self) { permission in
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text(String(format: Localizer.string("perm.needed"), permission.title))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button(Localizer.string("perm.grant")) { permission.request() }
+                                .controlSize(.small)
+                        }
+                    }
                 }
             }
         }
@@ -379,98 +407,6 @@ enum FeatureDestination: Hashable {
         case .displays: return "Displays"
         case .windowSnapping: return "Window Snapping"
         case .notch: return "Notch"
-        }
-    }
-}
-
-/// Row used inside the General pane's drill-down list.
-///
-/// Tapping the icon-and-text area pushes the matching `FeatureDestination`
-/// onto the parent's `NavigationPath`. The trailing toggle still flips
-/// the preference without navigating, so users can enable / disable a
-/// feature without leaving the General view.
-struct FeatureNavRow: View {
-    let title: String
-    let subtitle: String
-    let systemImage: String
-    let tint: Color
-    @Binding var isOn: Bool
-    let onSelect: () -> Void
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Button(action: onSelect) {
-                HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .fill(tint)
-                        )
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 12)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            Toggle("", isOn: $isOn)
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .controlSize(.small)
-        }
-    }
-}
-
-/// Wraps a detail pane in a slim header row with a back chevron + label
-/// that returns to the General root. We render this manually rather than
-/// relying on a `NavigationStack` toolbar because macOS adds a chevron
-/// indicator to that toolbar that we don't want, and there's no public
-/// API to hide it on Form-style content.
-struct DetailContainer<Content: View>: View {
-    let title: String
-    let onBack: () -> Void
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                Button(action: onBack) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.backward")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("General")
-                            .font(.system(size: 13, weight: .medium))
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(Color.primary.opacity(0.06))
-                    )
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .keyboardShortcut("[", modifiers: .command)
-
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 4)
-
-            content()
         }
     }
 }

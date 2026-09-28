@@ -7,6 +7,7 @@ final class FinderBridgeService {
     private struct DrainResult: Sendable {
         var createdURLs: [URL] = []
         var revealURLs: [URL] = []
+        var terminalURLs: [URL] = []
     }
 
     private var pollTimer: Timer?
@@ -111,7 +112,7 @@ final class FinderBridgeService {
     private nonisolated static func drainQueues(extensionBundleURL: URL?) -> DrainResult {
         var result = DrainResult()
         result.createdURLs = processCreateQueue(extensionBundleURL: extensionBundleURL)
-        result.revealURLs = processRevealQueue()
+        (result.revealURLs, result.terminalURLs) = processRevealQueue()
         return result
     }
 
@@ -129,6 +130,12 @@ final class FinderBridgeService {
                 down?.post(tap: .cghidEventTap)
                 up?.post(tap: .cghidEventTap)
             }
+        }
+        if !result.terminalURLs.isEmpty,
+           let terminal = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Terminal") {
+            let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
+            NSWorkspace.shared.open(result.terminalURLs, withApplicationAt: terminal, configuration: config)
         }
         for url in result.revealURLs {
             NSWorkspace.shared.selectFile(
@@ -180,15 +187,16 @@ final class FinderBridgeService {
         return created
     }
 
-    private nonisolated static func processRevealQueue() -> [URL] {
+    private nonisolated static func processRevealQueue() -> ([URL], [URL]) {
         guard let queueDir = FinderRevealBridge.queueDirectory else {
             NSLog("Augment: Finder reveal bridge - missing App Group queue directory.")
-            return []
+            return ([], [])
         }
         guard let names = try? FileManager.default.contentsOfDirectory(atPath: queueDir.path),
-              !names.isEmpty else { return [] }
+              !names.isEmpty else { return ([], []) }
 
         var revealURLs: [URL] = []
+        var terminalURLs: [URL] = []
         for name in queuePlistNames(from: names) {
             let fileURL = queueDir.appendingPathComponent(name)
             guard let req: FinderRevealBridge.Request = decodeRequest(at: fileURL) else {
@@ -199,13 +207,18 @@ final class FinderBridgeService {
             let pathURL = URL(fileURLWithPath: req.filePath)
             var isDir: ObjCBool = false
             if FileManager.default.fileExists(atPath: pathURL.path, isDirectory: &isDir) {
-                revealURLs.append(pathURL)
+                if req.action == "terminal" {
+                    // A file opens Terminal in its folder.
+                    terminalURLs.append(isDir.boolValue ? pathURL : pathURL.deletingLastPathComponent())
+                } else {
+                    revealURLs.append(pathURL)
+                }
             } else {
                 NSLog("Augment: Finder reveal bridge - file does not exist at %@", pathURL.path)
             }
             removeQueueFile(fileURL)
         }
-        return revealURLs
+        return (revealURLs, terminalURLs)
     }
 
     private nonisolated static func decodeRequest<T: Decodable>(at fileURL: URL) -> T? {

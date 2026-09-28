@@ -1,0 +1,481 @@
+import AppKit
+import SwiftUI
+
+/// The glass panel under Augment's menu bar icon: every screen's
+/// brightness, sound (with per-app volumes when the mixer is on) and keep
+/// awake — the things worth reaching in one click. Right-clicking the icon
+/// still shows Augment's regular menu.
+@MainActor
+final class QuickPanelController {
+    static let shared = QuickPanelController()
+    static let openSettingsNotification = Notification.Name("augment.quickPanel.openSettings")
+    static let width: CGFloat = 340
+
+    private(set) var isOpen = false
+    private var panel: QuickPanelWindow?
+    private var monitors: [Any] = []
+
+    private init() {}
+
+    func toggle(below button: NSStatusBarButton?) {
+        isOpen ? close() : open(below: button)
+    }
+
+    func open(below button: NSStatusBarButton?) {
+        DisplayBrightnessService.shared.refresh()
+        SystemControlsService.shared.refresh()
+
+        let panel = self.panel ?? makePanel()
+        self.panel = panel
+        panel.contentView?.layoutSubtreeIfNeeded()
+        let size = panel.contentView?.fittingSize ?? CGSize(width: Self.width, height: 400)
+
+        let anchor = button?.window?.frame ?? CGRect(origin: NSEvent.mouseLocation, size: .zero)
+        let screen = NSScreen.screens.first { $0.frame.contains(CGPoint(x: anchor.midX, y: anchor.midY)) } ?? NSScreen.main
+        let visible = screen?.visibleFrame ?? .zero
+        var x = anchor.midX - size.width / 2
+        x = min(max(x, visible.minX + 8), visible.maxX - size.width - 8)
+        let top = visible.maxY - 6
+        panel.setFrame(CGRect(x: x, y: top - size.height, width: size.width, height: size.height), display: true)
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        panel.makeKey()
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.14
+            panel.animator().alphaValue = 1
+        }
+        isOpen = true
+        installMonitors()
+    }
+
+    func close(_ reason: String = #function, line: Int = #line) {
+        guard isOpen else { return }
+        if CommandLine.arguments.contains("--functest") { NSLog("Augment: quick panel closed by %@:%d", reason, line) }
+        isOpen = false
+        monitors.forEach { NSEvent.removeMonitor($0) }
+        monitors.removeAll()
+        panel?.orderOut(nil)
+    }
+
+    /// Keeps the panel's top edge pinned while its content grows/shrinks
+    /// (e.g. apps starting to play in the mixer list).
+    fileprivate func contentSizeChanged() {
+        guard isOpen, let panel, let size = panel.contentView?.fittingSize else { return }
+        let top = panel.frame.maxY
+        panel.setFrame(CGRect(x: panel.frame.minX, y: top - size.height, width: size.width, height: size.height), display: true)
+    }
+
+    /// For off-screen rendering in tests.
+    static func previewView() -> AnyView { AnyView(QuickPanelView()) }
+
+    private func makePanel() -> QuickPanelWindow {
+        let panel = QuickPanelWindow(
+            contentRect: CGRect(x: 0, y: 0, width: Self.width, height: 400),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.level = .popUpMenu
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        // The glass draws its own edge; a window shadow would outline the
+        // transparent rectangular corners.
+        panel.hasShadow = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        let host = NSHostingView(rootView: QuickPanelView())
+        host.sizingOptions = [.intrinsicContentSize]
+        panel.contentView = host
+        return panel
+    }
+
+    private func installMonitors() {
+        if let m = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown], handler: { [weak self] _ in
+            Task { @MainActor in self?.close("outside click") }
+        }) { monitors.append(m) }
+        if let m = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+            guard event.keyCode == 53 else { return event } // Esc
+            self?.close()
+            return nil
+        }) { monitors.append(m) }
+    }
+}
+
+private final class QuickPanelWindow: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
+// MARK: - View
+
+private struct QuickPanelView: View {
+    @ObservedObject private var displays = DisplayBrightnessService.shared
+    @ObservedObject private var controls = SystemControlsService.shared
+    @ObservedObject private var caffeinate = CaffeinateService.shared
+    @ObservedObject private var preferences = SharedPreferences.shared
+    @ObservedObject private var meetings = MeetingsService.shared
+    @State private var allLevel: Double?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            header
+            if preferences.quickPanelMeetings && preferences.meetingsEnabled && !meetings.events.isEmpty {
+                module(title: Localizer.string("meetings.today"), icon: "calendar") {
+                    ForEach(meetings.events.prefix(3)) { event in
+                        HStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 2).fill(Color(nsColor: event.color)).frame(width: 3, height: 26)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(event.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                                Text(NotchContentView.meetingTime(event))
+                                    .font(.system(size: 10).monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if let url = event.joinURL {
+                                Button(Localizer.string("meetings.join")) {
+                                    QuickPanelController.shared.close()
+                                    NSWorkspace.shared.open(url)
+                                }
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                }
+            }
+            if preferences.quickPanelDisplays {
+            module(title: Localizer.string("quick.displays"), icon: "sun.max") {
+                if displays.displays.count > 1 {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(Localizer.string("quick.all_displays")).font(.system(size: 12, weight: .medium))
+                        QuickSlider(value: allLevel ?? displays.displays.map(\.brightness).reduce(0, +) / Double(displays.displays.count),
+                                    icon: "sun.max.fill") {
+                            allLevel = $0
+                            displays.setAll($0)
+                        }
+                    }
+                }
+                ForEach(displays.displays) { display in
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack(spacing: 6) {
+                            Image(systemName: display.isBuiltIn ? "laptopcomputer" : "display")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                            Text(display.name).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                            Spacer()
+                            if display.method == .software {
+                                Text(Localizer.string("displays.method_software"))
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        QuickSlider(value: display.brightness,
+                                    icon: display.brightness < 0.4 ? "sun.min.fill" : "sun.max.fill") {
+                            displays.setBrightness($0, for: display.id)
+                        }
+                    }
+                }
+            }
+            }
+            if preferences.quickPanelSound || preferences.quickPanelMic {
+            module(title: Localizer.string("quick.sound"), icon: "speaker.wave.2") {
+                if preferences.quickPanelSound {
+                VStack(alignment: .leading, spacing: 5) {
+                    if !controls.outputDeviceName.isEmpty {
+                        Text(controls.outputDeviceName)
+                            .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
+                    }
+                    QuickSlider(value: controls.isMuted ? 0 : controls.volume, icon: volumeIcon,
+                                onIconTap: { controls.toggleMute() }) {
+                        controls.setVolume($0)
+                    }
+                }
+                }
+                if preferences.quickPanelMic && controls.hasMicrophone {
+                    Button {
+                        controls.toggleMicrophone()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: controls.isMicMuted ? "mic.slash.fill" : "mic.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(controls.isMicMuted ? Color.white : Color.primary)
+                                .frame(width: 26, height: 26)
+                                .background(Circle().fill(controls.isMicMuted ? Color.red : Color.primary.opacity(0.1)))
+                            Text(Localizer.string(controls.isMicMuted ? "quick.mic_off" : "quick.mic_on"))
+                                .font(.system(size: 12, weight: .medium))
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                if preferences.quickPanelSound { mixerSection }
+            }
+            }
+            if preferences.quickPanelAwake {
+                module(title: Localizer.string("page.awake"), icon: "cup.and.saucer") {
+                    awakeSection
+                }
+            }
+            footer
+        }
+        .padding(12)
+        .frame(width: QuickPanelController.width)
+        .modifier(QuickPanelBackground())
+        .onChange(of: displays.displays.count) { _ in QuickPanelController.shared.contentSizeChanged() }
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Augment").font(.system(size: 13, weight: .semibold))
+            Spacer()
+            Button {
+                openSettings(nil)
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 13))
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(Localizer.string("menu.settings"))
+        }
+        .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private var mixerSection: some View {
+        if #available(macOS 14.2, *), preferences.volumeMixerEnabled {
+            QuickMixerList()
+        } else {
+            Button {
+                openSettings(.sound)
+            } label: {
+                HStack(spacing: 4) {
+                    Text(Localizer.string("quick.enable_mixer"))
+                    Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
+                }
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var awakeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Localizer.string(caffeinate.isActive ? "notch.awake_on" : "quick.awake_off_title"))
+                        .font(.system(size: 12, weight: .medium))
+                    if !caffeinate.isActive, let reason = caffeinate.automaticReason {
+                        Text(reason).font(.system(size: 11)).foregroundStyle(.green)
+                    }
+                    if caffeinate.isActive {
+                        TimelineView(.periodic(from: .now, by: 30)) { _ in
+                            Text(remainingText)
+                                .font(.system(size: 11).monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                Spacer()
+                Toggle("", isOn: Binding(get: { caffeinate.isActive },
+                                         set: { $0 ? caffeinate.activate(for: nil) : caffeinate.deactivate() }))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .controlSize(.small)
+                    .tint(.orange)
+            }
+            HStack(spacing: 6) {
+                ForEach(Array(CaffeinateService.presets.enumerated()), id: \.offset) { _, preset in
+                    let selected = caffeinate.isActive && caffeinate.selectedPreset == preset.map { Int($0) }
+                    Button {
+                        caffeinate.activate(for: preset)
+                    } label: {
+                        Text(shortTitle(preset))
+                            .font(.system(size: 11, weight: .medium))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 24)
+                            .foregroundStyle(selected ? Color.black : Color.primary)
+                            .background(
+                                Capsule().fill(selected ? Color.orange : Color.primary.opacity(0.08))
+                            )
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            Spacer()
+            Button(Localizer.string("menu.quit")) { NSApp.terminate(nil) }
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: 12))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 6)
+        .padding(.top, 2)
+    }
+
+    private func module<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+            content()
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.primary.opacity(0.06)))
+    }
+
+    private var volumeIcon: String {
+        if controls.isMuted || controls.volume == 0 { return "speaker.slash.fill" }
+        if controls.volume < 0.33 { return "speaker.wave.1.fill" }
+        if controls.volume < 0.66 { return "speaker.wave.2.fill" }
+        return "speaker.wave.3.fill"
+    }
+
+    private var remainingText: String {
+        guard let end = caffeinate.endDate else { return Localizer.string("notch.awake_indefinite") }
+        let minutes = max(1, Int(ceil(end.timeIntervalSinceNow / 60)))
+        return String(format: Localizer.string("quick.awake_remaining"),
+                      minutes >= 60 ? "\(minutes / 60)\(Localizer.string("notch.hour_short")) \(minutes % 60)\(Localizer.string("notch.minute_short"))"
+                                    : "\(minutes)\(Localizer.string("notch.minute_short"))")
+    }
+
+    private func shortTitle(_ preset: TimeInterval?) -> String {
+        guard let preset else { return "∞" }
+        let minutes = Int(preset / 60)
+        return minutes >= 60 ? "\(minutes / 60)\(Localizer.string("notch.hour_short"))" : "\(minutes)\(Localizer.string("notch.minute_short"))"
+    }
+
+    private func openSettings(_ tab: SettingsTab?) {
+        QuickPanelController.shared.close()
+        NotificationCenter.default.post(name: QuickPanelController.openSettingsNotification, object: tab?.rawValue)
+    }
+}
+
+@available(macOS 14.2, *)
+private struct QuickMixerList: View {
+    @ObservedObject private var mixer = AudioProcessMixerService.shared
+
+    var body: some View {
+        let apps = mixer.apps.sorted { ($0.isPlaying ? 0 : 1, $0.name) < ($1.isPlaying ? 0 : 1, $1.name) }.prefix(6)
+        if apps.isEmpty {
+            Text(Localizer.string("mixer.no_apps"))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else {
+            VStack(spacing: 6) {
+                ForEach(Array(apps)) { app in
+                    HStack(spacing: 8) {
+                        if let icon = app.icon {
+                            Image(nsImage: icon).resizable().frame(width: 18, height: 18)
+                        }
+                        Text(app.name).font(.system(size: 11)).lineLimit(1).frame(width: 78, alignment: .leading)
+                        QuickSlider(value: app.isMuted ? 0 : min(app.volume, 1),
+                                    icon: app.isMuted ? "speaker.slash.fill" : "speaker.fill",
+                                    height: 22,
+                                    onIconTap: { mixer.setMuted(!app.isMuted, forPID: app.id) }) {
+                            mixer.setVolume($0, forPID: app.id)
+                        }
+                        // Where this app plays: default output or a specific device.
+                        Menu {
+                            Button {
+                                mixer.setOutputDevice(nil, forPID: app.id)
+                            } label: {
+                                if app.outputDeviceUID == nil { Label(Localizer.string("mixer.default_output"), systemImage: "checkmark") }
+                                else { Text(Localizer.string("mixer.default_output")) }
+                            }
+                            Divider()
+                            ForEach(mixer.outputDevices) { device in
+                                Button {
+                                    mixer.setOutputDevice(device.uid, forPID: app.id)
+                                } label: {
+                                    if app.outputDeviceUID == device.uid { Label(device.name, systemImage: "checkmark") }
+                                    else { Text(device.name) }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: app.outputDeviceUID == nil ? "hifispeaker" : "hifispeaker.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(app.outputDeviceUID == nil ? Color.secondary : Color.accentColor)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .help(outputName(for: app))
+                    }
+                }
+            }
+            .onChange(of: apps.count) { _ in QuickPanelController.shared.contentSizeChanged() }
+        }
+    }
+}
+
+@available(macOS 14.2, *)
+private extension QuickMixerList {
+    func outputName(for app: MixerAppInfo) -> String {
+        guard let uid = app.outputDeviceUID else { return Localizer.string("mixer.default_output") }
+        return mixer.outputDevices.first { $0.uid == uid }?.name ?? Localizer.string("mixer.default_output")
+    }
+}
+
+/// Control Center–style slider for the quick panel.
+private struct QuickSlider: View {
+    let value: Double
+    let icon: String
+    var height: CGFloat = 28
+    var onIconTap: (() -> Void)? = nil
+    let onChange: (Double) -> Void
+
+    @State private var dragValue: Double?
+
+    var body: some View {
+        GeometryReader { geo in
+            let shown = dragValue ?? value
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.primary.opacity(0.12))
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: max(geo.size.height, geo.size.width * shown))
+                    .shadow(color: .black.opacity(0.15), radius: 1, y: 0.5)
+                Image(systemName: icon)
+                    .font(.system(size: height * 0.42, weight: .semibold))
+                    .foregroundStyle(Color.black.opacity(0.7))
+                    .frame(width: geo.size.height)
+            }
+            .clipShape(Capsule())
+            .contentShape(Capsule())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { g in
+                        if onIconTap != nil, g.startLocation.x < geo.size.height, abs(g.translation.width) < 3 { return }
+                        let v = min(max(g.location.x / geo.size.width, 0), 1)
+                        dragValue = v
+                        onChange(v)
+                    }
+                    .onEnded { g in
+                        defer { dragValue = nil }
+                        if let onIconTap, g.startLocation.x < geo.size.height, abs(g.translation.width) < 3 {
+                            onIconTap()
+                        }
+                    }
+            )
+        }
+        .frame(height: height)
+    }
+}
+
+private struct QuickPanelBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        } else {
+            content.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+    }
+}

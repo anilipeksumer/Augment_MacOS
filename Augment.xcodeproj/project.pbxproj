@@ -7,14 +7,55 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */; };
+		F17151A93D0740C6295F5929 /* WindowCutPasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */; };
+		554664E9216AD4758CA6043F /* FileCutPasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */; };
+		C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */; };
+		8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */; };
+		0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */; };
+		61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */; };
+		5DDF7947BCAA28AEC95E049A /* MeetingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370707631BAB168E23D5599C /* MeetingsService.swift */; };
+		7C49F31B3909702F7899639F /* DisplayKeysService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */; };
+		0A76B02B2BBA44720D885117 /* DisplayBrightnessService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4167340C51A3568C3AF833 /* DisplayBrightnessService.swift */; };
+		EA55D0AE3C2F8D4C5A1E2677 /* EventTapThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4578CEA03E1CC3C1A69893 /* EventTapThread.swift */; };
+		28EAF47FBC1C22A2F11F80DA /* DDCPrivateSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77BCD54C7E7D22810C437159 /* DDCPrivateSymbols.swift */; };
+		40143AC680A92CF29BC9AE30 /* AudioProcessMixerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D13A664FB608966F3F2932 /* AudioProcessMixerService.swift */; };
+		2D5B490A7CE5ABA23699E118 /* VolumeMixerSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C077CBBBF2DC20923F1BEE06 /* VolumeMixerSettingsPane.swift */; };
+		86983F25D48233F1F12A9B54 /* ClipboardHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114EAAB4F7ECBC5367D1F56C /* ClipboardHistoryService.swift */; };
+		468B4E45868D4DD295A99A4A /* NotchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB19F4D535C54C8A843E9381 /* NotchTypes.swift */; };
+		E31BA590636557258287A190 /* AmbientColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89AAEF6725637658FA11CB5 /* AmbientColor.swift */; };
+		DDC7AFF507E0D0D6D2CF5CEA /* MarqueeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28CF7D0009E9937F17EEEEF3 /* MarqueeText.swift */; };
+		5F8E6717B8D749EF8C44C12B /* NotchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E40FF692D6549399922F7A2 /* NotchContentView.swift */; };
+		680207686D59420B9D70469A /* NotchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3648F803A94D75981B0769 /* NotchService.swift */; };
 		BB0100000000000000000001 /* AugmentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B1 /* AugmentApp.swift */; };
 		BB0100000000000000000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B2 /* AppDelegate.swift */; };
+		82905E81026E8684AEB1F032 /* SelfTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF901FD762092A5FF549D01 /* SelfTest.swift */; };
+		696C53C4C602AB45DE702ABB /* FuncTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE45FA7B18FD3BDBD620C81 /* FuncTest.swift */; };
 		BB0100000000000000000003 /* PermissionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B3 /* PermissionCoordinator.swift */; };
+		0969C9BD7073EE450DF40448 /* FeaturePermissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B91459B780DD0EF8467D9F33 /* FeaturePermissions.swift */; };
 		BB0100000000000000000004 /* AppGroupConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A1 /* AppGroupConstants.swift */; };
 		BB0100000000000000000005 /* SharedPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A2 /* SharedPreferences.swift */; };
-		BB0100000000000000000019 /* PreferenceDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A3 /* PreferenceDefaults.swift */; };
 		BB0100000000000000000006 /* DockInteractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B4 /* DockInteractionService.swift */; };
 		BB0100000000000000000007 /* WindowDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B5 /* WindowDiscoveryService.swift */; };
+		BB0100000000000000000008 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B6 /* VisualEffectView.swift */; };
+		BB0100000000000000000009 /* PermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B7 /* PermissionView.swift */; };
+		BB010000000000000000000A /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B8 /* OnboardingWindow.swift */; };
+		BB010000000000000000000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000BB /* Assets.xcassets */; };
+		BB010000000000000000000C /* AugmentFinder.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000C4 /* AugmentFinder.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BB010000000000000000000D /* AugmentQL.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000D4 /* AugmentQL.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BB0100000000000000000012 /* DockPreviewPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F1 /* DockPreviewPanelController.swift */; };
+		BB0100000000000000000013 /* DockPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F2 /* DockPreviewView.swift */; };
+		BB0100000000000000000014 /* WindowThumbnailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F3 /* WindowThumbnailCell.swift */; };
+		BB0100000000000000000015 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F4 /* SettingsWindow.swift */; };
+		63B9064524B7B3E0166650CB /* SettingsPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 076FCA03BCA773806F13022D /* SettingsPages.swift */; };
+		90D09F265ED7FF2FA81F487D /* MirrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3A034DF7D3D89F818E5984 /* MirrorView.swift */; };
+		071EA2B531D95BE2684A9464 /* SettingsExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4512C512C519FBCDE1C79563 /* SettingsExtras.swift */; };
+		9818B199B973AB3227754A32 /* ClipboardPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83C06B5855A2289411119ED /* ClipboardPanel.swift */; };
+		1A557829A1233B1A66896309 /* QuickPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC7F92EB2D778A44945D335 /* QuickPanel.swift */; };
+		BB0100000000000000000016 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F5 /* ScreenGeometry.swift */; };
+		BB0100000000000000000017 /* MouseEventCatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F6 /* MouseEventCatcher.swift */; };
+		BB0100000000000000000018 /* FileTemplateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000C5 /* FileTemplateFactory.swift */; };
+		BB0100000000000000000019 /* PreferenceDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A3 /* PreferenceDefaults.swift */; };
 		BB010000000000000000001A /* AXElementCoercion.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B0 /* AXElementCoercion.swift */; };
 		BB010000000000000000001B /* FinderBridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B0B /* FinderBridgeService.swift */; };
 		BB010000000000000000001C /* MediaRemoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B0C /* MediaRemoteProvider.swift */; };
@@ -24,7 +65,6 @@
 		BB0100000000000000000020 /* AppleScriptMediaProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B10 /* AppleScriptMediaProvider.swift */; };
 		BB0100000000000000000021 /* BrowserMediaProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B11 /* BrowserMediaProvider.swift */; };
 		BB0100000000000000000022 /* MediaCommandSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B12 /* MediaCommandSender.swift */; };
-		BB0100000000000000000023 /* DockEffectApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B13 /* DockEffectApplier.swift */; };
 		BB0100000000000000000024 /* SettingsGeneralPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F7 /* SettingsGeneralPane.swift */; };
 		BB0100000000000000000025 /* SettingsHoverPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F8 /* SettingsHoverPane.swift */; };
 		BB0100000000000000000026 /* SettingsWindowControlsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F9 /* SettingsWindowControlsPane.swift */; };
@@ -35,19 +75,6 @@
 		BB010000000000000000002B /* SettingsWindowSnappingPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000FE /* SettingsWindowSnappingPane.swift */; };
 		BB010000000000000000002C /* SettingsNotchPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000FF /* SettingsNotchPane.swift */; };
 		BB010000000000000000002D /* AboutWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000E0 /* AboutWindow.swift */; };
-		BB0100000000000000000008 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B6 /* VisualEffectView.swift */; };
-		BB0100000000000000000009 /* PermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B7 /* PermissionView.swift */; };
-		BB010000000000000000000A /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000B8 /* OnboardingWindow.swift */; };
-		BB0100000000000000000012 /* DockPreviewPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F1 /* DockPreviewPanelController.swift */; };
-		BB0100000000000000000013 /* DockPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F2 /* DockPreviewView.swift */; };
-		BB0100000000000000000014 /* WindowThumbnailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F3 /* WindowThumbnailCell.swift */; };
-		BB0100000000000000000015 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F4 /* SettingsWindow.swift */; };
-		BB0100000000000000000016 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F5 /* ScreenGeometry.swift */; };
-		BB0100000000000000000017 /* MouseEventCatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F6 /* MouseEventCatcher.swift */; };
-		BB0100000000000000000018 /* FileTemplateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000C5 /* FileTemplateFactory.swift */; };
-		BB010000000000000000000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000BB /* Assets.xcassets */; };
-		BB010000000000000000000C /* AugmentFinder.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000C4 /* AugmentFinder.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		BB010000000000000000000D /* AugmentQL.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000D4 /* AugmentQL.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CC0100000000000000000001 /* FinderSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000C1 /* FinderSync.swift */; };
 		CC0100000000000000000002 /* AppGroupConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A1 /* AppGroupConstants.swift */; };
 		CC0100000000000000000003 /* PreferenceDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A3 /* PreferenceDefaults.swift */; };
@@ -59,10 +86,6 @@
 		DD0100000000000000000003 /* PreferenceDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000A3 /* PreferenceDefaults.swift */; };
 		DD0100000000000000000004 /* DirectoryTreeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000D5 /* DirectoryTreeBuilder.swift */; };
 		DD0100000000000000000005 /* DirectoryTreeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000D6 /* DirectoryTreeFormatter.swift */; };
-		3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */; };
-		680207686D59420B9D70469A /* NotchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3648F803A94D75981B0769 /* NotchService.swift */; };
-		5F8E6717B8D749EF8C44C12B /* NotchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E40FF692D6549399922F7A2 /* NotchContentView.swift */; };
-		468B4E45868D4DD295A99A4A /* NotchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB19F4D535C54C8A843E9381 /* NotchTypes.swift */; };
 		MED111112222333344445556 /* MediaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = MED111112222333344445555 /* MediaManager.swift */; };
 		MED111112222333344445558 /* MediaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = MED111112222333344445557 /* MediaWidget.swift */; };
 		TT0100000000000000000001 /* DirectoryTreeBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TT01000000000000000000A1 /* DirectoryTreeBuilderTests.swift */; };
@@ -113,24 +136,42 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSnappingService.swift; sourceTree = "<group>"; };
+		0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCutPasteService.swift; sourceTree = "<group>"; };
+		E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCutPasteService.swift; sourceTree = "<group>"; };
+		1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaffeinateService.swift; sourceTree = "<group>"; };
+		F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapLayoutsService.swift; sourceTree = "<group>"; };
+		EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSwitcherService.swift; sourceTree = "<group>"; };
+		BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemControlsService.swift; sourceTree = "<group>"; };
+		370707631BAB168E23D5599C /* MeetingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingsService.swift; sourceTree = "<group>"; };
+		AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayKeysService.swift; sourceTree = "<group>"; };
+		6A4167340C51A3568C3AF833 /* DisplayBrightnessService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayBrightnessService.swift; sourceTree = "<group>"; };
+		8F4578CEA03E1CC3C1A69893 /* EventTapThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTapThread.swift; sourceTree = "<group>"; };
+		77BCD54C7E7D22810C437159 /* DDCPrivateSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCPrivateSymbols.swift; sourceTree = "<group>"; };
+		F7D13A664FB608966F3F2932 /* AudioProcessMixerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioProcessMixerService.swift; sourceTree = "<group>"; };
+		C077CBBBF2DC20923F1BEE06 /* VolumeMixerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMixerSettingsPane.swift; sourceTree = "<group>"; };
+		114EAAB4F7ECBC5367D1F56C /* ClipboardHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryService.swift; sourceTree = "<group>"; };
+		5E40FF692D6549399922F7A2 /* NotchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchContentView.swift; sourceTree = "<group>"; };
 		EE01000000000000000000A1 /* AppGroupConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupConstants.swift; sourceTree = "<group>"; };
 		EE01000000000000000000A2 /* SharedPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPreferences.swift; sourceTree = "<group>"; };
 		EE01000000000000000000A3 /* PreferenceDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceDefaults.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B1 /* AugmentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AugmentApp.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B3 /* PermissionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCoordinator.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B4 /* DockInteractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockInteractionService.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B5 /* WindowDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowDiscoveryService.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0 /* AXElementCoercion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXElementCoercion.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0B /* FinderBridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderBridgeService.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0C /* MediaRemoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRemoteProvider.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0D /* DockPreviewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPreviewCoordinator.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0E /* MediaScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaScriptRunner.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B0F /* ArtworkCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkCache.swift; sourceTree = "<group>"; };
+		EE01000000000000000000B1 /* AugmentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AugmentApp.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B10 /* AppleScriptMediaProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptMediaProvider.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B11 /* BrowserMediaProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserMediaProvider.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B12 /* MediaCommandSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCommandSender.swift; sourceTree = "<group>"; };
-		EE01000000000000000000B13 /* DockEffectApplier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockEffectApplier.swift; sourceTree = "<group>"; };
+		EE01000000000000000000B2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DFF901FD762092A5FF549D01 /* SelfTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfTest.swift; sourceTree = "<group>"; };
+		FBE45FA7B18FD3BDBD620C81 /* FuncTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuncTest.swift; sourceTree = "<group>"; };
+		EE01000000000000000000B3 /* PermissionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCoordinator.swift; sourceTree = "<group>"; };
+		B91459B780DD0EF8467D9F33 /* FeaturePermissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturePermissions.swift; sourceTree = "<group>"; };
+		EE01000000000000000000B4 /* DockInteractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockInteractionService.swift; sourceTree = "<group>"; };
+		EE01000000000000000000B5 /* WindowDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowDiscoveryService.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B6 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B7 /* PermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionView.swift; sourceTree = "<group>"; };
 		EE01000000000000000000B8 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
@@ -151,10 +192,16 @@
 		EE01000000000000000000D4 /* AugmentQL.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AugmentQL.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE01000000000000000000D5 /* DirectoryTreeBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryTreeBuilder.swift; sourceTree = "<group>"; };
 		EE01000000000000000000D6 /* DirectoryTreeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryTreeFormatter.swift; sourceTree = "<group>"; };
+		EE01000000000000000000E0 /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F1 /* DockPreviewPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPreviewPanelController.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F2 /* DockPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPreviewView.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F3 /* WindowThumbnailCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowThumbnailCell.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F4 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
+		076FCA03BCA773806F13022D /* SettingsPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPages.swift; sourceTree = "<group>"; };
+		ED3A034DF7D3D89F818E5984 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
+		4512C512C519FBCDE1C79563 /* SettingsExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExtras.swift; sourceTree = "<group>"; };
+		C83C06B5855A2289411119ED /* ClipboardPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPanel.swift; sourceTree = "<group>"; };
+		CFC7F92EB2D778A44945D335 /* QuickPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPanel.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F5 /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F6 /* MouseEventCatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseEventCatcher.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F7 /* SettingsGeneralPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGeneralPane.swift; sourceTree = "<group>"; };
@@ -166,11 +213,10 @@
 		EE01000000000000000000FD /* SettingsPermissionsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPermissionsPane.swift; sourceTree = "<group>"; };
 		EE01000000000000000000FE /* SettingsWindowSnappingPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowSnappingPane.swift; sourceTree = "<group>"; };
 		EE01000000000000000000FF /* SettingsNotchPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNotchPane.swift; sourceTree = "<group>"; };
-		EE01000000000000000000E0 /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
-		12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSnappingService.swift; sourceTree = "<group>"; };
-		FD3648F803A94D75981B0769 /* NotchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchService.swift; sourceTree = "<group>"; };
-		5E40FF692D6549399922F7A2 /* NotchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchContentView.swift; sourceTree = "<group>"; };
 		FB19F4D535C54C8A843E9381 /* NotchTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTypes.swift; sourceTree = "<group>"; };
+		C89AAEF6725637658FA11CB5 /* AmbientColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientColor.swift; sourceTree = "<group>"; };
+		28CF7D0009E9937F17EEEEF3 /* MarqueeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeText.swift; sourceTree = "<group>"; };
+		FD3648F803A94D75981B0769 /* NotchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchService.swift; sourceTree = "<group>"; };
 		MED111112222333344445555 /* MediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaManager.swift; sourceTree = "<group>"; };
 		MED111112222333344445557 /* MediaWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaWidget.swift; sourceTree = "<group>"; };
 		TT01000000000000000000A1 /* DirectoryTreeBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryTreeBuilderTests.swift; sourceTree = "<group>"; };
@@ -235,6 +281,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		EE01000000000000000000C6 /* Templates */ = {
+			isa = PBXGroup;
+			children = (
+				EE01000000000000000000C7 /* Blank.docx */,
+				EE01000000000000000000C8 /* Blank.xlsx */,
+			);
+			path = Templates;
+			sourceTree = "<group>";
+		};
 		EE01000000000000000000E1 /* Augment */ = {
 			isa = PBXGroup;
 			children = (
@@ -255,6 +310,8 @@
 			children = (
 				EE01000000000000000000B1 /* AugmentApp.swift */,
 				EE01000000000000000000B2 /* AppDelegate.swift */,
+				DFF901FD762092A5FF549D01 /* SelfTest.swift */,
+				FBE45FA7B18FD3BDBD620C81 /* FuncTest.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -263,6 +320,7 @@
 			isa = PBXGroup;
 			children = (
 				EE01000000000000000000B3 /* PermissionCoordinator.swift */,
+				B91459B780DD0EF8467D9F33 /* FeaturePermissions.swift */,
 			);
 			path = Permissions;
 			sourceTree = "<group>";
@@ -286,8 +344,20 @@
 				EE01000000000000000000B5 /* WindowDiscoveryService.swift */,
 				EE01000000000000000000B0 /* AXElementCoercion.swift */,
 				EE01000000000000000000F5 /* ScreenGeometry.swift */,
-			
 				12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */,
+				0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */,
+				E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */,
+				1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */,
+				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
+				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
+				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
+				370707631BAB168E23D5599C /* MeetingsService.swift */,
+				AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */,
+				6A4167340C51A3568C3AF833 /* DisplayBrightnessService.swift */,
+				8F4578CEA03E1CC3C1A69893 /* EventTapThread.swift */,
+				77BCD54C7E7D22810C437159 /* DDCPrivateSymbols.swift */,
+				F7D13A664FB608966F3F2932 /* AudioProcessMixerService.swift */,
+				114EAAB4F7ECBC5367D1F56C /* ClipboardHistoryService.swift */,
 				FD3648F803A94D75981B0769 /* NotchService.swift */,
 				MED111112222333344445555 /* MediaManager.swift */,
 				EE01000000000000000000B0C /* MediaRemoteProvider.swift */,
@@ -296,8 +366,9 @@
 				EE01000000000000000000B10 /* AppleScriptMediaProvider.swift */,
 				EE01000000000000000000B11 /* BrowserMediaProvider.swift */,
 				EE01000000000000000000B12 /* MediaCommandSender.swift */,
-				EE01000000000000000000B13 /* DockEffectApplier.swift */,
-				FB19F4D535C54C8A843E9381 /* NotchTypes.swift */,);
+				FB19F4D535C54C8A843E9381 /* NotchTypes.swift */,
+				C89AAEF6725637658FA11CB5 /* AmbientColor.swift */,
+			);
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -306,12 +377,19 @@
 			children = (
 				EE01000000000000000000E0 /* AboutWindow.swift */,
 				EE01000000000000000000B6 /* VisualEffectView.swift */,
+				28CF7D0009E9937F17EEEEF3 /* MarqueeText.swift */,
+				C077CBBBF2DC20923F1BEE06 /* VolumeMixerSettingsPane.swift */,
 				EE01000000000000000000B7 /* PermissionView.swift */,
 				EE01000000000000000000B8 /* OnboardingWindow.swift */,
 				EE01000000000000000000F1 /* DockPreviewPanelController.swift */,
 				EE01000000000000000000F2 /* DockPreviewView.swift */,
 				EE01000000000000000000F3 /* WindowThumbnailCell.swift */,
 				EE01000000000000000000F4 /* SettingsWindow.swift */,
+				076FCA03BCA773806F13022D /* SettingsPages.swift */,
+				ED3A034DF7D3D89F818E5984 /* MirrorView.swift */,
+				4512C512C519FBCDE1C79563 /* SettingsExtras.swift */,
+				C83C06B5855A2289411119ED /* ClipboardPanel.swift */,
+				CFC7F92EB2D778A44945D335 /* QuickPanel.swift */,
 				EE01000000000000000000F7 /* SettingsGeneralPane.swift */,
 				EE01000000000000000000F8 /* SettingsHoverPane.swift */,
 				EE01000000000000000000F9 /* SettingsWindowControlsPane.swift */,
@@ -322,9 +400,9 @@
 				EE01000000000000000000FE /* SettingsWindowSnappingPane.swift */,
 				EE01000000000000000000FF /* SettingsNotchPane.swift */,
 				EE01000000000000000000F6 /* MouseEventCatcher.swift */,
-			
 				5E40FF692D6549399922F7A2 /* NotchContentView.swift */,
-				MED111112222333344445557 /* MediaWidget.swift */,);
+				MED111112222333344445557 /* MediaWidget.swift */,
+			);
 			path = UI;
 			sourceTree = "<group>";
 		};
@@ -346,15 +424,6 @@
 				EE01000000000000000000C3 /* AugmentFinder.entitlements */,
 			);
 			path = AugmentFinder;
-			sourceTree = "<group>";
-		};
-		EE01000000000000000000C6 /* Templates */ = {
-			isa = PBXGroup;
-			children = (
-				EE01000000000000000000C7 /* Blank.docx */,
-				EE01000000000000000000C8 /* Blank.xlsx */,
-			);
-			path = Templates;
 			sourceTree = "<group>";
 		};
 		EE01000000000000000000E9 /* AugmentQL */ = {
@@ -542,7 +611,10 @@
 				BB010000000000000000002D /* AboutWindow.swift in Sources */,
 				BB0100000000000000000001 /* AugmentApp.swift in Sources */,
 				BB0100000000000000000002 /* AppDelegate.swift in Sources */,
+				82905E81026E8684AEB1F032 /* SelfTest.swift in Sources */,
+				696C53C4C602AB45DE702ABB /* FuncTest.swift in Sources */,
 				BB0100000000000000000003 /* PermissionCoordinator.swift in Sources */,
+				0969C9BD7073EE450DF40448 /* FeaturePermissions.swift in Sources */,
 				BB0100000000000000000004 /* AppGroupConstants.swift in Sources */,
 				BB0100000000000000000005 /* SharedPreferences.swift in Sources */,
 				BB0100000000000000000019 /* PreferenceDefaults.swift in Sources */,
@@ -552,12 +624,18 @@
 				BB0100000000000000000007 /* WindowDiscoveryService.swift in Sources */,
 				BB010000000000000000001A /* AXElementCoercion.swift in Sources */,
 				BB0100000000000000000008 /* VisualEffectView.swift in Sources */,
+				DDC7AFF507E0D0D6D2CF5CEA /* MarqueeText.swift in Sources */,
 				BB0100000000000000000009 /* PermissionView.swift in Sources */,
 				BB010000000000000000000A /* OnboardingWindow.swift in Sources */,
 				BB0100000000000000000012 /* DockPreviewPanelController.swift in Sources */,
 				BB0100000000000000000013 /* DockPreviewView.swift in Sources */,
 				BB0100000000000000000014 /* WindowThumbnailCell.swift in Sources */,
 				BB0100000000000000000015 /* SettingsWindow.swift in Sources */,
+				63B9064524B7B3E0166650CB /* SettingsPages.swift in Sources */,
+				90D09F265ED7FF2FA81F487D /* MirrorView.swift in Sources */,
+				071EA2B531D95BE2684A9464 /* SettingsExtras.swift in Sources */,
+				9818B199B973AB3227754A32 /* ClipboardPanel.swift in Sources */,
+				1A557829A1233B1A66896309 /* QuickPanel.swift in Sources */,
 				BB0100000000000000000024 /* SettingsGeneralPane.swift in Sources */,
 				BB0100000000000000000025 /* SettingsHoverPane.swift in Sources */,
 				BB0100000000000000000026 /* SettingsWindowControlsPane.swift in Sources */,
@@ -570,8 +648,21 @@
 				BB0100000000000000000016 /* ScreenGeometry.swift in Sources */,
 				BB0100000000000000000017 /* MouseEventCatcher.swift in Sources */,
 				BB0100000000000000000018 /* FileTemplateFactory.swift in Sources */,
-			
 				3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */,
+				F17151A93D0740C6295F5929 /* WindowCutPasteService.swift in Sources */,
+				554664E9216AD4758CA6043F /* FileCutPasteService.swift in Sources */,
+				C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */,
+				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
+				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
+				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
+				5DDF7947BCAA28AEC95E049A /* MeetingsService.swift in Sources */,
+				7C49F31B3909702F7899639F /* DisplayKeysService.swift in Sources */,
+				0A76B02B2BBA44720D885117 /* DisplayBrightnessService.swift in Sources */,
+				EA55D0AE3C2F8D4C5A1E2677 /* EventTapThread.swift in Sources */,
+				28EAF47FBC1C22A2F11F80DA /* DDCPrivateSymbols.swift in Sources */,
+				40143AC680A92CF29BC9AE30 /* AudioProcessMixerService.swift in Sources */,
+				2D5B490A7CE5ABA23699E118 /* VolumeMixerSettingsPane.swift in Sources */,
+				86983F25D48233F1F12A9B54 /* ClipboardHistoryService.swift in Sources */,
 				680207686D59420B9D70469A /* NotchService.swift in Sources */,
 				MED111112222333344445556 /* MediaManager.swift in Sources */,
 				BB010000000000000000001C /* MediaRemoteProvider.swift in Sources */,
@@ -580,10 +671,11 @@
 				BB0100000000000000000020 /* AppleScriptMediaProvider.swift in Sources */,
 				BB0100000000000000000021 /* BrowserMediaProvider.swift in Sources */,
 				BB0100000000000000000022 /* MediaCommandSender.swift in Sources */,
-				BB0100000000000000000023 /* DockEffectApplier.swift in Sources */,
 				MED111112222333344445558 /* MediaWidget.swift in Sources */,
 				5F8E6717B8D749EF8C44C12B /* NotchContentView.swift in Sources */,
-				468B4E45868D4DD295A99A4A /* NotchTypes.swift in Sources */,);
+				468B4E45868D4DD295A99A4A /* NotchTypes.swift in Sources */,
+				E31BA590636557258287A190 /* AmbientColor.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		CC01000000000000000000F4 /* Sources */ = {
@@ -777,6 +869,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LUPJND3R24;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Augment/Info.plist;
@@ -805,6 +898,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LUPJND3R24;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Augment/Info.plist;

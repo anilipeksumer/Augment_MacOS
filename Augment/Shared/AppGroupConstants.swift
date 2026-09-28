@@ -13,47 +13,132 @@ public enum AugmentHostLaunchArgument {
 /// Shared identifiers and keys used across the main app and bundled extensions.
 ///
 /// All three targets (`Augment`, `AugmentFinder`, `AugmentQL`) share this module
-/// so keys and App Group file paths stay aligned. **Preferences in the group
-/// suite are read/written only via `CFPreferences` + `kCFPreferencesCurrentUser`.**
-/// Do not use `UserDefaults(suiteName:)` for `identifier` — it produces
-/// `kCFPreferencesAnyUser` / cfprefsd detach logs and unreliable cross-process reads.
+/// so keys and App Group file paths stay aligned.
+///
+/// **Storage backend: a plist file in a plain shared folder, not the App
+/// Group container and not `CFPreferences`.** This app pairs a sandboxed
+/// FinderSync/QuickLook extension with an *unsandboxed* host. Two things
+/// that look like they should work here do not, on current macOS:
+///
+/// 1. `cfprefsd` rejects every write an unsandboxed process makes into a
+///    `CFPDContainerSource` for an App Group domain — logged as "rejecting
+///    write of key(s) <private> … because setting these preferences requires
+///    user-preference-write or file-write-data sandbox access".
+/// 2. The App Group **container directory itself** (`~/Library/Group
+///    Containers/group.…`) refuses the unsandboxed host both read and write
+///    access outright ("You don't have permission…") — only a sandboxed
+///    process holding the matching container's sandbox extension can touch
+///    it, and declaring the entitlement without *being* sandboxed doesn't
+///    grant that.
+///
+/// Both failed silently: Settings toggles looked like they worked (the
+/// in-memory `@Published` value did change) but nothing ever reached disk or
+/// the extensions, and `FinderCreateBridge`/`FinderRevealBridge` (§ below)
+/// could never actually be read by the host. The fix is a directory the
+/// *host* can reach with zero entitlements (any path under its own
+/// `~/Library/Application Support`) and the *extensions* reach via an
+/// explicit `temporary-exception.files.home-relative-path.read-write`
+/// entitlement naming this exact path (declared in
+/// `AugmentFinder.entitlements` / `AugmentQL.entitlements`).
 public enum AppGroup {
-    /// The App Group identifier shared by every Augment target.
-    ///
-    /// This must match the value declared in each target's entitlements file
-    /// under `com.apple.security.application-groups`.
+    /// The App Group identifier shared by every Augment target. Still used
+    /// for the app-group entitlement itself (required to *exist* even though
+    /// its container can't be used for host/extension IPC) — not for any
+    /// path lookups any more.
     public static let identifier: String = "group.com.anilipeksumer.augment"
 
-    private static let suiteDomain = identifier as CFString
-    private static let suiteUser = kCFPreferencesCurrentUser
-    private static let suiteHost = kCFPreferencesAnyHost
+    /// Plain shared folder both the unsandboxed host and the sandboxed
+    /// extensions (via a temporary-exception entitlement) can read and write.
+    public static var sharedDirectory: URL {
+        realHomeDirectory
+            .appendingPathComponent("Library/Application Support/Augment/Shared", isDirectory: true)
+    }
 
-    /// Writes a property-list value into the App Group suite and flushes for
-    /// cross-process visibility. Pass `nil` to remove the key.
+    /// The user's real home folder. Inside a sandboxed extension
+    /// `homeDirectoryForCurrentUser` is the extension's container instead,
+    /// which would split host and extensions into two different stores.
+    private static var realHomeDirectory: URL {
+        if let entry = getpwuid(getuid()), let dir = entry.pointee.pw_dir {
+            return URL(fileURLWithPath: String(cString: dir), isDirectory: true)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+    }
+
+    /// Posted (distributed) whenever the Finder cut set changes.
+    public static let fileCutChangedNotification = Notification.Name("com.anilipeksumer.augment.fileCutChanged")
+
+    private static let storeFileName = "AugmentSharedPreferences.plist"
+    private static let lock = NSLock()
+    private static var cache: [String: Any] = loadFromDisk()
+
+    private static var storeURL: URL? {
+        sharedDirectory.appendingPathComponent(storeFileName)
+    }
+
+    private static func loadFromDisk() -> [String: Any] {
+        guard let url = storeURL,
+              let data = try? Data(contentsOf: url),
+              let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+              let dict = plist as? [String: Any]
+        else { return [:] }
+        return dict
+    }
+
+    /// Writes a property-list value into the shared store and flushes to
+    /// disk immediately for cross-process visibility. Pass `nil` to remove
+    /// the key.
     public static func setSuiteValue(_ value: CFPropertyList?, forKey key: String) {
-        CFPreferencesSetValue(key as CFString, value, suiteDomain, suiteUser, suiteHost)
-        synchronizeSuitePreferences()
+        lock.lock()
+        defer { lock.unlock() }
+        if let value {
+            cache[key] = value
+        } else {
+            cache.removeValue(forKey: key)
+        }
+        persistLocked()
     }
 
-    /// Reads a value without synchronizing first — call `synchronizeSuitePreferences`
-    /// before a batch of reads (e.g. `SharedPreferences.init`).
+    /// Reads a value from the in-memory cache — call `synchronizeSuitePreferences`
+    /// first to pick up another process's writes (e.g. `SharedPreferences.init`).
     public static func copySuiteValue(forKey key: String) -> Any? {
-        CFPreferencesCopyValue(key as CFString, suiteDomain, suiteUser, suiteHost)
+        lock.lock()
+        defer { lock.unlock() }
+        return cache[key]
     }
 
-    /// Sync the shared plist so another process’s writes are visible before we read.
+    /// Re-reads the shared plist from disk so another process's writes
+    /// become visible before a batch of reads.
     @discardableResult
     public static func synchronizeSuitePreferences() -> Bool {
-        CFPreferencesSynchronize(suiteDomain, suiteUser, suiteHost)
+        lock.lock()
+        defer { lock.unlock() }
+        cache = loadFromDisk()
+        return true
+    }
+
+    /// Must be called with `lock` held.
+    private static func persistLocked() {
+        guard let url = storeURL else {
+            NSLog("Augment: AppGroup persistLocked – containerURL is nil")
+            return
+        }
+        do {
+            let data = try PropertyListSerialization.data(
+                fromPropertyList: cache, format: .binary, options: 0
+            )
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true
+            )
+            try data.write(to: url, options: .atomic)
+        } catch {
+            NSLog("Augment: AppGroup persistLocked – write FAILED at %@: %@", url.path, error.localizedDescription)
+        }
     }
 
     /// Default values for each key in the App Group suite.
     public static let suiteRegistrationDefaults = PreferenceDefaults.registrationValues
 
-    /// Reads a boolean for extensions / lightweight call sites using only
-    /// `CFPreferences` + `kCFPreferencesCurrentUser` — never
-    /// `UserDefaults(suiteName:)`, which logs `kCFPreferencesAnyUser` detach
-    /// noise for App Group containers.
+    /// Reads a boolean for extensions / lightweight call sites.
     public static func preferencesBool(forKey key: String) -> Bool {
         synchronizeSuitePreferences()
         return boolFromCopiedPlist(copySuiteValue(forKey: key))
@@ -64,6 +149,7 @@ public enum AppGroup {
     public static func preferencesDouble(forKey key: String) -> Double {
         synchronizeSuitePreferences()
         if let pref = copySuiteValue(forKey: key) as? Double { return pref }
+        if let num = copySuiteValue(forKey: key) as? NSNumber { return num.doubleValue }
         return (suiteRegistrationDefaults[key] as? Double) ?? 0.0
     }
 
@@ -127,7 +213,6 @@ public enum AppGroupKey {
     public static let killButtonVisible = "augment.killButtonVisible"
 
     // MARK: - Dock minimize effect (legacy, kept for migration)
-    public static let minimizeEffect = "augment.minimizeEffect"
 
     // MARK: - Multi-display dock lock
     /// Comma-separated list of preferred screen IDs the dock interaction
@@ -140,6 +225,34 @@ public enum AppGroupKey {
     /// JSON-encoded dictionary mapping snap directions to custom shortcut
     /// configurations. Each entry contains modifier flags and a key code.
     public static let windowSnappingShortcuts = "augment.windowSnappingShortcuts"
+
+    // MARK: - Window cut & paste (⌃⌘X / ⌃⌘V)
+    /// Master toggle for cutting a window and re-placing it elsewhere,
+    /// modeled on the Windows 11 "cut & paste to move windows" feature.
+    public static let windowCutPasteEnabled = "augment.windowCutPasteEnabled"
+
+    // MARK: - File cut & paste (⌘X / ⌘V in Finder)
+    /// Master toggle for a real Finder "Cut" (Finder natively only has
+    /// Copy + ⌥⌘V paste-as-move).
+    public static let fileCutPasteEnabled = "augment.fileCutPasteEnabled"
+
+    // MARK: - Snap Layouts (⌃⌥Space)
+    /// Master toggle for the Windows 11-style snap-zone picker flyout.
+    public static let snapLayoutsEnabled = "augment.snapLayoutsEnabled"
+
+    // MARK: - Window switcher (⌥Tab)
+    /// Master toggle for the thumbnail-based ⌥Tab window switcher.
+    public static let windowSwitcherEnabled = "augment.windowSwitcherEnabled"
+
+    // MARK: - Menu bar organizer
+    /// Master toggle for the menu-bar icon hide/reveal spacer.
+
+    // MARK: - Volume mixer (per-app volume, macOS 14.2+ process taps)
+    /// Master toggle for the per-app volume mixer.
+    public static let volumeMixerEnabled = "augment.volumeMixerEnabled"
+
+    // MARK: - External display control (experimental DDC/CI)
+    /// Master toggle for external-display brightness/volume sliders in the notch.
 
     // MARK: - Notch (BoringNotch)
     /// Master toggle for the interactive notch overlay.
@@ -155,6 +268,42 @@ public enum AppGroupKey {
     public static let notchCalendarStyle = "augment.notchCalendarStyle"
     public static let notchBatteryStyle = "augment.notchBatteryStyle"
     public static let notchHoverDelay = "augment.notchHoverDelay"
+    /// Master toggle for the clipboard history feature, surfaced as a tab
+    /// inside the notch's file-shelf widget.
+    public static let clipboardHistoryEnabled = "augment.clipboardHistoryEnabled"
+
+    /// Whether the keep-awake toggle button is shown in the notch top bar.
+    public static let notchCaffeinateWidget = "augment.notchCaffeinateWidget"
+
+    /// Whether the quick note + Pomodoro timer widget is shown.
+    public static let notchProductivityWidget = "augment.notchProductivityWidget"
+    public static let notchPomodoroMinutes = "augment.notchPomodoroMinutes"
+    public static let notchMirrorEnabled = "augment.notchMirrorEnabled"
+    public static let quickPanelDisplays = "augment.quickPanelDisplays"
+    public static let quickPanelSound = "augment.quickPanelSound"
+    public static let quickPanelMic = "augment.quickPanelMic"
+    public static let quickPanelMeetings = "augment.quickPanelMeetings"
+    public static let quickPanelAwake = "augment.quickPanelAwake"
+    public static let displayKeysEnabled = "augment.displayKeysEnabled"
+    public static let brightnessScheduleEnabled = "augment.brightnessScheduleEnabled"
+    public static let brightnessDayStart = "augment.brightnessDayStart"
+    public static let brightnessNightStart = "augment.brightnessNightStart"
+    public static let brightnessDayLevel = "augment.brightnessDayLevel"
+    public static let brightnessNightLevel = "augment.brightnessNightLevel"
+    public static let awakeDisplayMaySleep = "augment.awakeDisplayMaySleep"
+    public static let awakeWhileApps = "augment.awakeWhileApps"
+    public static let awakeOnPower = "augment.awakeOnPower"
+    public static let awakeWhileDownloading = "augment.awakeWhileDownloading"
+    public static let awakeLidClosed = "augment.awakeLidClosed"
+    public static let clipboardPanelEnabled = "augment.clipboardPanelEnabled"
+    public static let meetingsEnabled = "augment.meetingsEnabled"
+    public static let screenshotShelfEnabled = "augment.screenshotShelfEnabled"
+    public static let finderExtraMenuEnabled = "augment.finderExtraMenuEnabled"
+    /// Persisted text of the notch quick-note scratchpad.
+    public static let notchQuickNoteText = "augment.notchQuickNoteText"
+    /// POSIX paths currently marked with Finder ⌘X; the Finder extension badges them.
+    public static let fileCutPaths = "augment.fileCutPaths"
+
     /// Persisted pinned URLs for the file shelf
     public static let notchShelfURLs = "augment.notchShelfURLs"
 }
@@ -202,8 +351,7 @@ public enum FinderCreateBridge {
     }
 
     public static var queueDirectory: URL? {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppGroup.identifier)?
-            .appendingPathComponent("FinderCreateQueue", isDirectory: true)
+        AppGroup.sharedDirectory.appendingPathComponent("FinderCreateQueue", isDirectory: true)
     }
 
     /// Writes one plist into the shared App Group and pings the host app.
@@ -238,12 +386,16 @@ public enum FinderRevealBridge {
 
     public struct Request: Codable {
         public let filePath: String
-        public init(filePath: String) { self.filePath = filePath }
+        /// nil = reveal in Finder; "terminal" = open a Terminal window there.
+        public var action: String?
+        public init(filePath: String, action: String? = nil) {
+            self.filePath = filePath
+            self.action = action
+        }
     }
 
     public static var queueDirectory: URL? {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppGroup.identifier)?
-            .appendingPathComponent("FinderRevealQueue", isDirectory: true)
+        AppGroup.sharedDirectory.appendingPathComponent("FinderRevealQueue", isDirectory: true)
     }
 
     public static func enqueue(_ request: Request) throws {

@@ -4,22 +4,14 @@ import SwiftUI
 
 // MARK: - Window Snapping
 
-struct WindowSnappingSettingsPane: View {
+struct WindowSnappingSettingsSections: View {
     @EnvironmentObject private var preferences: SharedPreferences
 
     @State private var shortcuts: [String: SnapShortcut] = [:]
     @State private var recordingDirection: SnapDirection?
 
     var body: some View {
-        Form {
-            Section {
-                PaneHeader(
-                    title: Localizer.string("snapping.title"),
-                    subtitle: Localizer.string("snapping.subtitle"),
-                    systemImage: "rectangle.split.2x1.fill",
-                    tint: .cyan
-                )
-            }
+        Group {
 
             Section {
                 ToggleRow(
@@ -27,7 +19,8 @@ struct WindowSnappingSettingsPane: View {
                     subtitle: Localizer.string("snapping.enable_desc"),
                     systemImage: "keyboard",
                     tint: .cyan,
-                    isOn: $preferences.windowSnappingEnabled
+                    isOn: $preferences.windowSnappingEnabled,
+                    requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.windowSnappingEnabled)
                 )
             } header: {
                 Text(Localizer.string("snapping.toggle"))
@@ -101,8 +94,82 @@ struct WindowSnappingSettingsPane: View {
             } header: {
                 Text(Localizer.string("snapping.preview"))
             }
+
+            Section {
+                ToggleRow(
+                    title: Localizer.string("cutpaste.window_title"),
+                    subtitle: Localizer.string("cutpaste.window_desc"),
+                    systemImage: "macwindow.and.cursorarrow",
+                    tint: .indigo,
+                    isOn: $preferences.windowCutPasteEnabled,
+                    requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.windowCutPasteEnabled)
+                )
+                HStack {
+                    Text(Localizer.string("cutpaste.cut"))
+                    Spacer()
+                    Text("⌃⌘X").foregroundStyle(.secondary)
+                }
+                .font(.caption)
+                HStack {
+                    Text(Localizer.string("cutpaste.paste"))
+                    Spacer()
+                    Text("⌃⌘V").foregroundStyle(.secondary)
+                }
+                .font(.caption)
+            } header: {
+                Text(Localizer.string("cutpaste.section"))
+            } footer: {
+                Text(Localizer.string("cutpaste.footer"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ToggleRow(
+                    title: Localizer.string("snaplayouts.title"),
+                    subtitle: Localizer.string("snaplayouts.desc"),
+                    systemImage: "square.grid.2x2",
+                    tint: .teal,
+                    isOn: $preferences.snapLayoutsEnabled,
+                    requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.snapLayoutsEnabled)
+                )
+                HStack {
+                    Text(Localizer.string("snaplayouts.trigger"))
+                    Spacer()
+                    Text("⌃⌥Space").foregroundStyle(.secondary)
+                }
+                .font(.caption)
+            } header: {
+                Text(Localizer.string("snaplayouts.section"))
+            } footer: {
+                Text(Localizer.string("snaplayouts.footer"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ToggleRow(
+                    title: Localizer.string("switcher.title"),
+                    subtitle: Localizer.string("switcher.desc"),
+                    systemImage: "rectangle.stack",
+                    tint: .purple,
+                    isOn: $preferences.windowSwitcherEnabled,
+                    requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.windowSwitcherEnabled)
+                )
+                HStack {
+                    Text(Localizer.string("switcher.trigger"))
+                    Spacer()
+                    Text("⌥Tab").foregroundStyle(.secondary)
+                }
+                .font(.caption)
+            } header: {
+                Text(Localizer.string("switcher.section"))
+            } footer: {
+                Text(Localizer.string("switcher.footer"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .formStyle(.grouped)
         .onAppear { loadShortcuts() }
         .background(
             ShortcutCaptureView(

@@ -10,8 +10,8 @@ public enum PreferenceDefaults {
         AppGroupKey.hasRequestedAccessibilityPrompt: false,
         AppGroupKey.pendingFinderBridgeHostLaunch: false,
         AppGroupKey.appLanguage: "system",
-        AppGroupKey.dockClickBehaviorEnabled: true,
-        AppGroupKey.windowPreviewsEnabled: true,
+        AppGroupKey.dockClickBehaviorEnabled: false,
+        AppGroupKey.windowPreviewsEnabled: false,
         AppGroupKey.folderQuickLookEnabled: true,
         AppGroupKey.folderQuickLookShowWarning: true,
         AppGroupKey.finderNewFileMenuEnabled: true,
@@ -28,10 +28,40 @@ public enum PreferenceDefaults {
         AppGroupKey.trafficLightEnabled: true,
         AppGroupKey.trafficLightSide: "trailing",
         AppGroupKey.killButtonVisible: false,
-        AppGroupKey.minimizeEffect: "system",
         AppGroupKey.lockedScreenIDs: [String](),
         AppGroupKey.windowSnappingEnabled: false,
         AppGroupKey.windowSnappingShortcuts: "",
+        AppGroupKey.windowCutPasteEnabled: false,
+        AppGroupKey.fileCutPasteEnabled: false,
+        AppGroupKey.snapLayoutsEnabled: false,
+        AppGroupKey.windowSwitcherEnabled: false,
+        AppGroupKey.volumeMixerEnabled: false,
+        AppGroupKey.clipboardHistoryEnabled: false,
+        AppGroupKey.notchCaffeinateWidget: false,
+        AppGroupKey.notchProductivityWidget: false,
+        AppGroupKey.notchPomodoroMinutes: 25.0,
+        AppGroupKey.notchMirrorEnabled: false,
+        AppGroupKey.quickPanelDisplays: true,
+        AppGroupKey.quickPanelSound: true,
+        AppGroupKey.quickPanelMic: true,
+        AppGroupKey.quickPanelMeetings: true,
+        AppGroupKey.quickPanelAwake: true,
+        AppGroupKey.displayKeysEnabled: false,
+        AppGroupKey.brightnessScheduleEnabled: false,
+        AppGroupKey.brightnessDayStart: 420.0,
+        AppGroupKey.brightnessNightStart: 1260.0,
+        AppGroupKey.brightnessDayLevel: 0.8,
+        AppGroupKey.brightnessNightLevel: 0.35,
+        AppGroupKey.awakeDisplayMaySleep: false,
+        AppGroupKey.awakeWhileApps: [String](),
+        AppGroupKey.awakeOnPower: false,
+        AppGroupKey.awakeWhileDownloading: false,
+        AppGroupKey.awakeLidClosed: false,
+        AppGroupKey.clipboardPanelEnabled: false,
+        AppGroupKey.meetingsEnabled: false,
+        AppGroupKey.screenshotShelfEnabled: false,
+        AppGroupKey.finderExtraMenuEnabled: true,
+        AppGroupKey.notchQuickNoteText: "",
         AppGroupKey.notchEnabled: false,
         AppGroupKey.notchMusicWidget: true,
         AppGroupKey.notchBatteryWidget: true,
@@ -77,36 +107,69 @@ public enum Localizer {
             "menu.about": "About Augment",
             "menu.settings": "Settings…",
             "menu.permissions": "Accessibility Permission…",
+            "menu.caffeinate": "Keep Mac Awake",
+            "perm.accessibility": "Accessibility",
+            "perm.screen_recording": "Screen Recording",
+            "perm.automation_finder": "Finder automation",
+            "perm.needed": "Needs %@ permission",
+            "perm.grant": "Grant",
+            "short.previews": "Dock previews",
+            "short.dockclick": "Click to minimize",
+            "short.docklock": "Dock display lock",
+            "short.snap": "Window snapping",
+            "short.layouts": "Layout picker",
+            "short.switcher": "Window switcher",
+            "short.wincut": "Window cut & paste",
+            "short.newfile": "New File menu",
+            "short.folderql": "Folder preview",
+            "short.filecut": "File cut & paste",
+            "short.notch": "Notch",
+            "short.mixer": "Volume mixer",
+            
+            "perm.granted": "Granted",
+            "perm.used_by": "Used by: %@",
+            "permissions.subtitle_v2": "Augment only asks for a permission when you turn on a feature that needs it.",
+            "permissions.footer_v2": "If a switch looks on in System Settings but the status here stays empty, remove Augment from that list with “−” and grant it again — an older build's approval doesn't carry over.",
+            "page.dock": "Dock",
+            "page.dock_sub": "What happens when you point at or click an app in the Dock.",
+            "page.dock_previews": "Window previews",
+            "page.windows": "Windows",
+            "page.windows_sub": "Arrange windows and switch between them from the keyboard.",
+            "page.finder": "Finder",
+            "page.finder_sub": "Additions to Finder's menus, Quick Look and shortcuts.",
+            "page.finder_cut": "Cut and paste",
+            "page.sound": "Sound & Display",
+            "page.sound_sub": "Per-app volume and external monitor controls.",
+            "page.menubar": "Quick Panel",
+            "page.menubar_sub": "Choose what the panel under Augment's menu bar icon shows. Right-click the icon for Augment's menu.",
+            "page.awake": "Keep awake",
+            "page.awake_sub": "Prevents the display from sleeping until you turn it off.",
+            "general.summary": "%d of %d features on",
+            "general.all_off": "All off", "general.on": "On",
+            "general.perms_ok": "All permissions granted",
+            "general.perms_missing": "%d permission(s) missing",
+            "general.app": "App",
+            "general.launch_at_login": "Open Augment at login",
             "menu.quit": "Quit Augment",
             "settings.title": "Augment Settings",
-            "about.description": "A focused utility for Dock, Finder and the notch.",
+            "about.description": "The small things macOS leaves out — for the Dock, windows, Finder, the notch, sound and displays.",
             "about.version": "Version",
-            "about.dock_previews": "Dock previews",
-            "about.finder_tools": "Finder tools",
-            "about.interactive_notch": "Interactive notch",
-            "about.close": "Close",
-            "about.copyright": "Copyright",
+            
+            
             
             // General Pane
-            "general.title": "Welcome to Augment",
-            "general.subtitle": "Enhance your macOS workflow with live Dock hover previews, window snapping, Finder integrations, and a dynamic interactive Notch.",
+            
             "general.features": "Features",
-            "general.about": "About",
-            "general.version": "Version",
-            "general.build": "Build",
+            
             "general.language": "Language",
             "general.lang_system": "System Language",
             "general.lang_en": "English",
             "general.lang_tr": "Türkçe",
-            
             // Sidebar / tab titles
             "tab.general": "General",
-            "tab.hover": "Hover",
-            "tab.windowControls": "Window Controls",
-            "tab.dockClick": "Dock Click",
-            "tab.displays": "Displays",
-            "tab.finder": "Finder",
-            "tab.windowSnapping": "Snapping",
+            
+            
+            
             "tab.notch": "Notch",
             "tab.permissions": "Permissions",
 
@@ -114,24 +177,90 @@ public enum Localizer {
             "feature.hover_title": "Window previews on Dock hover",
             "feature.hover_subtitle": "Live thumbnails appear when you linger on a Dock icon.",
             "feature.dockClick_title": "Toggle minimize on Dock click",
-            "feature.dockClick_subtitle": "Click the active app's Dock icon to hide its windows; click again to bring them back. Other apps keep their macOS default behavior.",
-            "feature.windowControls_title": "Window controls on previews",
-            "feature.windowControls_subtitle": "Show macOS-style traffic lights on every hover thumbnail.",
-            "feature.folderQL_title": "Folder Quick Look hierarchy",
-            "feature.folderQL_subtitle": "Pressing Space on a folder shows its tree, sizes, and summaries.",
-            "feature.finderMenu_title": "Finder \u{201C}New File with Augment\u{201D} menu",
-            "feature.finderMenu_subtitle": "Adds a categorized contextual menu for creating files.",
-            "feature.displays_title": "Pin Dock to selected displays",
-            "feature.displays_subtitle": "Keep Augment's Dock interactions on one or more chosen monitors.",
+            
+            
+            
+            
             "feature.snapping_title": "Window snapping",
-            "feature.snapping_subtitle": "Snap windows to screen halves with Cmd+Arrow keys (customizable).",
-            "feature.notch_title": "Interactive Notch",
-            "feature.notch_subtitle": "Transform the MacBook notch into a music, battery & file shelf hub.",
+            
+            
+            
+            
+            "menubar.no_match": "No matches.",
+            
+            
+            "page.awake_title": "Keep Awake", "page.awake_page_sub": "Stop your Mac from sleeping — by hand, for a while, or automatically.",
+            "awake.manual_section": "Now", "quick.modules": "Show in the panel", "quick.microphone": "Microphone",
+            "quick.modules_footer": "Sections only appear when they have something to show (for example meetings need Upcoming meetings on the Notch page).",
+            "notch.search": "Search", "notch.copied": "Copied",
+            "notch.drop_shelf": "Shelf", "notch.drop_zip": "Zip", "notch.tab_mirror": "Mirror",
+            "notch.airdrop_all": "AirDrop All", "notch.zip_all": "Zip All to Downloads", "notch.clear_shelf": "Clear Shelf",
+            "mirror.title": "Mirror", "mirror.desc": "A camera tab in the notch to check how you look before a call. The camera is only on while the tab is open.",
+            "mirror.denied": "Augment isn't allowed to use the camera.", "mirror.no_camera": "No camera found",
+            "awake.reason_app": "Kept awake: %@ is open",
+            "awake.reason_power": "Kept awake: on power",
+            "awake.reason_download": "Kept awake: download in progress",
+            "awake.on_power": "While connected to power",
+            "awake.downloading": "While a download is in progress",
+            "awake.apps": "While these apps are open",
+            "awake.add_app": "Add App…",
+            "awake.auto_section": "Keep awake automatically",
+            "awake.auto_footer": "Any of these keeps your Mac awake on its own; the manual switch and durations above still work too. Downloads are detected from unfinished files in your Downloads folder.",
+            "awake.display_sleep": "Let the display sleep",
+            "awake.display_sleep_desc": "Keep the Mac running (downloads, renders, music) but allow the screen to turn off.",
+            "awake.lid": "Stay awake with the lid closed",
+            "awake.lid_desc": "Works while the Mac is connected to power — macOS always sleeps on battery when the lid closes.",
+            "awake.options_section": "Options",
+            "displays.keys_title": "Brightness & volume keys control monitors",
+            "displays.keys_desc": "The keyboard's brightness keys adjust the screen under the pointer, and volume keys drive a monitor's speakers over DDC. The built-in screen keeps working as usual.",
+            "displays.keys_section": "Keyboard",
+            "displays.schedule_title": "Day & night brightness",
+            "displays.schedule_desc": "Switches every screen to a day or night level at the times you choose. Changes you make in between are kept.",
+            "displays.schedule_section": "Schedule",
+            "displays.schedule_day": "Day from",
+            "displays.schedule_night": "Night from",
+            "meetings.title": "Upcoming meetings",
+            "meetings.desc": "Shows your next event in the notch and quick panel, and opens the notch 5 minutes before it starts with a Join button for Zoom, Meet or Teams links.",
+            "meetings.no_access": "Augment can't read your calendars yet.",
+            "meetings.join": "Join",
+            "meetings.now": "Now",
+            "meetings.in_minutes": "In %d min",
+            "meetings.today": "Today",
+            "perm.open_settings": "Open Settings",
+            "screenshots.title": "Screenshots to the shelf",
+            "screenshots.desc": "New screenshots drop onto the notch shelf so you can drag them straight into a chat or email.",
+            "notch.extras_section": "More in the notch",
+            "clip.panel_title": "Clipboard panel (⇧⌘V)",
+            "clip.panel_desc": "Search your clipboard history, pin favourites and paste with Return or ⌘1–⌘9.",
+            "clip.section": "Clipboard",
+            "clip.search": "Search clipboard",
+            "clip.hint": "Return pastes · ⌘1–9 quick paste · ⌘P pins · Esc closes",
+            "clip.pin": "Pin",
+            "finder.extra_title": "Copy Path & Open in Terminal",
+            "finder.extra_desc": "Adds both to Finder's right-click menu.",
+            "finder.extras_section": "More in Finder",
+            "finder.copy_path": "Copy Path",
+            "finder.open_terminal": "Open in Terminal",
+            "quick.all_displays": "All displays",
+            "quick.mic_on": "Microphone on",
+            "quick.mic_off": "Microphone muted",
+            "mixer.default_output": "Default output",
+            "mixer.output_help": "Where this app's sound plays",
+            "notch.awake_on": "Awake", "notch.awake_off": "Keep awake",
+            "notch.awake_turn_off": "Turn Off", "notch.awake_indefinite": "Until I turn it off",
+            "notch.awake_hours": "%d hours", "notch.awake_minutes": "%d minutes",
+            "notch.awake_help": "Keeps your Mac and display awake. Right-click to choose how long.",
+            "notch.hour_short": "h", "notch.minute_short": "m",
+            "notch.tab_note": "Note", "notch.pomodoro_help": "Focus timer — right-click to change its length",
+            "notch.pomodoro_length": "Pomodoro length", "notch.minutes_value": "%d min",
+            
+            
+            
             
             // Hover Pane
-            "hover.title": "Hover Previews",
-            "hover.subtitle": "Tune how live window previews behave on Dock hover.",
+            
             "hover.delay": "Hover delay",
+            "hover.minimized": "Minimized",
             "hover.timing": "Timing",
             "hover.delay_desc": "How long the cursor needs to dwell on a Dock icon before the preview appears.",
             "hover.appearance": "Appearance",
@@ -153,8 +282,7 @@ public enum Localizer {
             "hover.no_open_windows": "No open windows",
 
             // Window Controls Pane
-            "controls.title": "Window Controls",
-            "controls.subtitle": "macOS-style traffic lights live on every preview thumbnail.",
+            
             "controls.show": "Show traffic-light controls",
             "controls.show_desc": "Close, minimize, and zoom dots appear on hover, matching macOS.",
             "controls.side": "Side",
@@ -163,20 +291,15 @@ public enum Localizer {
             "controls.legacy": "Show legacy close glyph",
             "controls.legacy_desc": "When traffic lights are off, fall back to the small × button on hover.",
             "controls.layout": "Layout",
-            
             // Dock Click Pane
-            "dock_click.title": "Dock Click",
-            "dock_click.subtitle": "Decide what happens when you click a Dock icon.",
+            
             "dock_click.behavior": "Click Behaviour",
             "dock_click.toggle_minimize": "Toggle minimize on Dock click",
             "dock_click.toggle_minimize_desc": "Click the active app's Dock icon to hide its windows; click again to bring them back. Other apps keep their macOS default behavior.",
-            "dock_click.effect_title": "Minimize Animation",
-            "dock_click.effect_picker": "Minimize effect",
-            "dock_click.effect_desc": "Choose “System” to leave macOS in charge of the animation; the other choices override the system preference and quickly restart the Dock.",
+            
             
             // Finder Pane
-            "finder.title": "Finder Integration",
-            "finder.subtitle": "Right-click anywhere in Finder for a categorized \u{201C}New File with Augment\u{201D} menu.",
+            
             "finder.menu": "\u{201C}New File with Augment\u{201D} menu",
             "finder.menu_desc": "Adds the categorized contextual menu in Finder.",
             "finder.folder_ql": "Folder Quick Look hierarchy",
@@ -185,7 +308,6 @@ public enum Localizer {
             "finder.warning_desc": "If off, macOS shows its default folder icon instead of Augment\u{2019}s \u{201C}feature off\u{201D} message.",
             "finder.behavior": "Behaviour",
             "finder.footer": "Finder/Quick Look extensions are managed by macOS. After toggling these, you may need to right-click in Finder once for the menu to refresh.",
-            
             "finder.menu_title": "New File with Augment",
             "finder.category_coding": "Coding",
             "finder.category_office": "Microsoft Office",
@@ -202,10 +324,8 @@ public enum Localizer {
             "finder.error_generic_title": "Could not create file",
             "finder.error_no_permission": "Augment doesn’t have permission to write in this location. Try another folder or grant access in Privacy settings.",
             "finder.error_read_only": "This volume is read-only, so a new file can’t be created here.",
-            
             // Displays Pane
-            "displays.title": "Displays",
-            "displays.subtitle": "Keep the Dock on the screens you actually use.",
+            
             "displays.lock": "Lock Dock to chosen displays",
             "displays.lock_desc": "Augment ignores Dock interactions on other screens and lifts the cursor out of their Dock-summon zone, so macOS won't slide the Dock onto a non-selected display.",
             "displays.dock_lock": "Dock Lock",
@@ -214,9 +334,20 @@ public enum Localizer {
             "displays.fallback": "If no display is selected, Augment falls back to the screen under the cursor.",
             "displays.id": "Display ID",
             
+            "displays.section": "Displays", "displays.rescan": "Rescan",
+            "displays.none": "No displays found.",
+            "displays.footer": "Built-in and Apple displays use macOS's own brightness. Other monitors are controlled over DDC/CI (like MonitorControl); if a monitor doesn't support it, Augment dims the picture instead.",
+            "displays.method_native": "Built-in control", "displays.method_ddc": "DDC/CI", "displays.method_software": "Software dimming",
+            "quick.displays": "Displays", "quick.sound": "Sound",
+            "quick.enable_mixer": "Per-app volume: turn on the Volume Mixer",
+            "quick.awake_off_title": "Off", "quick.awake_remaining": "%@ left",
+            "quick.off": "Off", "quick.awake_duration": "Duration",
+            
+            
+            
+            
             // Snapping Pane
-            "snapping.title": "Window Snapping",
-            "snapping.subtitle": "Snap windows to screen edges with keyboard shortcuts, just like Windows.",
+            
             "snapping.enable": "Enable window snapping",
             "snapping.enable_desc": "Use keyboard shortcuts to tile windows to halves or maximize them.",
             "snapping.toggle": "Master Toggle",
@@ -228,13 +359,43 @@ public enum Localizer {
             "snapping.preview": "Preview",
             "snapping.left": "Left",
             "snapping.right": "Right",
-            "snapping.up": "Up",
-            "snapping.down": "Down",
+            
             "snapping.left_half": "Left Half",
             "snapping.right_half": "Right Half",
             "snapping.maximize": "Maximize",
             "snapping.restore_center": "Restore / Center",
+
+            // Cut & Paste
+            "cutpaste.section": "Cut & Paste",
+            "cutpaste.footer": "Move windows or Finder files by cutting them and pasting them elsewhere, the way Windows 11 lets you cut & paste a window.",
+            "cutpaste.window_title": "Window Cut & Paste",
+            "cutpaste.window_desc": "Cut the focused window, move your cursor anywhere (even another display), and paste to relocate it there.",
+            "cutpaste.cut": "Cut window",
+            "cutpaste.paste": "Paste window here",
+            "cutpaste.file_title": "Finder File Cut",
+            "cutpaste.file_desc": "Adds a real Cut (⌘X) to Finder: cut items get a scissors badge, ⌘V in another folder moves them, ⌘Z moves them back. Esc or ⌘Z before pasting cancels the cut.",
+
+            "snaplayouts.section": "Snap Layouts",
+            "snaplayouts.title": "Snap-Zone Picker",
+            "snaplayouts.desc": "A Windows 11-style flyout with halves, quarters, and thirds — pick a zone to snap the frontmost window into it.",
+            "snaplayouts.trigger": "Show picker",
+            "snaplayouts.footer": "Press the shortcut near where you want the window to land — the picker opens next to your cursor. Escape cancels.",
+
+            "switcher.section": "Window Switcher",
+            "switcher.title": "Thumbnail Window Switcher",
+            "switcher.desc": "Hold Option and tap Tab to cycle through live thumbnails of every open window, release Option to jump to it.",
+            "switcher.trigger": "Show switcher",
+            "switcher.footer": "Bound to ⌥Tab (not ⌘Tab) so the system's own App Switcher is never touched — this one switches between individual windows, not just apps.",
+
             
+            "mixer.toggle": "Volume Mixer",
+            "mixer.enable": "Enable Volume Mixer",
+            "mixer.enable_desc": "Set a separate volume for each app, independent of the system volume.",
+            "mixer.footer": "Uses macOS 14.2+'s Core Audio process-tap API (no virtual audio driver, no private APIs) — the same technique open-source Mac volume mixers use. Requires macOS 14.2 or later.",
+            "mixer.apps": "Running Apps",
+            "mixer.no_apps": "No apps currently playing audio.",
+            "mixer.unsupported": "Volume Mixer needs macOS 14.2 or later.",
+
             // Notch Pane
             "notch.title": "Interactive Notch",
             "notch.subtitle": "Turn the MacBook camera notch into a dynamic hub for music, battery & files.",
@@ -266,25 +427,30 @@ public enum Localizer {
             "notch.widgets_desc": "Hover over the notch area to expand it and see your widgets. Drag files onto it to use the shelf.",
             "notch.preview": "Preview",
             "notch.no_widgets": "No widgets selected",
+            
+            "notch.caffeinate": "Keep-Awake Button",
+            "notch.caffeinate_desc": "Shows a toggle in the notch's top bar to keep the Mac awake.",
+            "notch.clipboard": "Clipboard History",
+            "notch.clipboard_desc": "Adds a Clipboard tab next to the file shelf with your recent copies.",
+            "notch.shelf_tab_files": "Files",
+            "notch.shelf_tab_clipboard": "Clipboard",
+            "notch.clipboard_empty": "Nothing copied yet.",
+            "notch.productivity": "Quick Note & Pomodoro",
+            "notch.productivity_desc": "A scratchpad and a focus timer inside the notch.",
+            "notch.quick_note_placeholder": "Quick note…",
+            
+            "notch.pomodoro_done": "Pomodoro finished 🍅",
             "notch.drop_files": "Drop files to pin",
-            "notch.drop_here": "Drop here to pin",
             "notch.open": "Open",
             "notch.reveal": "Reveal in Finder",
             "notch.copy": "Copy File",
             "notch.remove": "Remove",
-            
             // Permissions Pane
-            "permissions.title": "Accessibility Permission",
-            "permissions.subtitle": "Augment uses Accessibility to read window state and intercept Dock interactions.",
-            "permissions.recheck": "Re-check",
-            "permissions.reprompt": "Re-prompt",
-            "permissions.settings": "Open System Settings",
-            "permissions.status": "Status",
-            "permissions.footer": "Augment uses Accessibility to draw window previews and intercept Dock clicks. Nothing is collected or transmitted.",
-            "permissions.enabled": "Accessibility access enabled",
-            "permissions.required": "Accessibility access required",
-            "permissions.desc_enabled": "Augment can read window positions and intercept Dock clicks.",
-            "permissions.desc_required": "Without Accessibility, hover previews and click toggling can't run.",
+            "permissions.title": "Permissions",
+            
+            
+            
+            
             
             // Enums
             "size.small": "Small",
@@ -313,61 +479,160 @@ public enum Localizer {
             "menu.about": "Augment Hakkında",
             "menu.settings": "Ayarlar…",
             "menu.permissions": "Erişilebilirlik İzni…",
+            "menu.caffeinate": "Mac'i Uyanık Tut",
+            "perm.accessibility": "Erişilebilirlik",
+            "perm.screen_recording": "Ekran Kaydı",
+            "perm.automation_finder": "Finder otomasyonu",
+            "perm.needed": "%@ izni gerekiyor",
+            "perm.grant": "İzin Ver",
+            "short.previews": "Dock önizlemeleri",
+            "short.dockclick": "Tıklayınca küçült",
+            "short.docklock": "Dock ekran kilidi",
+            "short.snap": "Kenara yaslama",
+            "short.layouts": "Yerleşim seçici",
+            "short.switcher": "Pencere değiştirici",
+            "short.wincut": "Pencere kes-yapıştır",
+            "short.newfile": "Yeni dosya menüsü",
+            "short.folderql": "Klasör önizleme",
+            "short.filecut": "Dosya kes-yapıştır",
+            "short.notch": "Notch",
+            "short.mixer": "Ses mikseri",
+            
+            "perm.granted": "Verildi",
+            "perm.used_by": "Kullanan: %@",
+            "permissions.subtitle_v2": "Augment bir izni yalnızca o izne ihtiyaç duyan bir özelliği açtığında ister.",
+            "permissions.footer_v2": "Sistem Ayarları'nda düğme açık görünüyor ama burada durum boş kalıyorsa, Augment'i o listeden “−” ile kaldırıp izni yeniden ver. Eski bir sürüme verilen izin yeni sürüme geçmiyor.",
+            "page.dock": "Dock",
+            "page.dock_sub": "Dock'taki bir uygulamanın üzerine gelince veya tıklayınca olanlar.",
+            "page.dock_previews": "Pencere önizlemeleri",
+            "page.windows": "Pencereler",
+            "page.windows_sub": "Pencereleri klavyeyle yerleştir ve aralarında geçiş yap.",
+            "page.finder": "Finder",
+            "page.finder_sub": "Finder menülerine, Quick Look'a ve kısayollara eklenenler.",
+            "page.finder_cut": "Kes ve yapıştır",
+            "page.sound": "Ses ve Ekran",
+            "page.sound_sub": "Uygulama başına ses ve harici monitör kontrolleri.",
+            "page.menubar": "Hızlı Panel",
+            "page.menubar_sub": "Menü çubuğundaki Augment ikonuna tıklayınca açılan panelde neler görüneceğini seç. Augment menüsü için ikona sağ tıkla.",
+            "page.awake": "Uyanık tut",
+            "page.awake_sub": "Sen kapatana kadar ekranın uykuya geçmesini engeller.",
+            "general.summary": "%d / %d özellik açık",
+            "general.all_off": "Kapalı", "general.on": "Açık",
+            "general.perms_ok": "Tüm izinler verildi",
+            "general.perms_missing": "%d izin eksik",
+            "general.app": "Uygulama",
+            "general.launch_at_login": "Girişte Augment'i aç",
             "menu.quit": "Augment'ten Çık",
             "settings.title": "Augment Ayarları",
-            "about.description": "Dock, Finder ve çentik (notch) için pratik araçlar.",
+            "about.description": "macOS'ta eksik kalan küçük dokunuşlar — Dock, pencereler, Finder, notch, ses ve ekranlar için.",
             "about.version": "Sürüm",
-            "about.dock_previews": "Dock önizlemeleri",
-            "about.finder_tools": "Finder araçları",
-            "about.interactive_notch": "Etkileşimli çentik",
-            "about.close": "Kapat",
-            "about.copyright": "Telif Hakkı",
+            
+            
             
             // General Pane
-            "general.title": "Augment'e Hoş Geldiniz",
-            "general.subtitle": "Canlı Dock önizlemeleri, pencere hizalama (snapping), Finder entegrasyonları ve dinamik kamera çentiği (Notch) ile macOS iş akışınızı zenginleştirin.",
+            
             "general.features": "Özellikler",
-            "general.about": "Hakkında",
-            "general.version": "Sürüm",
-            "general.build": "Yapı",
+            
             "general.language": "Dil",
             "general.lang_system": "Sistem Dili",
             "general.lang_en": "English",
             "general.lang_tr": "Türkçe",
-            
             // Sidebar / tab titles
             "tab.general": "Genel",
-            "tab.hover": "Üzerine Gelme",
-            "tab.windowControls": "Pencere Kontrolleri",
-            "tab.dockClick": "Dock Tıklaması",
-            "tab.displays": "Ekranlar",
-            "tab.finder": "Finder",
-            "tab.windowSnapping": "Hizalama",
-            "tab.notch": "Çentik",
+            
+            
+            
+            "tab.notch": "Notch",
             "tab.permissions": "İzinler",
 
             // Feature titles & subtitles
             "feature.hover_title": "Dock simgesi üzerinde pencere önizlemeleri",
             "feature.hover_subtitle": "Bir Dock simgesinin üzerinde beklediğinizde canlı küçük resimler görünür.",
             "feature.dockClick_title": "Dock tıklamasında küçültmeyi aç/kapat",
-            "feature.dockClick_subtitle": "Etkin uygulamanın Dock simgesine tıklayarak pencerelerini gizleyin; geri getirmek için tekrar tıklayın. Diğer uygulamalar standart macOS davranışını korur.",
-            "feature.windowControls_title": "Önizlemelerde pencere kontrolleri",
-            "feature.windowControls_subtitle": "Her önizleme görselinde macOS tarzı pencere kontrollerini göster.",
-            "feature.folderQL_title": "Klasör Hızlı Bakış hiyerarşisi",
-            "feature.folderQL_subtitle": "Bir klasör üzerinde Boşluk tuşuna basıldığında klasör ağacını, boyutlarını ve özetlerini gösterir.",
-            "feature.finderMenu_title": "Finder \u{201C}Augment ile Yeni Dosya\u{201D} menüsü",
-            "feature.finderMenu_subtitle": "Dosya oluşturmak için kategorize edilmiş bağlamsal bir menü ekler.",
-            "feature.displays_title": "Dock'u seçili ekranlara sabitle",
-            "feature.displays_subtitle": "Augment'in Dock etkileşimlerini seçilen bir veya daha fazla monitörde tutun.",
+            
+            
+            
+            
             "feature.snapping_title": "Pencere hizalama (snapping)",
-            "feature.snapping_subtitle": "Cmd+Yön tuşları ile pencereleri ekranın yarılarına hizalayın (özelleştirilebilir).",
-            "feature.notch_title": "Etkileşimli Çentik",
-            "feature.notch_subtitle": "MacBook çentiğini müzik, pil ve dosya rafı merkezine dönüştürün.",
+            
+            
+            
+            
+            "menubar.no_match": "Eşleşme yok.",
+            
+            
+            "page.awake_title": "Uyanık Tut", "page.awake_page_sub": "Mac'in uykuya geçmesini engelle — elle, bir süreliğine ya da kendiliğinden.",
+            "awake.manual_section": "Şimdi", "quick.modules": "Panelde göster", "quick.microphone": "Mikrofon",
+            "quick.modules_footer": "Bölümler yalnızca gösterecek bir şey olduğunda çıkar (örneğin toplantılar için Notch sayfasındaki Yaklaşan toplantılar açık olmalı).",
+            "notch.search": "Ara", "notch.copied": "Kopyalandı",
+            "notch.drop_shelf": "Raf", "notch.drop_zip": "Zip", "notch.tab_mirror": "Ayna",
+            "notch.airdrop_all": "Hepsini AirDrop ile Gönder", "notch.zip_all": "Hepsini Zip Yap (İndirilenler)", "notch.clear_shelf": "Rafı Temizle",
+            "mirror.title": "Ayna", "mirror.desc": "Görüşmeden önce nasıl göründüğüne bakmak için notch'ta kamera sekmesi. Kamera yalnızca sekme açıkken çalışır.",
+            "mirror.denied": "Augment'in kamerayı kullanma izni yok.", "mirror.no_camera": "Kamera bulunamadı",
+            "awake.reason_app": "Uyanık: %@ açık",
+            "awake.reason_power": "Uyanık: şarjda",
+            "awake.reason_download": "Uyanık: indirme sürüyor",
+            "awake.on_power": "Şarja takılıyken",
+            "awake.downloading": "İndirme sürerken",
+            "awake.apps": "Bu uygulamalar açıkken",
+            "awake.add_app": "Uygulama Ekle…",
+            "awake.auto_section": "Otomatik uyanık tut",
+            "awake.auto_footer": "Bunlardan biri gerçekleşince Mac kendiliğinden uyanık kalır; yukarıdaki anahtar ve süreler de çalışmaya devam eder. İndirmeler, İndirilenler klasöründeki yarım dosyalardan anlaşılır.",
+            "awake.display_sleep": "Ekran uyuyabilsin",
+            "awake.display_sleep_desc": "Mac çalışmaya devam etsin (indirme, render, müzik) ama ekran kapanabilsin.",
+            "awake.lid": "Kapak kapalıyken de uyanık kal",
+            "awake.lid_desc": "Mac şarja takılıyken çalışır — macOS pilde kapak kapanınca her zaman uyur.",
+            "awake.options_section": "Seçenekler",
+            "displays.keys_title": "Parlaklık ve ses tuşları monitörü kontrol etsin",
+            "displays.keys_desc": "Klavyedeki parlaklık tuşları imlecin olduğu ekranı, ses tuşları monitörün hoparlörünü (DDC) ayarlar. Dahili ekran her zamanki gibi çalışır.",
+            "displays.keys_section": "Klavye",
+            "displays.schedule_title": "Gündüz ve gece parlaklığı",
+            "displays.schedule_desc": "Seçtiğin saatlerde tüm ekranları gündüz ya da gece seviyesine geçirir. Aradaki değişikliklerin korunur.",
+            "displays.schedule_section": "Zamanlama",
+            "displays.schedule_day": "Gündüz başlangıcı",
+            "displays.schedule_night": "Gece başlangıcı",
+            "meetings.title": "Yaklaşan toplantılar",
+            "meetings.desc": "Sıradaki etkinliği notch'ta ve hızlı panelde gösterir; başlamadan 5 dakika önce notch'u açar ve Zoom, Meet, Teams bağlantıları için Katıl düğmesi sunar.",
+            "meetings.no_access": "Augment henüz takvimlerini okuyamıyor.",
+            "meetings.join": "Katıl",
+            "meetings.now": "Şimdi",
+            "meetings.in_minutes": "%d dk sonra",
+            "meetings.today": "Bugün",
+            "perm.open_settings": "Ayarları Aç",
+            "screenshots.title": "Ekran görüntüleri rafa",
+            "screenshots.desc": "Yeni ekran görüntüleri notch rafına düşer; oradan doğrudan sohbete ya da e-postaya sürükleyebilirsin.",
+            "notch.extras_section": "Notch'ta daha fazlası",
+            "clip.panel_title": "Pano paneli (⇧⌘V)",
+            "clip.panel_desc": "Pano geçmişinde ara, sık kullandıklarını sabitle, Return ya da ⌘1–⌘9 ile yapıştır.",
+            "clip.section": "Pano",
+            "clip.search": "Panoda ara",
+            "clip.hint": "Return yapıştırır · ⌘1–9 hızlı yapıştır · ⌘P sabitler · Esc kapatır",
+            "clip.pin": "Sabitle",
+            "finder.extra_title": "Yolu Kopyala ve Terminal'de Aç",
+            "finder.extra_desc": "İkisini de Finder'ın sağ tık menüsüne ekler.",
+            "finder.extras_section": "Finder'da daha fazlası",
+            "finder.copy_path": "Yolu Kopyala",
+            "finder.open_terminal": "Terminal'de Aç",
+            "quick.all_displays": "Tüm ekranlar",
+            "quick.mic_on": "Mikrofon açık",
+            "quick.mic_off": "Mikrofon kapalı",
+            "mixer.default_output": "Varsayılan çıkış",
+            "mixer.output_help": "Bu uygulamanın sesi nereden çalsın",
+            "notch.awake_on": "Uyanık", "notch.awake_off": "Uyanık tut",
+            "notch.awake_turn_off": "Kapat", "notch.awake_indefinite": "Ben kapatana kadar",
+            "notch.awake_hours": "%d saat", "notch.awake_minutes": "%d dakika",
+            "notch.awake_help": "Mac'i ve ekranı uyanık tutar. Süre seçmek için sağ tıkla.",
+            "notch.hour_short": "sa", "notch.minute_short": "dk",
+            "notch.tab_note": "Not", "notch.pomodoro_help": "Odak sayacı — süresini değiştirmek için sağ tıkla",
+            "notch.pomodoro_length": "Pomodoro süresi", "notch.minutes_value": "%d dk",
+            
+            
+            
             
             // Hover Pane
-            "hover.title": "Üzerine Gelme Önizlemeleri",
-            "hover.subtitle": "Dock üzerinde gezinirken canlı pencere önizlemelerinin nasıl davranacağını ayarlayın.",
+            
             "hover.delay": "Gecikme süresi",
+            "hover.minimized": "Küçültüldü",
             "hover.timing": "Zamanlama",
             "hover.delay_desc": "Önizlemenin görünmesi için imlecin ne kadar süre Dock simgesi üzerinde kalması gerektiği.",
             "hover.appearance": "Görünüm",
@@ -389,8 +654,7 @@ public enum Localizer {
             "hover.no_open_windows": "Açık pencere yok",
 
             // Window Controls Pane
-            "controls.title": "Pencere Kontrolleri",
-            "controls.subtitle": "Her önizleme küçük resminde macOS tarzı pencere kontrol noktaları bulunur.",
+            
             "controls.show": "Pencere kontrollerini göster",
             "controls.show_desc": "Üzerine gelindiğinde macOS ile uyumlu kapatma, simge durumuna küçültme ve büyütme noktaları görünür.",
             "controls.side": "Kenar",
@@ -399,20 +663,15 @@ public enum Localizer {
             "controls.legacy": "Klasik kapatma simgesi",
             "controls.legacy_desc": "Pencere kontrolleri kapalıyken, üzerine gelindiğinde küçük × simgesini göster.",
             "controls.layout": "Düzen",
-            
             // Dock Click Pane
-            "dock_click.title": "Dock Tıklaması",
-            "dock_click.subtitle": "Bir Dock simgesine tıkladığınızda ne olacağına karar verin.",
+            
             "dock_click.behavior": "Tıklama Davranışı",
             "dock_click.toggle_minimize": "Dock tıklamasında küçültmeyi aç/kapat",
             "dock_click.toggle_minimize_desc": "Etkin uygulamanın Dock simgesine tıklayarak pencerelerini gizleyin; geri getirmek için tekrar tıklayın. Diğer uygulamalar standart macOS davranışını korur.",
-            "dock_click.effect_title": "Simge Durumuna Küçültme Animasyonu",
-            "dock_click.effect_picker": "Küçültme efekti",
-            "dock_click.effect_desc": "Animasyonu macOS'in kontrolüne bırakmak için “Sistem” seçeneğini belirleyin; diğer seçenekler sistem tercihini geçersiz kılar ve Dock'u hızlıca yeniden başlatır.",
+            
             
             // Finder Pane
-            "finder.title": "Finder Entegrasyonu",
-            "finder.subtitle": "Kategorize edilmiş bir \u{201C}Augment ile Yeni Dosya\u{201D} menüsü için Finder'da herhangi bir yere sağ tıklayın.",
+            
             "finder.menu": "\u{201C}Augment ile Yeni Dosya\u{201D} menüsü",
             "finder.menu_desc": "Finder'a kategorize edilmiş bağlamsal menüyü ekler.",
             "finder.folder_ql": "Klasör Hızlı Bakış hiyerarşisi",
@@ -421,7 +680,6 @@ public enum Localizer {
             "finder.warning_desc": "Kapalıysa, macOS Augment'in \u{201C}özellik kapalı\u{201D} mesajı yerine varsayılan klasör simgesini gösterir.",
             "finder.behavior": "Davranış",
             "finder.footer": "Finder/Hızlı Bakış uzantıları macOS tarafından yönetilir. Bunları açıp kapattıktan sonra, menünün yenilenmesi için Finder'da bir kez sağ tıklamanız gerekebilir.",
-            
             "finder.menu_title": "Augment ile Yeni Dosya",
             "finder.category_coding": "Yazılım / Kodlama",
             "finder.category_office": "Microsoft Office",
@@ -438,10 +696,8 @@ public enum Localizer {
             "finder.error_generic_title": "Dosya oluşturulamadı",
             "finder.error_no_permission": "Augment'in bu konuma yazma izni yok. Başka bir klasör deneyin veya Gizlilik ayarlarından erişim izni verin.",
             "finder.error_read_only": "Bu disk salt okunur olduğundan burada yeni bir dosya oluşturulamaz.",
-            
             // Displays Pane
-            "displays.title": "Ekranlar",
-            "displays.subtitle": "Dock'u gerçekten kullandığınız ekranlarda tutun.",
+            
             "displays.lock": "Dock'u seçilen ekranlara kilitle",
             "displays.lock_desc": "Augment diğer ekranlardaki Dock etkileşimlerini yoksayar ve imleci Dock çağırma bölgesinin dışına çıkarır, böylece macOS Dock'u seçilmemiş bir ekrana kaydırmaz.",
             "displays.dock_lock": "Dock Kilidi",
@@ -450,9 +706,20 @@ public enum Localizer {
             "displays.fallback": "Herhangi bir ekran seçilmezse, Augment imlecin altındaki ekrana geri döner.",
             "displays.id": "Ekran ID",
             
+            "displays.section": "Ekranlar", "displays.rescan": "Yeniden tara",
+            "displays.none": "Ekran bulunamadı.",
+            "displays.footer": "Dahili ve Apple ekranlarında macOS'un kendi parlaklığı kullanılır. Diğer monitörler DDC/CI ile kontrol edilir (MonitorControl gibi); desteklemeyen monitörlerde Augment görüntüyü karartır.",
+            "displays.method_native": "Dahili kontrol", "displays.method_ddc": "DDC/CI", "displays.method_software": "Yazılımla karartma",
+            "quick.displays": "Ekranlar", "quick.sound": "Ses",
+            "quick.enable_mixer": "Uygulama bazında ses: Ses Mikseri'ni aç",
+            "quick.awake_off_title": "Kapalı", "quick.awake_remaining": "%@ kaldı",
+            "quick.off": "Kapalı", "quick.awake_duration": "Süre",
+            
+            
+            
+            
             // Snapping Pane
-            "snapping.title": "Pencere Hizalama",
-            "snapping.subtitle": "Pencereleri klavye kısayollarıyla ekran kenarlarına hizalayın (tıpkı Windows'taki gibi).",
+            
             "snapping.enable": "Pencere hizalamayı etkinleştir",
             "snapping.enable_desc": "Pencereleri yarım boyuta getirmek veya ekranı kaplamak için klavye kısayollarını kullanın.",
             "snapping.toggle": "Ana Açma/Kapama",
@@ -464,13 +731,43 @@ public enum Localizer {
             "snapping.preview": "Önizleme",
             "snapping.left": "Sol",
             "snapping.right": "Sağ",
-            "snapping.up": "Yukarı",
-            "snapping.down": "Aşağı",
+            
             "snapping.left_half": "Sol Yarı",
             "snapping.right_half": "Sağ Yarı",
             "snapping.maximize": "Ekranı Kapla",
             "snapping.restore_center": "Geri Yükle / Ortala",
+
+            // Cut & Paste
+            "cutpaste.section": "Kes & Yapıştır",
+            "cutpaste.footer": "Windows 11'deki pencere kesip yapıştırma özelliği gibi, pencereleri veya Finder dosyalarını keserek başka bir yere taşıyın.",
+            "cutpaste.window_title": "Pencere Kes & Yapıştır",
+            "cutpaste.window_desc": "Odaktaki pencereyi kesin, imleci istediğiniz yere (başka bir ekrana bile) götürün ve yapıştırarak oraya taşıyın.",
+            "cutpaste.cut": "Pencereyi kes",
+            "cutpaste.paste": "Pencereyi buraya yapıştır",
+            "cutpaste.file_title": "Finder Dosya Kesme",
+            "cutpaste.file_desc": "Finder'a gerçek bir Kes (⌘X) ekler: kesilen öğelerde makas rozeti görünür, başka klasörde ⌘V ile taşınır, ⌘Z ile geri gelir. Yapıştırmadan önce Esc veya ⌘Z kesmeyi iptal eder.",
+
+            "snaplayouts.section": "Snap Layouts",
+            "snaplayouts.title": "Yerleşim Seçici",
+            "snaplayouts.desc": "Windows 11 tarzı bir açılır panel — yarım, çeyrek ve üçte bir bölgeler arasından seçip odaktaki pencereyi oraya yerleştirin.",
+            "snaplayouts.trigger": "Seçiciyi göster",
+            "snaplayouts.footer": "Kısayola pencerenin gitmesini istediğin yerin yakınında bas — seçici imlecin yanında açılır. Escape iptal eder.",
+
+            "switcher.section": "Pencere Değiştirici",
+            "switcher.title": "Küçük Resimli Pencere Değiştirici",
+            "switcher.desc": "Option'a basılı tutup Tab'a dokunarak açık her pencerenin canlı küçük resmi arasında gezin, Option'ı bırakınca oraya geçin.",
+            "switcher.trigger": "Değiştiriciyi göster",
+            "switcher.footer": "⌘Tab yerine ⌥Tab'a bağlıdır, böylece sistemin kendi Uygulama Değiştirici'sine hiç dokunulmaz — bu, uygulama değil, tek tek pencereler arasında geçiş yapar.",
+
             
+            "mixer.toggle": "Ses Mikseri",
+            "mixer.enable": "Ses Mikserini Etkinleştir",
+            "mixer.enable_desc": "Sistem sesinden bağımsız olarak her uygulama için ayrı bir ses seviyesi ayarlayın.",
+            "mixer.footer": "macOS 14.2+'nin Core Audio process-tap API'sini kullanır (sanal ses sürücüsü yok, özel/gizli API yok) — açık kaynaklı Mac ses mikserlerinin kullandığı aynı teknik. macOS 14.2 veya üstü gerektirir.",
+            "mixer.apps": "Çalışan Uygulamalar",
+            "mixer.no_apps": "Şu anda ses çalan bir uygulama yok.",
+            "mixer.unsupported": "Ses Mikseri için macOS 14.2 veya üstü gerekiyor.",
+
             // Notch Pane
             "notch.title": "Etkileşimli Çentik",
             "notch.subtitle": "MacBook kamera çentiğini müzik, pil ve dosyalar için dinamik bir merkeze dönüştürün.",
@@ -502,25 +799,30 @@ public enum Localizer {
             "notch.widgets_desc": "Çentiği genişletmek ve araçlarınızı görmek için çentik alanının üzerine gelin. Rafı kullanmak için dosyaları üzerine sürükleyin.",
             "notch.preview": "Önizleme",
             "notch.no_widgets": "Seçili araç yok",
+            
+            "notch.caffeinate": "Uykuda Kalma Düğmesi",
+            "notch.caffeinate_desc": "Çentiğin üst çubuğunda Mac'i uyanık tutan bir düğme gösterir.",
+            "notch.clipboard": "Pano Geçmişi",
+            "notch.clipboard_desc": "Dosya rafının yanına, son kopyaladıklarınızı gösteren bir Pano sekmesi ekler.",
+            "notch.shelf_tab_files": "Dosyalar",
+            "notch.shelf_tab_clipboard": "Pano",
+            "notch.clipboard_empty": "Henüz bir şey kopyalanmadı.",
+            "notch.productivity": "Hızlı Not & Pomodoro",
+            "notch.productivity_desc": "Çentiğin içinde bir not defteri ve odaklanma zamanlayıcısı.",
+            "notch.quick_note_placeholder": "Hızlı not…",
+            
+            "notch.pomodoro_done": "Pomodoro tamamlandı 🍅",
             "notch.drop_files": "Dosyaları sabitlemek için bırakın",
-            "notch.drop_here": "Sabitlemek için buraya bırakın",
             "notch.open": "Aç",
             "notch.reveal": "Finder'da Göster",
             "notch.copy": "Dosyayı Kopyala",
             "notch.remove": "Kaldır",
-            
             // Permissions Pane
-            "permissions.title": "Erişilebilirlik İzni",
-            "permissions.subtitle": "Augment, pencere durumunu okumak ve Dock etkileşimlerini algılamak için Erişilebilirlik iznini kullanır.",
-            "permissions.recheck": "Tekrar Kontrol Et",
-            "permissions.reprompt": "Tekrar İste",
-            "permissions.settings": "Sistem Ayarlarını Aç",
-            "permissions.status": "Durum",
-            "permissions.footer": "Augment, pencere önizlemelerini çizmek ve Dock tıklamalarını algılamak için Erişilebilirlik iznini kullanır. Hiçbir veri toplanmaz veya iletilmez.",
-            "permissions.enabled": "Erişilebilirlik erişimi etkin",
-            "permissions.required": "Erişilebilirlik erişimi gerekli",
-            "permissions.desc_enabled": "Augment, pencere konumlarını okuyabilir ve Dock tıklamalarını algılayabilir.",
-            "permissions.desc_required": "Erişilebilirlik olmadan, üzerine gelme önizlemeleri ve tıklama eylemleri çalışamaz.",
+            "permissions.title": "İzinler",
+            
+            
+            
+            
             
             // Enums
             "size.small": "Küçük",

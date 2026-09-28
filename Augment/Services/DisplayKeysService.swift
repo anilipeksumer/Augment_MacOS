@@ -97,7 +97,7 @@ final class DisplayKeysService {
                 DispatchQueue.main.async {
                     let service = DisplayBrightnessService.shared
                     if let value = service.step(delta, for: target) {
-                        LevelHUD.shared.show(icon: value < 0.4 ? "sun.min.fill" : "sun.max.fill", level: value, on: target)
+                        LevelHUD.shared.show(icon: value < 0.4 ? "sun.min.fill" : "sun.max.fill", level: value, on: target, showPercent: true)
                     }
                 }
             }
@@ -171,16 +171,18 @@ final class LevelHUD {
     final class Model: ObservableObject {
         @Published var icon = "sun.max.fill"
         @Published var level: Double = 0.5
+        @Published var showPercent = true
     }
 
-    func show(icon: String, level: Double, on displayID: CGDirectDisplayID) {
+    func show(icon: String, level: Double, on displayID: CGDirectDisplayID, showPercent: Bool = true) {
         model.icon = icon
-        model.level = level
+        model.showPercent = showPercent
+        withAnimation(.easeOut(duration: 0.18)) { model.level = level }
         let panel = self.panel ?? makePanel()
         self.panel = panel
         let screen = NSScreen.screens.first { $0.displayID == displayID } ?? NSScreen.main
         if let frame = screen?.frame {
-            let size = CGSize(width: 220, height: 56)
+            let size = CGSize(width: 260, height: 56)
             panel.setFrame(CGRect(x: frame.midX - size.width / 2, y: frame.minY + frame.height * 0.14,
                                   width: size.width, height: size.height), display: true)
         }
@@ -200,7 +202,7 @@ final class LevelHUD {
     }
 
     private func makePanel() -> NSPanel {
-        let panel = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 220, height: 56),
+        let panel = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 260, height: 56),
                             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .screenSaver
         panel.isOpaque = false
@@ -230,9 +232,14 @@ private struct LevelHUDView: View {
                 }
             }
             .frame(height: 6)
+            if model.showPercent {
+                Text("\(Int((model.level * 100).rounded()))%")
+                    .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                    .frame(width: 38, alignment: .trailing)
+            }
         }
         .padding(.horizontal, 18)
-        .frame(width: 220, height: 56)
+        .frame(width: 260, height: 56)
         .modifier(HUDBackground())
     }
 }
@@ -287,7 +294,7 @@ final class BrightnessScheduler {
         let isDay = Self.isDay(now: Date(), dayStart: Int(prefs.brightnessDayStart), nightStart: Int(prefs.brightnessNightStart))
         guard isDay != lastPeriod else { return }
         lastPeriod = isDay
-        DisplayBrightnessService.shared.setAll(isDay ? prefs.brightnessDayLevel : prefs.brightnessNightLevel)
+        DisplayBrightnessService.shared.setAll(isDay ? prefs.brightnessDayLevel : prefs.brightnessNightLevel, animated: true)
     }
 
     nonisolated static func isDay(now: Date, dayStart: Int, nightStart: Int) -> Bool {

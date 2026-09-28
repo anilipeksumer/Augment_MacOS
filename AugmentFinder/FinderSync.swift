@@ -150,6 +150,13 @@ final class FinderSync: FIFinderSync {
         let submenu = NSMenu(title: menuTitle)
         var globalIndex = 0
 
+        let folderTitle = Localizer.string("finder.new_folder")
+        let folderItem = NSMenuItem(title: folderTitle, action: #selector(handleNewFolder(_:)), keyEquivalent: "")
+        folderItem.target = self
+        folderItem.image = Self.templateSymbol("folder.badge.plus", description: folderTitle)
+        submenu.addItem(folderItem)
+        submenu.addItem(.separator())
+
         for category in categories {
             let categoryTitleKey: String
             switch category.title {
@@ -252,8 +259,18 @@ final class FinderSync: FIFinderSync {
         }
     }
 
+    @objc private func handleNewFolder(_ sender: NSMenuItem) {
+        enqueueCreate(tag: FinderCreateBridge.newFolderTag)
+    }
+
     @objc private func handleTemplateSelection(_ sender: NSMenuItem) {
         guard flatTemplates.indices.contains(sender.tag) else { return }
+        enqueueCreate(tag: sender.tag)
+    }
+
+    /// Hands the request to Augment (unsandboxed), which creates the item
+    /// right away and selects it for renaming.
+    private func enqueueCreate(tag: Int) {
         let controller = FIFinderSyncController.default()
         guard let directory = currentTargetDirectory(for: controller) else {
             presentAlert(
@@ -265,18 +282,9 @@ final class FinderSync: FIFinderSync {
 
         do {
             try FinderCreateBridge.enqueue(
-                FinderCreateBridge.Request(templateTag: sender.tag, directoryPath: directory.path)
+                FinderCreateBridge.Request(templateTag: tag, directoryPath: directory.path)
             )
             ensureAugmentHostRunningForFinderBridge()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                CFNotificationCenterPostNotification(
-                    CFNotificationCenterGetDarwinNotifyCenter(),
-                    FinderCreateBridge.darwinNotificationName,
-                    nil,
-                    nil,
-                    true
-                )
-            }
         } catch {
             presentAlert(
                 title: Localizer.string("finder.error_generic_title"),

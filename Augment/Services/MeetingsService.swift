@@ -128,44 +128,85 @@ final class MeetingsService: ObservableObject {
     }
 }
 
-/// Drops new screenshots onto the notch shelf. Uses Spotlight's
-/// `kMDItemIsScreenCapture` flag, so it works wherever screenshots are saved.
+/// Drops new screenshots onto the notch shelf. Watches the folder macOS
+/// saves screenshots to (System Settings' / ⇧⌘5 "Save to", Desktop by
+/// default) and picks up new files carrying the screen-capture flag
+/// screencapture writes. Works without Spotlight, which is often off or
+/// not indexing an iCloud-synced Desktop.
 @MainActor
 final class ScreenshotShelfWatcher {
     static let shared = ScreenshotShelfWatcher()
 
     var onScreenshot: ((URL) -> Void)?
-    private var query: NSMetadataQuery?
+    private var source: DispatchSourceFileSystemObject?
+    private var watchedFolder: URL?
     private var startedAt = Date()
     private var seen = Set<String>()
+    private var scanWork: DispatchWorkItem?
 
-    func start() {
-        guard query == nil else { return }
+    /// Where screenshots are saved right now.
+    static var screenshotFolder: URL {
+        if let custom = CFPreferencesCopyAppValue("location" as CFString, "com.apple.screencapture" as CFString) as? String {
+            let url = URL(fileURLWithPath: (custom as NSString).expandingTildeInPath, isDirectory: true)
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue { return url }
+        }
+        return FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop")
+    }
+
+    func start(folder override: URL? = nil) {
+        let folder = override ?? Self.screenshotFolder
+        guard source == nil || watchedFolder != folder else { return }
+        stop()
         startedAt = Date()
         seen.removeAll()
-        let q = NSMetadataQuery()
-        q.predicate = NSPredicate(format: "kMDItemIsScreenCapture == 1")
-        q.searchScopes = [NSMetadataQueryUserHomeScope]
-        NotificationCenter.default.addObserver(self, selector: #selector(updated(_:)),
-                                               name: .NSMetadataQueryDidUpdate, object: q)
-        q.start()
-        query = q
+        let fd = open(folder.path, O_EVTONLY)
+        guard fd >= 0 else {
+            NSLog("Augment: can't watch screenshot folder %@", folder.path)
+            return
+        }
+        let src = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .rename], queue: .main)
+        src.setEventHandler { [weak self] in self?.scheduleScan() }
+        src.setCancelHandler { close(fd) }
+        src.resume()
+        source = src
+        watchedFolder = folder
     }
 
     func stop() {
-        query?.stop()
-        if let query { NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryDidUpdate, object: query) }
-        query = nil
+        source?.cancel()
+        source = nil
+        watchedFolder = nil
+        scanWork?.cancel()
     }
 
-    @objc private func updated(_ note: Notification) {
-        guard let added = note.userInfo?[NSMetadataQueryUpdateAddedItemsKey] as? [NSMetadataItem] else { return }
-        for item in added {
-            guard let path = item.value(forAttribute: NSMetadataItemPathKey) as? String, !seen.contains(path) else { continue }
-            let created = item.value(forAttribute: NSMetadataItemFSCreationDateKey) as? Date ?? Date()
-            guard created >= startedAt.addingTimeInterval(-2) else { continue }
-            seen.insert(path)
-            onScreenshot?(URL(fileURLWithPath: path))
+    /// screencapture writes a hidden temp file and renames it; wait for the
+    /// dust to settle, then look for new screenshots.
+    private func scheduleScan() {
+        scanWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.scan() }
+        scanWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+    }
+
+    private func scan() {
+        guard let folder = watchedFolder,
+              let items = try? FileManager.default.contentsOfDirectory(
+                at: folder, includingPropertiesForKeys: [.creationDateKey], options: [.skipsHiddenFiles])
+        else { return }
+        for url in items where !seen.contains(url.path) {
+            let created = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
+            guard created >= startedAt.addingTimeInterval(-2), Self.isScreenshot(url) else { continue }
+            seen.insert(url.path)
+            onScreenshot?(url)
         }
+    }
+
+    /// screencapture tags its files with kMDItemIsScreenCapture as an
+    /// extended attribute, so this works even when Spotlight is off.
+    static func isScreenshot(_ url: URL) -> Bool {
+        let name = "com.apple.metadata:kMDItemIsScreenCapture"
+        return getxattr(url.path, name, nil, 0, 0, 0) > 0
     }
 }

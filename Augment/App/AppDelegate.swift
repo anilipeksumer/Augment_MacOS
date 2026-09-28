@@ -27,7 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let dockService = DockInteractionService()
     private let windowDiscovery = WindowDiscoveryService()
     private let windowSnappingService = WindowSnappingService()
-    private let windowCutPasteService = WindowCutPasteService()
     private let fileCutPasteService = FileCutPasteService()
     private let snapLayoutsService = SnapLayoutsService()
     private lazy var windowSwitcherService = WindowSwitcherService(windowDiscovery: windowDiscovery)
@@ -85,6 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         NSApp.setActivationPolicy(.accessory)
+        preferences.migrateNotchStylesIfNeeded()
         if let icon = AugmentApplicationIcon.load() {
             NSApp.applicationIconImage = icon
         }
@@ -139,16 +139,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // --- New feature services ---
         startWindowSnappingIfNeeded()
-        startWindowCutPasteIfNeeded()
         startFileCutPasteIfNeeded()
         startSnapLayoutsIfNeeded()
         startWindowSwitcherIfNeeded()
         startVolumeMixerIfNeeded()
         startClipboardHistoryIfNeeded()
         startExtrasIfNeeded()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+        // First launch after installing: the tour, then Settings in front.
+        // Later launches only nudge about the Finder extension if needed.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             guard let self else { return }
-            FinderExtensionStatus.promptIfNeeded(preferences: self.preferences)
+            if !WelcomeTourController.hasShown {
+                WelcomeTourController.show { [weak self] in self?.showSettings() }
+            } else {
+                FinderExtensionStatus.promptIfNeeded(preferences: self.preferences)
+            }
         }
         startNotchIfNeeded()
         observeNewFeaturePreferences()
@@ -167,7 +172,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         permissionCoordinator.stopPolling()
         dockPreviewCoordinator.stop()
         windowSnappingService.stop()
-        windowCutPasteService.stop()
         fileCutPasteService.stop()
         snapLayoutsService.stop()
         windowSwitcherService.stop()
@@ -252,6 +256,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: Localizer.string("menu.permissions"),
                      action: #selector(showOnboarding),
                      keyEquivalent: "").target = self
+        menu.addItem(withTitle: Localizer.string("menu.tour"),
+                     action: #selector(showTour),
+                     keyEquivalent: "").target = self
         menu.addItem(.separator())
         let caffeinateItem = menu.addItem(
             withTitle: Localizer.string("menu.caffeinate"),
@@ -283,6 +290,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleCaffeinate() {
         CaffeinateService.shared.toggle()
+    }
+
+    @objc private func showTour() {
+        WelcomeTourController.show { [weak self] in self?.showSettings() }
     }
 
     @objc private func showOnboarding() {
@@ -337,7 +348,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     // Features switched on while Accessibility was missing
                     // start now instead of needing an app relaunch.
                     self.startWindowSnappingIfNeeded()
-                    self.startWindowCutPasteIfNeeded()
                     self.startFileCutPasteIfNeeded()
                     self.startSnapLayoutsIfNeeded()
                     self.startWindowSwitcherIfNeeded()
@@ -349,7 +359,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestPermissionsWhenEnabled(preferences.$windowPreviewsEnabled, key: AppGroupKey.windowPreviewsEnabled)
         requestPermissionsWhenEnabled(preferences.$dockClickBehaviorEnabled, key: AppGroupKey.dockClickBehaviorEnabled)
         requestPermissionsWhenEnabled(preferences.$windowSnappingEnabled, key: AppGroupKey.windowSnappingEnabled)
-        requestPermissionsWhenEnabled(preferences.$windowCutPasteEnabled, key: AppGroupKey.windowCutPasteEnabled)
         requestPermissionsWhenEnabled(preferences.$fileCutPasteEnabled, key: AppGroupKey.fileCutPasteEnabled)
         requestPermissionsWhenEnabled(preferences.$snapLayoutsEnabled, key: AppGroupKey.snapLayoutsEnabled)
         requestPermissionsWhenEnabled(preferences.$windowSwitcherEnabled, key: AppGroupKey.windowSwitcherEnabled)
@@ -389,15 +398,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         guard permissionCoordinator.state == .granted else { return }
         windowSnappingService.start(shortcutsJSON: preferences.windowSnappingShortcuts)
-    }
-
-    private func startWindowCutPasteIfNeeded() {
-        guard preferences.windowCutPasteEnabled else {
-            windowCutPasteService.stop()
-            return
-        }
-        guard permissionCoordinator.state == .granted else { return }
-        windowCutPasteService.start()
     }
 
     private func startFileCutPasteIfNeeded() {
@@ -449,6 +449,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// panel, meetings and screenshots-to-shelf.
     private func startExtrasIfNeeded() {
         _ = CaffeinateService.shared // starts evaluating keep-awake rules
+        AudioRouteWatcher.shared.onDefaultOutputChanged = {
+            if #available(macOS 14.2, *) { AudioProcessMixerService.shared.defaultOutputChanged() }
+        }
+        AudioRouteWatcher.shared.start()
 
         if preferences.displayKeysEnabled && AXIsProcessTrusted() {
             DisplayKeysService.shared.start()
@@ -498,19 +502,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 if self.preferences.windowSnappingEnabled {
                     self.windowSnappingService.updateShortcuts(json)
-                }
-            }
-            .store(in: &cancellables)
-
-        // Window cut & paste toggle
-        preferences.$windowCutPasteEnabled
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] enabled in
-                guard let self else { return }
-                if enabled {
-                    self.startWindowCutPasteIfNeeded()
-                } else {
-                    self.windowCutPasteService.stop()
                 }
             }
             .store(in: &cancellables)

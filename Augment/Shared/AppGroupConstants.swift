@@ -229,7 +229,6 @@ public enum AppGroupKey {
     // MARK: - Window cut & paste (⌃⌘X / ⌃⌘V)
     /// Master toggle for cutting a window and re-placing it elsewhere,
     /// modeled on the Windows 11 "cut & paste to move windows" feature.
-    public static let windowCutPasteEnabled = "augment.windowCutPasteEnabled"
 
     // MARK: - File cut & paste (⌘X / ⌘V in Finder)
     /// Master toggle for a real Finder "Cut" (Finder natively only has
@@ -279,6 +278,7 @@ public enum AppGroupKey {
     public static let notchProductivityWidget = "augment.notchProductivityWidget"
     public static let notchPomodoroMinutes = "augment.notchPomodoroMinutes"
     public static let notchMirrorEnabled = "augment.notchMirrorEnabled"
+    public static let pauseOnHeadphonesRemoved = "augment.pauseOnHeadphonesRemoved"
     public static let quickPanelDisplays = "augment.quickPanelDisplays"
     public static let quickPanelSound = "augment.quickPanelSound"
     public static let quickPanelMic = "augment.quickPanelMic"
@@ -318,6 +318,9 @@ public enum AppGroupKey {
 /// sandboxed, so it can create the file and read template binaries from
 /// the embedded `AugmentFinder.appex` bundle.
 public enum FinderCreateBridge {
+    /// `templateTag` value meaning "a new folder" rather than a file template.
+    public static let newFolderTag = -1
+
     /// Darwin notify name – must stay in sync with the observer in
     /// `AppDelegate`.
     public static let darwinNotificationName = CFNotificationName(

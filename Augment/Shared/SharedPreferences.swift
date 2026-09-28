@@ -211,9 +211,6 @@ public final class SharedPreferences: ObservableObject {
     // MARK: - Window cut & paste
 
     /// Master toggle for ⌃⌘X (cut focused window) / ⌃⌘V (paste it under the cursor).
-    @Published public var windowCutPasteEnabled: Bool {
-        didSet { write(windowCutPasteEnabled, AppGroupKey.windowCutPasteEnabled) }
-    }
 
     // MARK: - File cut & paste
 
@@ -378,6 +375,9 @@ public final class SharedPreferences: ObservableObject {
     @Published public var quickPanelAwake: Bool {
         didSet { write(quickPanelAwake, AppGroupKey.quickPanelAwake) }
     }
+    @Published public var pauseOnHeadphonesRemoved: Bool {
+        didSet { write(pauseOnHeadphonesRemoved, AppGroupKey.pauseOnHeadphonesRemoved) }
+    }
     @Published public var notchMirrorEnabled: Bool {
         didSet { write(notchMirrorEnabled, AppGroupKey.notchMirrorEnabled) }
     }
@@ -437,7 +437,6 @@ public final class SharedPreferences: ObservableObject {
         self.windowSnappingEnabled = Self.loadBool(AppGroupKey.windowSnappingEnabled, reg)
         self.windowSnappingShortcuts = Self.loadString(AppGroupKey.windowSnappingShortcuts, reg) ?? ""
 
-        self.windowCutPasteEnabled = Self.loadBool(AppGroupKey.windowCutPasteEnabled, reg)
         self.fileCutPasteEnabled = Self.loadBool(AppGroupKey.fileCutPasteEnabled, reg)
         self.snapLayoutsEnabled = Self.loadBool(AppGroupKey.snapLayoutsEnabled, reg)
         self.windowSwitcherEnabled = Self.loadBool(AppGroupKey.windowSwitcherEnabled, reg)
@@ -461,6 +460,7 @@ public final class SharedPreferences: ObservableObject {
         self.notchProductivityWidget = Self.loadBool(AppGroupKey.notchProductivityWidget, reg)
         self.notchPomodoroMinutes = Self.loadDouble(AppGroupKey.notchPomodoroMinutes, reg)
         self.notchMirrorEnabled = Self.loadBool(AppGroupKey.notchMirrorEnabled, reg)
+        self.pauseOnHeadphonesRemoved = Self.loadBool(AppGroupKey.pauseOnHeadphonesRemoved, reg)
         self.quickPanelDisplays = Self.loadBool(AppGroupKey.quickPanelDisplays, reg)
         self.quickPanelSound = Self.loadBool(AppGroupKey.quickPanelSound, reg)
         self.quickPanelMic = Self.loadBool(AppGroupKey.quickPanelMic, reg)
@@ -482,6 +482,15 @@ public final class SharedPreferences: ObservableObject {
         self.screenshotShelfEnabled = Self.loadBool(AppGroupKey.screenshotShelfEnabled, reg)
         self.finderExtraMenuEnabled = Self.loadBool(AppGroupKey.finderExtraMenuEnabled, reg)
         self.notchQuickNoteText = Self.loadString(AppGroupKey.notchQuickNoteText, reg) ?? ""
+    }
+
+    /// 1.0.3 changed the notch defaults to a text date and a battery
+    /// symbol; people still on the old defaults move over once.
+    public func migrateNotchStylesIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: "augment.migratedNotchStyles103") else { return }
+        UserDefaults.standard.set(true, forKey: "augment.migratedNotchStyles103")
+        if notchCalendarStyle == "compact" { notchCalendarStyle = "text" }
+        if notchBatteryStyle == "gauge" { notchBatteryStyle = "symbol" }
     }
 
     private static func loadBool(_ key: String, _ registration: [String: Any]) -> Bool {

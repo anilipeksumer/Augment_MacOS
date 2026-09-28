@@ -32,7 +32,6 @@ struct GeneralSettingsPane: View {
                 (Localizer.string("short.snap"), preferences.windowSnappingEnabled),
                 (Localizer.string("short.layouts"), preferences.snapLayoutsEnabled),
                 (Localizer.string("short.switcher"), preferences.windowSwitcherEnabled),
-                (Localizer.string("short.wincut"), preferences.windowCutPasteEnabled),
             ]),
             PageSummary(tab: .finder, features: [
                 (Localizer.string("short.newfile"), preferences.finderNewFileMenuEnabled),

@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */; };
-		F17151A93D0740C6295F5929 /* WindowCutPasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */; };
 		554664E9216AD4758CA6043F /* FileCutPasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */; };
 		C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */; };
 		8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */; };
 		0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */; };
 		61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */; };
+		9F5708230B809EF21C46EB51 /* AudioRouteWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */; };
 		55B828C3ED3B8CEA41D27B46 /* FinderExtensionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */; };
 		5DDF7947BCAA28AEC95E049A /* MeetingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370707631BAB168E23D5599C /* MeetingsService.swift */; };
 		7C49F31B3909702F7899639F /* DisplayKeysService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */; };
@@ -49,6 +49,7 @@
 		BB0100000000000000000014 /* WindowThumbnailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F3 /* WindowThumbnailCell.swift */; };
 		BB0100000000000000000015 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01000000000000000000F4 /* SettingsWindow.swift */; };
 		63B9064524B7B3E0166650CB /* SettingsPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 076FCA03BCA773806F13022D /* SettingsPages.swift */; };
+		2F13230B016A402539D50913 /* WelcomeTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 307251077338447A505A130C /* WelcomeTour.swift */; };
 		90D09F265ED7FF2FA81F487D /* MirrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3A034DF7D3D89F818E5984 /* MirrorView.swift */; };
 		071EA2B531D95BE2684A9464 /* SettingsExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4512C512C519FBCDE1C79563 /* SettingsExtras.swift */; };
 		9818B199B973AB3227754A32 /* ClipboardPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83C06B5855A2289411119ED /* ClipboardPanel.swift */; };
@@ -138,12 +139,12 @@
 
 /* Begin PBXFileReference section */
 		12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSnappingService.swift; sourceTree = "<group>"; };
-		0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCutPasteService.swift; sourceTree = "<group>"; };
 		E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCutPasteService.swift; sourceTree = "<group>"; };
 		1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaffeinateService.swift; sourceTree = "<group>"; };
 		F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapLayoutsService.swift; sourceTree = "<group>"; };
 		EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSwitcherService.swift; sourceTree = "<group>"; };
 		BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemControlsService.swift; sourceTree = "<group>"; };
+		79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRouteWatcher.swift; sourceTree = "<group>"; };
 		9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderExtensionStatus.swift; sourceTree = "<group>"; };
 		370707631BAB168E23D5599C /* MeetingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingsService.swift; sourceTree = "<group>"; };
 		AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayKeysService.swift; sourceTree = "<group>"; };
@@ -200,6 +201,7 @@
 		EE01000000000000000000F3 /* WindowThumbnailCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowThumbnailCell.swift; sourceTree = "<group>"; };
 		EE01000000000000000000F4 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
 		076FCA03BCA773806F13022D /* SettingsPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPages.swift; sourceTree = "<group>"; };
+		307251077338447A505A130C /* WelcomeTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeTour.swift; sourceTree = "<group>"; };
 		ED3A034DF7D3D89F818E5984 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
 		4512C512C519FBCDE1C79563 /* SettingsExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExtras.swift; sourceTree = "<group>"; };
 		C83C06B5855A2289411119ED /* ClipboardPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPanel.swift; sourceTree = "<group>"; };
@@ -347,12 +349,12 @@
 				EE01000000000000000000B0 /* AXElementCoercion.swift */,
 				EE01000000000000000000F5 /* ScreenGeometry.swift */,
 				12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */,
-				0B9566837BB2805B2BB39E9C /* WindowCutPasteService.swift */,
 				E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */,
 				1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */,
 				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
 				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
 				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
+				79FB76EFA6A1AFE0E1E2A54F /* AudioRouteWatcher.swift */,
 				9E94E4FF33A70805A46FB5B1 /* FinderExtensionStatus.swift */,
 				370707631BAB168E23D5599C /* MeetingsService.swift */,
 				AE94E38BFF8BC8D3CF26D9DA /* DisplayKeysService.swift */,
@@ -389,6 +391,7 @@
 				EE01000000000000000000F3 /* WindowThumbnailCell.swift */,
 				EE01000000000000000000F4 /* SettingsWindow.swift */,
 				076FCA03BCA773806F13022D /* SettingsPages.swift */,
+				307251077338447A505A130C /* WelcomeTour.swift */,
 				ED3A034DF7D3D89F818E5984 /* MirrorView.swift */,
 				4512C512C519FBCDE1C79563 /* SettingsExtras.swift */,
 				C83C06B5855A2289411119ED /* ClipboardPanel.swift */,
@@ -635,6 +638,7 @@
 				BB0100000000000000000014 /* WindowThumbnailCell.swift in Sources */,
 				BB0100000000000000000015 /* SettingsWindow.swift in Sources */,
 				63B9064524B7B3E0166650CB /* SettingsPages.swift in Sources */,
+				2F13230B016A402539D50913 /* WelcomeTour.swift in Sources */,
 				90D09F265ED7FF2FA81F487D /* MirrorView.swift in Sources */,
 				071EA2B531D95BE2684A9464 /* SettingsExtras.swift in Sources */,
 				9818B199B973AB3227754A32 /* ClipboardPanel.swift in Sources */,
@@ -652,12 +656,12 @@
 				BB0100000000000000000017 /* MouseEventCatcher.swift in Sources */,
 				BB0100000000000000000018 /* FileTemplateFactory.swift in Sources */,
 				3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */,
-				F17151A93D0740C6295F5929 /* WindowCutPasteService.swift in Sources */,
 				554664E9216AD4758CA6043F /* FileCutPasteService.swift in Sources */,
 				C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */,
 				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
 				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
 				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
+				9F5708230B809EF21C46EB51 /* AudioRouteWatcher.swift in Sources */,
 				55B828C3ED3B8CEA41D27B46 /* FinderExtensionStatus.swift in Sources */,
 				5DDF7947BCAA28AEC95E049A /* MeetingsService.swift in Sources */,
 				7C49F31B3909702F7899639F /* DisplayKeysService.swift in Sources */,
@@ -871,7 +875,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -882,7 +886,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -900,7 +904,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -911,7 +915,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -924,7 +928,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -934,7 +938,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -949,7 +953,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -959,7 +963,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -975,7 +979,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -985,7 +989,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1001,7 +1005,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1011,7 +1015,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1025,7 +1029,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1033,7 +1037,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1047,7 +1051,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1055,7 +1059,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

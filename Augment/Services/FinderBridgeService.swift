@@ -56,23 +56,22 @@ final class FinderBridgeService {
     private func registerObservers() {
         let center = CFNotificationCenterGetDarwinNotifyCenter()
         CFNotificationCenterRemoveEveryObserver(center, Unmanaged.passUnretained(self).toOpaque())
-        CFNotificationCenterAddObserver(
-            center,
-            Unmanaged.passUnretained(self).toOpaque(),
-            { _, observer, name, _, _ in
-                guard let observer, let name else { return }
-                let service = Unmanaged<FinderBridgeService>.fromOpaque(observer).takeUnretainedValue()
-                let received = name.rawValue as String
-                if received == FinderCreateBridge.darwinNotificationName.rawValue as String {
+        // Darwin notifications must be observed by name — a nil name is
+        // silently ignored, which left requests waiting for the 15 s poll.
+        for name in [FinderCreateBridge.darwinNotificationName, FinderRevealBridge.darwinNotificationName] {
+            CFNotificationCenterAddObserver(
+                center,
+                Unmanaged.passUnretained(self).toOpaque(),
+                { _, observer, _, _, _ in
+                    guard let observer else { return }
+                    let service = Unmanaged<FinderBridgeService>.fromOpaque(observer).takeUnretainedValue()
                     DispatchQueue.main.async { service.processQueues() }
-                } else if received == FinderRevealBridge.darwinNotificationName.rawValue as String {
-                    DispatchQueue.main.async { service.processQueues() }
-                }
-            },
-            nil,
-            nil,
-            .deliverImmediately
-        )
+                },
+                name.rawValue,
+                nil,
+                .deliverImmediately
+            )
+        }
 
         if distributedRevealObserver == nil {
             distributedRevealObserver = DistributedNotificationCenter.default().addObserver(
@@ -122,7 +121,10 @@ final class FinderBridgeService {
             
             // Give Finder a moment to bring the window forward and select the file,
             // then simulate the Return key to enter inline rename mode.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                // Only while Finder is in front — otherwise the key would
+                // land in whatever app the user is typing into.
+                guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.finder" else { return }
                 let returnCode: CGKeyCode = 0x24 // Return
                 let src = CGEventSource(stateID: .hidSystemState)
                 let down = CGEvent(keyboardEventSource: src, virtualKey: returnCode, keyDown: true)
@@ -164,6 +166,20 @@ final class FinderBridgeService {
         for name in queuePlistNames(from: names) {
             let fileURL = queueDir.appendingPathComponent(name)
             guard let req: FinderCreateBridge.Request = decodeRequest(at: fileURL) else {
+                removeQueueFile(fileURL)
+                continue
+            }
+            if req.templateTag == FinderCreateBridge.newFolderTag {
+                let parent = URL(fileURLWithPath: req.directoryPath, isDirectory: true)
+                let base = Localizer.string("finder.new_folder_name")
+                var folder = parent.appendingPathComponent(base, isDirectory: true)
+                var n = 2
+                while FileManager.default.fileExists(atPath: folder.path) {
+                    folder = parent.appendingPathComponent("\(base) \(n)", isDirectory: true); n += 1
+                }
+                if (try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)) != nil {
+                    created.append(folder)
+                }
                 removeQueueFile(fileURL)
                 continue
             }

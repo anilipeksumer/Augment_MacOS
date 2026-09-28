@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import Combine
 import CoreGraphics
 import IOKit
@@ -136,8 +137,41 @@ final class DisplayBrightnessService: ObservableObject {
     }
 
     /// Sets every display at once (the quick panel's "All" slider, schedules).
-    func setAll(_ value: Double) {
-        for display in displays { setBrightness(value, for: display.id) }
+    func setAll(_ value: Double, animated: Bool = false) {
+        for display in displays {
+            if animated { animateBrightness(to: value, for: display.id, duration: 1.2) }
+            else { setBrightness(value, for: display.id) }
+        }
+    }
+
+    private var animations: [CGDirectDisplayID: Timer] = [:]
+    private var targets: [CGDirectDisplayID: Double] = [:]
+
+    /// Glides to `target` the way macOS's own brightness keys do, instead
+    /// of jumping. DDC monitors get fewer, coalesced writes.
+    func animateBrightness(to target: Double, for id: CGDirectDisplayID, duration: Double = 0.22) {
+        guard let display = displays.first(where: { $0.id == id }) else { return }
+        let clamped = min(max(target, 0), 1)
+        let start = display.brightness
+        targets[id] = clamped
+        animations[id]?.invalidate()
+        let begin = CACurrentMediaTime()
+        let interval = display.method == .ddc ? 1.0 / 20 : 1.0 / 60
+        let timer = Timer(timeInterval: interval, repeats: true) { timer in
+            MainActor.assumeIsolated {
+                let service = DisplayBrightnessService.shared
+                let p = min(1, (CACurrentMediaTime() - begin) / duration)
+                let eased = 1 - pow(1 - p, 3)
+                service.setBrightness(start + (clamped - start) * eased, for: id)
+                if p >= 1 {
+                    timer.invalidate()
+                    service.animations[id] = nil
+                    service.targets[id] = nil
+                }
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        animations[id] = timer
     }
 
     /// Moves one display's brightness by `delta` (keyboard keys) and
@@ -145,8 +179,11 @@ final class DisplayBrightnessService: ObservableObject {
     @discardableResult
     func step(_ delta: Double, for id: CGDirectDisplayID) -> Double? {
         guard let display = displays.first(where: { $0.id == id }) else { return nil }
-        let value = min(max(display.brightness + delta, 0), 1)
-        setBrightness(value, for: id)
+        // Build on the level we're already heading to, so quick repeated
+        // presses add up instead of fighting the running animation.
+        let base = targets[id] ?? display.brightness
+        let value = min(max(base + delta, 0), 1)
+        animateBrightness(to: value, for: id)
         return value
     }
 

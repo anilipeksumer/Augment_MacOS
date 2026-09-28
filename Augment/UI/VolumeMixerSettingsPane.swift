@@ -25,6 +25,16 @@ struct VolumeMixerSettingsSections: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Section {
+                    Toggle(isOn: $preferences.pauseOnHeadphonesRemoved) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Localizer.string("mixer.pause_headphones"))
+                            Text(Localizer.string("mixer.pause_headphones_desc")).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .toggleStyle(.switch)
+                }
+
                 if preferences.volumeMixerEnabled {
                     Section {
                         MixerAppList()

@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import Foundation
 import IOKit.ps
+import Quartz
 import SwiftUI
 @preconcurrency import UserNotifications
 
@@ -333,6 +334,9 @@ final class NotchService {
 
         setupOverlay()
         startMonitors()
+        // Create Quick Look's panel ahead of time so the first preview
+        // from the shelf opens instantly.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { _ = QLPreviewPanel.shared() }
         startClickThroughTracking()
 
         displayObserver = NotificationCenter.default.addObserver(

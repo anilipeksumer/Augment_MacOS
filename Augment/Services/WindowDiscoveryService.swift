@@ -25,6 +25,9 @@ struct DiscoveredWindow: Identifiable, Hashable {
     let frame: CGRect
     let layer: Int
     var isMinimized: Bool = false
+    /// Not a window: an open app with nothing to show on this screen
+    /// (hidden with ⌘H, on another Space, or without windows).
+    var isAppPlaceholder: Bool = false
 }
 
 /// A `DiscoveredWindow` paired with an optional captured thumbnail. Used by
@@ -255,7 +258,7 @@ final class WindowDiscoveryService {
         return result
     }
 
-    private func minimizedWindowsFromAX(bundleID: String) -> [DiscoveredWindow] {
+    func minimizedWindowsFromAX(bundleID: String) -> [DiscoveredWindow] {
         guard let app = NSWorkspace.shared.runningApplications.first(where: {
             $0.bundleIdentifier == bundleID
         }) else { return [] }
@@ -475,10 +478,20 @@ final class WindowDiscoveryService {
         )
 
         let raise = AXUIElementPerformAction(appElement.window, kAXRaiseAction as CFString)
-        if let app = NSRunningApplication(processIdentifier: window.ownerPID) {
-            app.activate(options: [.activateAllWindows])
-        }
+        AXUIElementSetAttributeValue(appElement.window, kAXMainAttribute as CFString, kCFBooleanTrue)
+        Self.bringAppForward(pid: window.ownerPID)
         return raise == .success
+    }
+
+    /// Makes an app frontmost. `NSRunningApplication.activate` alone can be
+    /// refused for a background app since macOS 14, so the app is also made
+    /// frontmost through Accessibility (and unhidden if it was ⌘H'd).
+    static func bringAppForward(pid: pid_t) {
+        let app = NSRunningApplication(processIdentifier: pid)
+        if app?.isHidden == true { app?.unhide() }
+        let element = AXUIElementCreateApplication(pid)
+        AXUIElementSetAttributeValue(element, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+        app?.activate(options: [.activateAllWindows])
     }
 
     /// Minimizes a single window via its AX `AXMinimized` attribute.

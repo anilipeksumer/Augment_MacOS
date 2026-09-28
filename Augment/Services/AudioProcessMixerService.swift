@@ -71,6 +71,10 @@ final class AudioProcessMixerService: ObservableObject {
         var processObjectIDs: [AudioObjectID] = []
         var gain: Float = 1.0
         var muted = false
+        // Diagnostics (written on the I/O thread, read by tests).
+        var ioCount = 0
+        var inputPeak: Float = 0
+        var layout = ""
     }
 
     /// Last error from creating a tap, surfaced in the UI so a missing
@@ -94,6 +98,17 @@ final class AudioProcessMixerService: ObservableObject {
         refreshTimer = t
     }
 
+    /// The default output changed: channels that follow it are rebuilt on
+    /// the new device (routed apps keep their chosen device).
+    func defaultOutputChanged() {
+        for (pid, channel) in channels {
+            guard let info = apps.first(where: { $0.id == pid }), info.outputDeviceUID == nil else { continue }
+            let gain = channel.gain, muted = channel.muted
+            teardownChannel(for: pid)
+            setupChannel(for: info.processObjectIDs, pid: pid, gain: gain, muted: muted)
+        }
+    }
+
     func stop() {
         refreshTimer?.invalidate()
         refreshTimer = nil
@@ -115,6 +130,7 @@ final class AudioProcessMixerService: ObservableObject {
         let ownPID = ProcessInfo.processInfo.processIdentifier
         let regularApps = NSWorkspace.shared.runningApplications.filter {
             $0.activationPolicy == .regular && $0.bundleIdentifier != nil && $0.processIdentifier != ownPID
+                && $0.bundleIdentifier != Bundle.main.bundleIdentifier // another Augment copy
         }
         let appsByPID = Dictionary(regularApps.map { ($0.processIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
 
@@ -300,6 +316,27 @@ final class AudioProcessMixerService: ObservableObject {
         channels[pid] = channel
     }
 
+    /// Test hook: tap an arbitrary process (e.g. `say`) and report what the
+    /// I/O callback sees.
+    func debugTap(pid: pid_t, gain: Float) -> Bool {
+        var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyTranslatePIDToProcessObject,
+                                              mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var pidValue = pid
+        var object = AudioObjectID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioObjectID>.size)
+        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, UInt32(MemoryLayout<pid_t>.size), &pidValue, &size, &object) == noErr,
+              object != kAudioObjectUnknown else { return false }
+        setupChannel(for: [object], pid: pid, gain: gain, muted: false)
+        return channels[pid] != nil
+    }
+
+    func debugStats(pid: pid_t) -> String {
+        guard let c = channels[pid] else { return "no channel (\(lastError ?? "no error"))" }
+        return "io=\(c.ioCount) peak=\(c.inputPeak) \(c.layout)"
+    }
+
+    func debugTeardown(pid: pid_t) { teardownChannel(for: pid) }
+
     private func teardownChannel(for pid: pid_t) {
         guard let channel = channels.removeValue(forKey: pid) else { return }
         if let ioProcID = channel.ioProcID {
@@ -316,6 +353,15 @@ final class AudioProcessMixerService: ObservableObject {
     nonisolated private static func makeIOBlock(for channel: Channel) -> AudioDeviceIOBlock {
         { [weak channel] _, inInputData, _, outOutputData, _ in
             guard let channel else { return }
+            channel.ioCount += 1
+            if channel.ioCount % 20 == 1 {
+                let ins = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inInputData))
+                let outs = UnsafeMutableAudioBufferListPointer(outOutputData)
+                var peak: Float = 0
+                for b in ins { if let d = b.mData { let n = Int(b.mDataByteSize) / 4; let f = d.bindMemory(to: Float.self, capacity: n); for i in 0..<n { peak = max(peak, abs(f[i])) } } }
+                channel.inputPeak = max(channel.inputPeak, peak)
+                channel.layout = "in=\(ins.map { "\($0.mNumberChannels)ch/\($0.mDataByteSize)B" }) out=\(outs.map { "\($0.mNumberChannels)ch/\($0.mDataByteSize)B" })"
+            }
             renderScaled(input: inInputData, output: outOutputData, gain: channel.muted ? 0 : channel.gain)
         }
     }

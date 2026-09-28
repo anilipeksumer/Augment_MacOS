@@ -168,15 +168,7 @@ struct NotchContentView: View {
                     ),
                     lineWidth: 2
                 )
-                .opacity(pulseScale)
-                .onAppear {
-                    withAnimation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                        pulseScale = 0.3
-                    }
-                }
-                .onDisappear {
-                    pulseScale = 1.0
-                }
+                .opacity(0.9)
         }
     }
 
@@ -459,6 +451,10 @@ struct NotchContentView: View {
     private var notchAnchor: CGRect? {
         guard let frame = NSApp.windows.first(where: { $0.contentView is NSHostingView<NotchContentView> })?.frame else { return nil }
         return CGRect(x: frame.minX, y: frame.maxY - expandedHeight, width: frame.width, height: expandedHeight)
+    }
+
+    private func closePreviewIfShowing(_ url: URL) {
+        if preview.isVisible && preview.currentURL == url { QLPreviewPanel.shared()?.orderOut(nil) }
     }
 
     private func previewFiles(_ url: URL) {
@@ -816,20 +812,24 @@ struct NotchContentView: View {
     private var calendarWidget: some View {
         switch viewModel.calendarStyle {
         case "badge":
+            // A small dark calendar tile that sits quietly on the black notch.
             VStack(spacing: 0) {
                 Text(localizedDate(.dateTime.month(.abbreviated)))
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 8, weight: .heavy))
+                    .foregroundStyle(Color(red: 1, green: 0.36, blue: 0.33))
                     .textCase(.uppercase)
-                    .frame(width: 34, height: 13)
-                    .background(Color.red)
+                    .padding(.top, 3)
                 Text(localizedDate(.dateTime.day()))
-                    .font(.system(size: 17, weight: .bold).monospacedDigit())
-                    .foregroundStyle(.black)
-                    .frame(width: 34, height: 24)
-                    .background(Color.white)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .offset(y: -1)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .frame(width: 32, height: 30)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.white.opacity(0.1))
+                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5))
+            )
         case "text":
             VStack(alignment: .leading, spacing: 1) {
                 Text(localizedDate(.dateTime.weekday(.wide)))
@@ -846,21 +846,15 @@ struct NotchContentView: View {
         }
     }
 
+    /// One line, like the menu bar clock: "Pzt 28 Eyl".
     private var compactCalendar: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: -2) {
-                Text(localizedDate(.dateTime.weekday(.abbreviated)))
-                    .font(.system(size: 9, weight: .black))
-                    .foregroundStyle(.red)
-                    .textCase(.uppercase)
-                Text(localizedDate(.dateTime.day()))
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundStyle(.white)
-            }
-            Text(localizedDate(.dateTime.month(.wide)))
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
+        HStack(spacing: 5) {
+            Text(localizedDate(.dateTime.weekday(.abbreviated)))
+                .foregroundStyle(.white.opacity(0.55))
+            Text(localizedDate(.dateTime.day().month(.abbreviated)))
+                .foregroundStyle(.white)
         }
+        .font(.system(size: 12, weight: .semibold))
     }
 
     private func localizedDate(_ style: Date.FormatStyle) -> String {
@@ -896,8 +890,16 @@ struct NotchContentView: View {
                                 shelfTile(selected: preview.currentURL == item.url, title: item.name) {
                                     ShelfThumbnail(url: item.url)
                                 }
-                                .onTapGesture(count: 2) { NSWorkspace.shared.open(item.url) }
-                                .onTapGesture { previewFiles(item.url) }
+                                .onTapGesture {
+                                    // One gesture, so a single click isn't held back
+                                    // waiting to see whether a second one follows.
+                                    if NSApp.currentEvent?.clickCount ?? 1 >= 2 {
+                                        closePreviewIfShowing(item.url)
+                                        NSWorkspace.shared.open(item.url)
+                                    } else {
+                                        previewFiles(item.url)
+                                    }
+                                }
                                 .onDrag {
                                     NSItemProvider(object: item.url as NSURL)
                                 }
@@ -964,8 +966,14 @@ struct NotchContentView: View {
                                         .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
                                 }
                             }
-                            .onTapGesture(count: 2) { copyWithFeedback(item) }
-                            .onTapGesture { previewClipboard(item) }
+                            .onTapGesture {
+                                if NSApp.currentEvent?.clickCount ?? 1 >= 2 {
+                                    closePreviewIfShowing(ShelfPreview.previewURL(for: item))
+                                    copyWithFeedback(item)
+                                } else {
+                                    previewClipboard(item)
+                                }
+                            }
                             .onHover { hovering in
                                 if hovering { NSCursor.pointingHand.set() } else { NSCursor.arrow.set() }
                             }
@@ -1186,7 +1194,9 @@ private struct NotchDropDelegate: DropDelegate {
     func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.fileURL]) }
     func dropEntered(info: DropInfo) { isTargeted = true; hoveredZone = zone(at: info.location) }
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        hoveredZone = zone(at: info.location)
+        // Called for every mouse move — only touch state when the zone changes.
+        let zone = zone(at: info.location)
+        if zone != hoveredZone { hoveredZone = zone }
         return DropProposal(operation: .copy)
     }
     func dropExited(info: DropInfo) { isTargeted = false; hoveredZone = nil }

@@ -211,6 +211,12 @@ struct MediaWidget: View {
                         )
                         .frame(width: geo.size.width * CGFloat(progress))
                 }
+                // Thicken visually on hover without changing layout — a
+                // growing frame pushed the row below and made the hover
+                // area flicker as the pointer moved up and down.
+                .frame(height: 4)
+                .scaleEffect(y: isHoveringProgress ? 1.6 : 1, anchor: .center)
+                .frame(maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -234,7 +240,7 @@ struct MediaWidget: View {
                     if hovering { NSCursor.pointingHand.set() } else { NSCursor.arrow.set() }
                 }
             }
-            .frame(height: isHoveringProgress ? 6 : 4)
+            .frame(height: 10)
             .animation(.easeOut(duration: 0.15), value: isHoveringProgress)
             .animation(.easeInOut(duration: 0.5), value: viewModel.ambientColor)
 

@@ -146,14 +146,42 @@ final class WindowSwitcherService {
 
     /// Only real app windows, front to back — never the Dock, Control Center
     /// or other system surfaces that also own on-screen windows.
+    /// Everything ⌘Tab would offer, as windows: on-screen windows front to
+    /// back, then minimized ones, then one tile per open app that has
+    /// nothing showing here (hidden, on another Space, or windowless).
+    var switchableWindowsForTesting: [DiscoveredWindow] { switchableWindows() }
+
     private func switchableWindows() -> [DiscoveredWindow] {
         let ownPID = ProcessInfo.processInfo.processIdentifier
-        let regularPIDs = Set(NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .map(\.processIdentifier))
-        return windowDiscovery.windows().filter {
-            $0.layer == 0 && $0.ownerPID != ownPID && regularPIDs.contains($0.ownerPID)
+        let apps = NSWorkspace.shared.runningApplications.filter {
+            $0.activationPolicy == .regular && $0.processIdentifier != ownPID
+                && $0.bundleIdentifier != Bundle.main.bundleIdentifier
         }
+        let appPIDs = Set(apps.map(\.processIdentifier))
+        var result = windowDiscovery.windows().filter { $0.layer == 0 && appPIDs.contains($0.ownerPID) }
+        var seen = Set(result.map(\.id))
+
+        for app in apps {
+            guard let bundleID = app.bundleIdentifier else { continue }
+            for window in windowDiscovery.minimizedWindowsFromAX(bundleID: bundleID) where seen.insert(window.id).inserted {
+                result.append(window)
+            }
+        }
+
+        let listed = Set(result.map(\.ownerPID))
+        // Most recently used first, the way ⌘Tab orders apps.
+        for app in apps where !listed.contains(app.processIdentifier) {
+            result.append(DiscoveredWindow(
+                id: CGWindowID(UInt32.max - UInt32(truncatingIfNeeded: app.processIdentifier)),
+                ownerPID: app.processIdentifier,
+                ownerName: app.localizedName ?? "",
+                title: nil,
+                frame: .zero,
+                layer: 0,
+                isAppPlaceholder: true
+            ))
+        }
+        return result
     }
 
     private func open() {
@@ -196,7 +224,7 @@ final class WindowSwitcherService {
         let discovery = windowDiscovery
         let maxDimension = layout.thumbnailSize.width * (screen.backingScaleFactor)
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            let images = windows.map { discovery.captureThumbnail(for: $0.id, maxDimension: maxDimension) }
+            let images = windows.map { $0.isAppPlaceholder ? nil : discovery.captureThumbnail(for: $0.id, maxDimension: maxDimension) }
             DispatchQueue.main.async {
                 guard let self, self.panel != nil, self.viewModel.items.count == images.count else { return }
                 for i in images.indices { self.viewModel.items[i].thumbnail = images[i] }
@@ -212,7 +240,13 @@ final class WindowSwitcherService {
             viewModel.items = []
         }
         guard activate, candidates.indices.contains(selectedIndex) else { return }
-        windowDiscovery.focusWindow(candidates[selectedIndex])
+        let target = candidates[selectedIndex]
+        if target.isAppPlaceholder {
+            WindowDiscoveryService.bringAppForward(pid: target.ownerPID)
+        } else if !windowDiscovery.focusWindow(target) {
+            // No AX match (e.g. the window moved Spaces): at least bring the app.
+            WindowDiscoveryService.bringAppForward(pid: target.ownerPID)
+        }
     }
 }
 

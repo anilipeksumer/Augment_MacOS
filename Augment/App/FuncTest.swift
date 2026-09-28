@@ -55,6 +55,107 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--mixer-test") {
+                if #available(macOS 14.2, *) {
+                    let say = Process()
+                    say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+                    say.arguments = ["-r", "170", "Augment ses mikseri testi. Bu cümle birkaç saniye sürüyor, sesin kısıldığını duyman gerekiyor."]
+                    try? say.run()
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                    let mixer = AudioProcessMixerService.shared
+                    let ok = mixer.debugTap(pid: say.processIdentifier, gain: 0.15)
+                    lines.append("INFO  tap created=\(ok)")
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    lines.append("INFO  stats: \(mixer.debugStats(pid: say.processIdentifier))")
+                    mixer.debugTeardown(pid: say.processIdentifier)
+                    say.terminate()
+                }
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--mixer-app") {
+                if #available(macOS 14.2, *) {
+                    let file = FileManager.default.temporaryDirectory.appendingPathComponent("augment-mixer.aiff")
+                    let say = Process()
+                    say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+                    say.arguments = ["-o", file.path, "Augment ses mikseri, gerçek uygulama testi. Bu ses QuickTime üzerinden çalıyor ve birazdan kısılacak, sonra başka bir hoparlöre geçecek."]
+                    try? say.run(); say.waitUntilExit()
+                    _ = runScript("tell application \"QuickTime Player\"\nopen POSIX file \"\(file.path)\"\ndelay 1\nplay document 1\nend tell")
+                    let mixer = AudioProcessMixerService.shared
+                    mixer.start()
+                    try? await Task.sleep(nanoseconds: 4_000_000_000)
+                    lines.append("INFO  apps: \(mixer.apps.map { "\($0.name) pid=\($0.id) playing=\($0.isPlaying) objs=\($0.processObjectIDs.count)" })")
+                    if let qt = mixer.apps.first(where: { $0.bundleID == "com.apple.QuickTimePlayerX" }) {
+                        mixer.setVolume(0.15, forPID: qt.id)
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+                        lines.append("INFO  after volume 15%: \(mixer.debugStats(pid: qt.id))")
+                        if let speakers = mixer.outputDevices.first(where: { $0.name.localizedCaseInsensitiveContains("MacBook") }) {
+                            mixer.setOutputDevice(speakers.uid, forPID: qt.id)
+                            try? await Task.sleep(nanoseconds: 2_000_000_000)
+                            lines.append("INFO  after routing to \(speakers.name): \(mixer.debugStats(pid: qt.id))")
+                            mixer.setOutputDevice(nil, forPID: qt.id)
+                        }
+                        mixer.setVolume(1, forPID: qt.id)
+                    } else {
+                        lines.append("INFO  QuickTime not in mixer list")
+                    }
+                    mixer.stop()
+                    _ = runScript("tell application \"QuickTime Player\" to close every document saving no")
+                    _ = runScript("tell application \"QuickTime Player\" to quit")
+                }
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--mixer-listen") {
+                if #available(macOS 14.2, *) {
+                    let file = FileManager.default.temporaryDirectory.appendingPathComponent("augment-tone.wav").path
+                    _ = runScript("tell application \"QuickTime Player\"\nopen POSIX file \"\(file)\"\ndelay 1\nplay document 1\nend tell")
+                    let mixer = AudioProcessMixerService.shared
+                    mixer.start()
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    if let qt = mixer.apps.first(where: { $0.bundleID == "com.apple.QuickTimePlayerX" }) {
+                        lines.append("INFO  stage 1 normal"); flushLog()
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        mixer.setVolume(0.1, forPID: qt.id)
+                        lines.append("INFO  stage 2 10%: \(mixer.debugStats(pid: qt.id))"); flushLog()
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        mixer.setMuted(true, forPID: qt.id)
+                        lines.append("INFO  stage 3 muted"); flushLog()
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        mixer.setMuted(false, forPID: qt.id)
+                        mixer.setVolume(1, forPID: qt.id)
+                        if let speakers = mixer.outputDevices.first(where: { $0.name.localizedCaseInsensitiveContains("MacBook") }) {
+                            mixer.setOutputDevice(speakers.uid, forPID: qt.id)
+                            lines.append("INFO  stage 4 routed to \(speakers.name): \(mixer.debugStats(pid: qt.id))"); flushLog()
+                        }
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        mixer.setOutputDevice(nil, forPID: qt.id)
+                    }
+                    mixer.stop()
+                    _ = runScript("tell application \"QuickTime Player\" to close every document saving no")
+                    _ = runScript("tell application \"QuickTime Player\" to quit")
+                }
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--switcher-list") {
+                let service = WindowSwitcherService(windowDiscovery: WindowDiscoveryService())
+                let list = service.switchableWindowsForTesting
+                for w in list {
+                    lines.append("INFO  \(w.isAppPlaceholder ? "APP " : (w.isMinimized ? "MIN " : "WIN ")) \(w.ownerName) — \(w.title ?? "")")
+                }
+                let apps = NSWorkspace.shared.runningApplications.filter { $0.activationPolicy == .regular }.count
+                record("Switcher covers every open app", Set(list.map(\.ownerPID)).count >= apps - 1, "apps=\(apps) covered=\(Set(list.map(\.ownerPID)).count)")
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--audio-route") {
+                let device = AudioRouteWatcher.defaultOutput()
+                SystemControlsService.shared.refresh()
+                lines.append("INFO  default output=\(SystemControlsService.shared.outputDeviceName) headphones=\(AudioRouteWatcher.isHeadphones(device))")
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-menu") {
                 await readFinderContextMenu()
                 finish()
@@ -240,6 +341,19 @@ enum FuncTest {
             lines.append("INFO  captured \(tab.rawValue) \(image.width)x\(image.height)")
         }
         controller.close()
+
+        for page in [0, 2] {
+            let tour = NSWindow(contentRect: CGRect(x: -6000, y: -6000, width: 560, height: 440),
+                                styleMask: [.titled, .fullSizeContentView], backing: .buffered, defer: false)
+            tour.titlebarAppearsTransparent = true
+            tour.contentView = NSHostingView(rootView: WelcomeTourView(onFinish: {}, index: page))
+            tour.orderFrontRegardless()
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            if let image = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(tour.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+                try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("tour-\(page).png"))
+            }
+            tour.orderOut(nil)
+        }
 
         let about = NSWindow(contentRect: CGRect(x: -6000, y: -6000, width: 460, height: 420),
                              styleMask: [.titled], backing: .buffered, defer: false)
@@ -492,22 +606,27 @@ enum FuncTest {
         record("Shelf zips files into one archive", listing.contains("bir.txt") && listing.contains("iki.txt"),
                archive?.lastPathComponent ?? "no archive")
 
-        // Screenshot detection via Spotlight's screen-capture flag.
+        // Screenshot detection: watch a folder, take a real screenshot into it.
         let watcher = ScreenshotShelfWatcher.shared
+        let shotDir = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentShotTest-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: shotDir, withIntermediateDirectories: true)
         var caught: URL?
         watcher.onScreenshot = { caught = $0 }
-        watcher.start()
-        let shot = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots/augment-screenshot-test.png")
-        try? FileManager.default.removeItem(at: shot)
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        task.arguments = ["-x", "-R", "0,0,40,40", shot.path]
-        try? task.run(); task.waitUntilExit()
-        for _ in 0..<40 where caught == nil { try? await Task.sleep(nanoseconds: 250_000_000) }
+        watcher.start(folder: shotDir)
+        let shot = shotDir.appendingPathComponent("Ekran Resmi test.png")
+        let shotTask = Process()
+        shotTask.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        shotTask.arguments = ["-x", "-R", "0,0,40,40", shot.path]
+        try? shotTask.run(); shotTask.waitUntilExit()
+        for _ in 0..<20 where caught == nil { try? await Task.sleep(nanoseconds: 250_000_000) }
         watcher.stop()
         record("New screenshot is detected for the shelf", caught?.lastPathComponent == shot.lastPathComponent,
-               "caught=\(caught?.path ?? "nil")")
-        try? FileManager.default.removeItem(at: shot)
+               "caught=\(caught?.lastPathComponent ?? "nil") xattr=\(ScreenshotShelfWatcher.isScreenshot(shot))")
+        let plain = shotDir.appendingPathComponent("not-a-shot.png")
+        try? FileManager.default.copyItem(at: shot, to: plain)
+        removexattr(plain.path, "com.apple.metadata:kMDItemIsScreenCapture", 0)
+        record("Ordinary files are ignored", !ScreenshotShelfWatcher.isScreenshot(plain), "")
+        try? FileManager.default.removeItem(at: shotDir)
 
     }
 

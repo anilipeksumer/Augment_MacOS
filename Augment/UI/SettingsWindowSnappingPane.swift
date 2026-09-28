@@ -97,35 +97,6 @@ struct WindowSnappingSettingsSections: View {
 
             Section {
                 ToggleRow(
-                    title: Localizer.string("cutpaste.window_title"),
-                    subtitle: Localizer.string("cutpaste.window_desc"),
-                    systemImage: "macwindow.and.cursorarrow",
-                    tint: .indigo,
-                    isOn: $preferences.windowCutPasteEnabled,
-                    requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.windowCutPasteEnabled)
-                )
-                HStack {
-                    Text(Localizer.string("cutpaste.cut"))
-                    Spacer()
-                    Text("⌃⌘X").foregroundStyle(.secondary)
-                }
-                .font(.caption)
-                HStack {
-                    Text(Localizer.string("cutpaste.paste"))
-                    Spacer()
-                    Text("⌃⌘V").foregroundStyle(.secondary)
-                }
-                .font(.caption)
-            } header: {
-                Text(Localizer.string("cutpaste.section"))
-            } footer: {
-                Text(Localizer.string("cutpaste.footer"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section {
-                ToggleRow(
                     title: Localizer.string("snaplayouts.title"),
                     subtitle: Localizer.string("snaplayouts.desc"),
                     systemImage: "square.grid.2x2",

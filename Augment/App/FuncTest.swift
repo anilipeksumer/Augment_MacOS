@@ -205,6 +205,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--readme-shots") {
+                await captureReadmeQuickPanel()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-menu") {
                 await readFinderContextMenu()
                 finish()
@@ -690,6 +695,49 @@ enum FuncTest {
         return out.contains("Augment: keep awake")
     }
 
+    /// The quick panel on real glass, over a neutral gradient backdrop (so
+    /// nothing personal from the desktop shows through), for the README.
+    private static func captureReadmeQuickPanel() async {
+        guard let screen = NSScreen.main else { return }
+        let backdropFrame = CGRect(x: screen.frame.maxX - 900, y: screen.frame.maxY - 1100, width: 900, height: 1100)
+        let backdrop = NSWindow(contentRect: backdropFrame, styleMask: [.borderless], backing: .buffered, defer: false)
+        backdrop.level = NSWindow.Level(rawValue: NSWindow.Level.popUpMenu.rawValue - 1)
+        let gradient = NSImage(size: backdropFrame.size, flipped: false) { rect in
+            NSGradient(colors: [NSColor(calibratedRed: 0.20, green: 0.33, blue: 0.62, alpha: 1),
+                                NSColor(calibratedRed: 0.55, green: 0.36, blue: 0.70, alpha: 1),
+                                NSColor(calibratedRed: 0.93, green: 0.55, blue: 0.47, alpha: 1)])!
+                .draw(in: rect, angle: -60)
+            return true
+        }
+        let imageView = NSImageView(image: gradient)
+        imageView.imageScaling = .scaleAxesIndependently
+        backdrop.contentView = imageView
+        backdrop.orderFrontRegardless()
+
+        let anchor = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        anchor.button?.image = NSImage(systemSymbolName: "square", accessibilityDescription: nil)
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        SystemControlsService.shared.outputDeviceNameOverride = "MacBook Pro Speakers"
+        QuickPanelController.shared.toggle(below: anchor.button)
+        try? await Task.sleep(nanoseconds: 4_000_000_000) // let stats fill in
+        let dir = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
+        if let panel = NSApp.windows.first(where: { $0.isVisible && $0.level == .popUpMenu }) {
+            let f = panel.frame.insetBy(dx: -36, dy: -36)
+            let topLeft = ScreenGeometry.convertToCG(CGPoint(x: f.minX, y: f.maxY))
+            if let image = CGWindowListCreateImage(CGRect(origin: topLeft, size: f.size), .optionOnScreenBelowWindow,
+                                                   CGWindowID(0), [.bestResolution]) ?? nil,
+               let composite = CGWindowListCreateImage(CGRect(origin: topLeft, size: f.size), .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]) {
+                _ = image
+                try? NSBitmapImageRep(cgImage: composite).representation(using: .png, properties: [:])?
+                    .write(to: dir.appendingPathComponent("readme-quick-panel.png"))
+                lines.append("INFO  captured readme quick panel \(composite.width)x\(composite.height)")
+            }
+        }
+        QuickPanelController.shared.close()
+        NSStatusBar.system.removeStatusItem(anchor)
+        backdrop.orderOut(nil)
+    }
+
     /// Renders the open notch into PNGs without touching the cursor or
     /// showing anything on screen — safe to run while the user works.
     private static func renderNotchOffscreen() async {
@@ -706,17 +754,26 @@ enum FuncTest {
             vm.clipboardHistoryEnabled = true
             vm.lowerTab = tab
             vm.battery = BatteryInfo.current()
-            vm.mediaInfo = playing ? MediaInfo(title: "Aşk Kokusu", artist: "Kenan Doğulu", appName: "Müzik",
+            vm.mediaInfo = playing ? MediaInfo(title: "Midnight City", artist: "M83", appName: "Music",
                                                appIcon: NSWorkspace.shared.icon(forFile: "/System/Applications/Music.app"),
                                                albumArt: nil, isPlaying: true, duration: 278, elapsedTime: 100,
                                                appBundleID: "com.apple.Music", isJSDisabled: false) : nil
             if name == "notch-render-files" {
+                // Neutral English sample files for screenshots.
                 let shots = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
-                vm.shelfItems = ["quick-panel-onscreen.png", "about.png", "general.png"]
-                    .map { shots.appendingPathComponent($0) }
-                    .filter { FileManager.default.fileExists(atPath: $0.path) }
-                    .map { ShelfItem(url: $0) } + [ShelfItem(url: URL(fileURLWithPath: "/System/Library/Fonts/Supplemental/Arial.ttf"))]
-                vm.nextMeeting = UpcomingEvent(id: "t", title: "Haftalık ürün toplantısı", start: Date().addingTimeInterval(4 * 60),
+                let samples = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentSamples")
+                try? FileManager.default.createDirectory(at: samples, withIntermediateDirectories: true)
+                let pairs: [(String, URL)] = [
+                    ("Moodboard.png", shots.appendingPathComponent("tour-2.png")),
+                    ("Welcome.png", shots.appendingPathComponent("tour-0.png")),
+                    ("Typeface.ttf", URL(fileURLWithPath: "/System/Library/Fonts/Supplemental/Arial.ttf")),
+                ]
+                vm.shelfItems = pairs.compactMap { name, source in
+                    let dest = samples.appendingPathComponent(name)
+                    if !FileManager.default.fileExists(atPath: dest.path) { try? FileManager.default.copyItem(at: source, to: dest) }
+                    return FileManager.default.fileExists(atPath: dest.path) ? ShelfItem(url: dest) : nil
+                }
+                vm.nextMeeting = UpcomingEvent(id: "t", title: "Weekly product sync", start: Date().addingTimeInterval(4 * 60),
                                                end: Date().addingTimeInterval(34 * 60), color: .systemPurple,
                                                joinURL: URL(string: "https://meet.google.com/abc"))
                 vm.meetingIsAlert = true

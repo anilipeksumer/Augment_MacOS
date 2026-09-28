@@ -20,6 +20,8 @@ final class SystemControlsService: ObservableObject {
     @Published private(set) var canSetBrightness = false
     @Published private(set) var canSetVolume = false
     @Published private(set) var outputDeviceName = ""
+    /// Screenshot hook: shows this name instead of the (system-localised) device name.
+    var outputDeviceNameOverride: String? { didSet { if let o = outputDeviceNameOverride { outputDeviceName = o } } }
     @Published private(set) var isMicMuted = false
     @Published private(set) var hasMicrophone = false
 
@@ -49,7 +51,7 @@ final class SystemControlsService: ObservableObject {
         if let device = Self.defaultOutputDevice(), let value = Self.volume(of: device) {
             volume = Double(value)
             isMuted = Self.isMuted(device)
-            outputDeviceName = Self.name(of: device) ?? ""
+            outputDeviceName = outputDeviceNameOverride ?? Self.name(of: device) ?? ""
             canSetVolume = true
         } else {
             canSetVolume = false

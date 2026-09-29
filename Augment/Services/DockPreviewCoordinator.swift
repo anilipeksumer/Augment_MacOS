@@ -132,7 +132,10 @@ final class DockPreviewCoordinator {
             guard let self else { return false }
             guard AppGroup.preferencesBool(forKey: AppGroupKey.dockClickBehaviorEnabled) else { return false }
             guard let activeID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier, activeID == bundleID else { return false }
-            return self.windowDiscovery.hasToggleableWindows(forBundleIdentifier: bundleID)
+            // Only take the click over to minimize. When the app's windows
+            // are already minimized, the Dock brings them back itself, which
+            // works for every kind of app (Mac Catalyst ones included).
+            return DockWindowToggle.hasVisibleWindow(bundleID: bundleID)
         }
         dockService.shouldHandleMiddleClick = { bundleID in
             guard AppGroup.preferencesBool(forKey: AppGroupKey.middleClickCloseEnabled) else { return false }
@@ -433,6 +436,23 @@ final class DockPreviewCoordinator {
 /// windows, or bring them back when they are all minimized.
 @MainActor
 enum DockWindowToggle {
+    /// Whether the app has a normal window on screen. Safe to call from the
+    /// event tap thread: it only reads the window server's list.
+    nonisolated static func hasVisibleWindow(bundleID: String) -> Bool {
+        let pids = Set(NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).map(\.processIdentifier))
+        guard !pids.isEmpty,
+              let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+        else { return false }
+        return info.contains { entry in
+            guard let pid = entry[kCGWindowOwnerPID as String] as? pid_t, pids.contains(pid),
+                  (entry[kCGWindowLayer as String] as? Int) == 0,
+                  (entry[kCGWindowAlpha as String] as? Double ?? 1) > 0,
+                  let bounds = entry[kCGWindowBounds as String] as? [String: CGFloat]
+            else { return false }
+            return min(bounds["Width"] ?? 0, bounds["Height"] ?? 0) >= 72
+        }
+    }
+
     static func toggle(_ app: NSRunningApplication) {
         // Accessibility calls into our own process can't be answered while
         // the main thread is busy making them, so handle Augment's own

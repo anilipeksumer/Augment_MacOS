@@ -683,15 +683,6 @@ final class WindowDiscoveryService {
         return bestMatch.map { MatchedAXWindow(window: $0) }
     }
 
-    func hasToggleableWindows(forBundleIdentifier bundleID: String) -> Bool {
-        let windows = windowsFromCG(
-            options: [.optionAll],
-            bundleID: bundleID,
-            minimumShortSide: 72
-        )
-        return !windows.isEmpty
-    }
-
     private func axFrame(for window: AXUIElement) -> CGRect? {
         var positionValue: AnyObject?
         var sizeValue: AnyObject?

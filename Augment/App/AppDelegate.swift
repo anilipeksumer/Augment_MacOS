@@ -74,6 +74,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    /// Clicking Augment's Dock icon (shown while Settings is open) brings a
+    /// minimized Settings window back, like any other app.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            let minimized = sender.windows.filter(\.isMiniaturized)
+            minimized.forEach { $0.deminiaturize(nil) }
+            if !minimized.isEmpty { sender.activate(ignoringOtherApps: true) }
+        }
+        return true
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         if CommandLine.arguments.contains(SelfTest.argument) {
             SelfTest.runAndExit()

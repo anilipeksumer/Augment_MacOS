@@ -55,6 +55,40 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--dock-toggle") {
+                // Minimize and restore each running app's windows the way a
+                // click on its Dock icon does.
+                for bundleID in ["net.whatsapp.WhatsApp", "com.apple.TextEdit"] {
+                    guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else {
+                        lines.append("SKIP  \(bundleID) not running")
+                        continue
+                    }
+                    func minimizedStates() -> [Bool] {
+                        let element = AXUIElementCreateApplication(app.processIdentifier)
+                        var value: AnyObject?
+                        AXUIElementCopyAttributeValue(element, kAXWindowsAttribute as CFString, &value)
+                        return ((value as? [AXUIElement]) ?? []).map { w in
+                            var m: AnyObject?
+                            AXUIElementCopyAttributeValue(w, kAXMinimizedAttribute as CFString, &m)
+                            return (m as? Bool) ?? false
+                        }
+                    }
+                    let before = minimizedStates()
+                    // `--gap N` leaves the window minimized for N seconds first.
+                    let args = CommandLine.arguments
+                    let gap = args.firstIndex(of: "--gap").flatMap { args.indices.contains($0 + 1) ? UInt64(args[$0 + 1]) : nil } ?? 1
+                    DockWindowToggle.toggle(app)
+                    try? await Task.sleep(nanoseconds: gap * 1_000_000_000)
+                    let afterFirst = minimizedStates()
+                    DockWindowToggle.toggle(app)
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    let afterSecond = minimizedStates()
+                    let ok = afterFirst.contains(true) != before.contains(true) && afterSecond.contains(true) == before.contains(true)
+                    lines.append("\(ok ? "PASS" : "FAIL")  \(bundleID) minimized before=\(before) after 1st click=\(afterFirst) after 2nd click=\(afterSecond)")
+                }
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--mixer-test") {
                 if #available(macOS 14.2, *) {
                     let say = Process()

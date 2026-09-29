@@ -418,7 +418,7 @@ final class DockPreviewCoordinator {
             }
             return
         }
-        toggleMinimizeRestore(of: app)
+        DockWindowToggle.toggle(app)
     }
 
     private func handleMiddleClick(bundleID: String) {
@@ -427,8 +427,20 @@ final class DockPreviewCoordinator {
         cancelHoverOpen()
         windowDiscovery.closeAllWindows(forBundleIdentifier: bundleID)
     }
+}
 
-    private func toggleMinimizeRestore(of app: NSRunningApplication) {
+/// What a click on the frontmost app's Dock icon does: minimize its
+/// windows, or bring them back when they are all minimized.
+@MainActor
+enum DockWindowToggle {
+    static func toggle(_ app: NSRunningApplication) {
+        // Accessibility calls into our own process can't be answered while
+        // the main thread is busy making them, so handle Augment's own
+        // windows (Settings, the tour) with AppKit directly.
+        if app.processIdentifier == ProcessInfo.processInfo.processIdentifier {
+            toggleOwnWindows()
+            return
+        }
         app.unhide()
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
         var windowsValue: AnyObject?
@@ -453,16 +465,67 @@ final class DockPreviewCoordinator {
                 AXUIElementPerformAction(window, kAXRaiseAction as CFString)
             }
             app.activate(options: [.activateAllWindows])
+            // Some apps (Mac Catalyst ones such as WhatsApp) ignore the
+            // Accessibility request. We swallowed the Dock click, so if the
+            // windows are still minimized, do what the Dock itself would:
+            // send the app a reopen event.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                guard candidates.allSatisfy({ isMinimized($0) }) else { return }
+                sendReopen(to: app)
+            }
         } else {
             for window in candidates where !isMinimized(window) {
                 AXUIElementSetAttributeValue(
                     window, kAXMinimizedAttribute as CFString, kCFBooleanTrue
                 )
+                if !isMinimized(window) {
+                    // Same for minimizing: fall back to the window's own
+                    // yellow button, which every app honours.
+                    pressMinimizeButton(of: window)
+                }
             }
         }
     }
 
-    private func dockToggleCandidateWindows(from windows: [AXUIElement], bundleID: String?) -> [AXUIElement] {
+    private static func toggleOwnWindows() {
+        let windows = NSApp.windows.filter { $0.styleMask.contains(.miniaturizable) && ($0.isVisible || $0.isMiniaturized) }
+        guard !windows.isEmpty else { return }
+        if windows.allSatisfy(\.isMiniaturized) {
+            windows.forEach { $0.deminiaturize(nil) }
+            NSApp.activate(ignoringOtherApps: true)
+        } else {
+            windows.filter { !$0.isMiniaturized }.forEach { $0.miniaturize(nil) }
+        }
+    }
+
+    /// The Apple event the Dock sends when an icon is clicked; apps respond
+    /// by bringing back a minimized window.
+    private static func sendReopen(to app: NSRunningApplication) {
+        // `open` goes through LaunchServices exactly like a Dock click, and
+        // unlike NSWorkspace it reliably makes Mac Catalyst apps restore a
+        // minimized window. Augment isn't sandboxed, so it can run it.
+        guard let url = app.bundleURL else {
+            app.activate(options: [.activateAllWindows])
+            return
+        }
+        let open = Process()
+        open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        open.arguments = [url.path]
+        do {
+            try open.run()
+        } catch {
+            app.activate(options: [.activateAllWindows])
+        }
+    }
+
+    private static func pressMinimizeButton(of window: AXUIElement) {
+        var button: AnyObject?
+        guard AXUIElementCopyAttributeValue(window, kAXMinimizeButtonAttribute as CFString, &button) == .success,
+              let button else { return }
+        AXUIElementPerformAction(button as! AXUIElement, kAXPressAction as CFString)
+    }
+
+    private static func dockToggleCandidateWindows(from windows: [AXUIElement], bundleID: String?) -> [AXUIElement] {
         let isFinder = bundleID == "com.apple.finder"
         let filtered = windows.filter { !isFinderDesktop($0) }
 
@@ -476,7 +539,7 @@ final class DockPreviewCoordinator {
         return filtered.filter { isProminentDockTargetWindow($0) && (isMinimizable($0) || isMinimized($0)) }
     }
 
-    private func isStandardWindow(_ window: AXUIElement) -> Bool {
+    private static func isStandardWindow(_ window: AXUIElement) -> Bool {
         var subroleValue: AnyObject?
         AXUIElementCopyAttributeValue(window, kAXSubroleAttribute as CFString, &subroleValue)
         if subroleValue == nil { return true }
@@ -486,7 +549,7 @@ final class DockPreviewCoordinator {
         return true
     }
 
-    private func isProminentDockTargetWindow(_ window: AXUIElement) -> Bool {
+    private static func isProminentDockTargetWindow(_ window: AXUIElement) -> Bool {
         var roleValue: AnyObject?
         guard AXUIElementCopyAttributeValue(window, kAXRoleAttribute as CFString, &roleValue) == .success,
               (roleValue as? String) == (kAXWindowRole as String) else {
@@ -500,7 +563,7 @@ final class DockPreviewCoordinator {
         return true
     }
 
-    private func isMinimized(_ window: AXUIElement) -> Bool {
+    private static func isMinimized(_ window: AXUIElement) -> Bool {
         var value: AnyObject?
         AXUIElementCopyAttributeValue(
             window, kAXMinimizedAttribute as CFString, &value
@@ -508,7 +571,7 @@ final class DockPreviewCoordinator {
         return (value as? Bool) ?? false
     }
 
-    private func isMinimizable(_ window: AXUIElement) -> Bool {
+    private static func isMinimizable(_ window: AXUIElement) -> Bool {
         var isSettable: DarwinBoolean = false
         if AXUIElementIsAttributeSettable(window, kAXMinimizedAttribute as CFString, &isSettable) == .success {
             return isSettable.boolValue
@@ -516,7 +579,7 @@ final class DockPreviewCoordinator {
         return false
     }
 
-    private func isFinderDesktop(_ window: AXUIElement) -> Bool {
+    private static func isFinderDesktop(_ window: AXUIElement) -> Bool {
         var titleValue: AnyObject?
         AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &titleValue)
         guard let title = titleValue as? String else { return false }

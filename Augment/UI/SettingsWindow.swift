@@ -21,7 +21,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Augment Settings"
+        window.title = Localizer.string("settings.title")
         window.titleVisibility = .visible
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false

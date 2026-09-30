@@ -52,7 +52,27 @@ xcodebuild -exportArchive -archivePath build/Augment.xcarchive -exportPath build
   -exportOptionsPlist ExportOptions.plist   # method: developer-id
 ```
 
-Then put the app in a DMG, sign the DMG with the Developer ID certificate, notarize it with `xcrun notarytool submit … --wait` and staple the ticket with `xcrun stapler staple`.
+Package with the original installer layout (background, arrow, icon positions and Finder window):
+
+```bash
+scripts/package-dmg.sh build/export/Augment.app build/Augment-1.0.8.dmg
+codesign --sign "Developer ID Application: ANIL IPEKSUEMER (LUPJND3R24)" --timestamp build/Augment-1.0.8.dmg
+xcrun notarytool submit build/Augment-1.0.8.dmg --keychain-profile Augment-release --wait
+# Continue only after the result is Accepted.
+xcrun stapler staple build/Augment-1.0.8.dmg
+xcrun stapler validate build/Augment-1.0.8.dmg
+```
+
+The packaging script clones the checksum-pinned 1.0.6 installer and replaces only
+Augment.app. It downloads that template from the 1.0.6 release if absent locally.
+Do not replace this with a plain `hdiutil create -srcfolder`: that loses the
+installer layout. Open the resulting DMG in Finder and visually verify the layout
+before publishing. Calculate the release checksum after stapling.
+
+To refresh the README Settings image, launch the installed release app with
+`--functest --readme-settings`. It captures the actual English window in dark
+appearance, writes `~/Library/Application Support/Augment/shots/readme-settings.png`,
+and restores the user's language preference afterward.
 
 ### Show Desktop
 

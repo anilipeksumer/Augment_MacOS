@@ -299,6 +299,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--readme-settings") {
+                await captureReadmeSettings()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--settings-shots") {
                 await captureSettingsPages()
                 finish()
@@ -423,6 +428,32 @@ enum FuncTest {
 
     /// Opens Settings and saves a PNG of every page to
     /// ~/Library/Application Support/Augment/shots/ for visual review.
+    private static func captureReadmeSettings() async {
+        let preferences = SharedPreferences.shared
+        let originalLanguage = preferences.appLanguage
+        preferences.appLanguage = "en"
+        defer { preferences.appLanguage = originalLanguage }
+        let controller = SettingsWindowController(preferences: preferences,
+                                                   permissionCoordinator: PermissionCoordinator(preferences: preferences))
+        guard let window = controller.window else { return }
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.setFrameOrigin(CGPoint(x: -6000, y: -6000))
+        window.orderFrontRegardless()
+        defer { controller.close() }
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        let dir = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        guard let image = CGWindowListCreateImage(.null, .optionIncludingWindow,
+                                                  CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .bestResolution]) else {
+            fail("README Settings capture", "could not capture window")
+            return
+        }
+        try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?
+            .write(to: dir.appendingPathComponent("readme-settings.png"))
+        record("README Settings title", window.title == "Augment", window.title)
+        lines.append("INFO  captured readme-settings.png \(image.width)x\(image.height)")
+    }
+
     private static func captureSettingsPages() async {
         let controller = SettingsWindowController(
             preferences: SharedPreferences.shared,

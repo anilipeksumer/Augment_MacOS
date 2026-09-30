@@ -103,7 +103,7 @@ Click Augment in the menu bar:
 </details>
 
 <p align="center">
-  <img src="docs/images/settings.png" width="620" alt="Augment settings">
+  <img src="docs/images/settings.png" width="620" alt="Augment">
 </p>
 
 ## Install

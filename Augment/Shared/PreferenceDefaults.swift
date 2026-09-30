@@ -157,7 +157,7 @@ public enum Localizer {
             "general.app": "App",
             "general.launch_at_login": "Open Augment at login",
             "menu.quit": "Quit Augment",
-            "settings.title": "Augment Settings",
+            "settings.title": "Augment",
             "about.description": "The small things macOS leaves out — for the Dock, windows, Finder, the notch, sound and displays.",
             "about.version": "Version",
             
@@ -558,7 +558,7 @@ public enum Localizer {
             "general.app": "Uygulama",
             "general.launch_at_login": "Girişte Augment'i aç",
             "menu.quit": "Augment'ten Çık",
-            "settings.title": "Augment Ayarları",
+            "settings.title": "Augment",
             "about.description": "macOS'ta eksik kalan küçük dokunuşlar — Dock, pencereler, Finder, notch, ses ve ekranlar için.",
             "about.version": "Sürüm",
             

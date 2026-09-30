@@ -225,7 +225,7 @@ private struct QuickPanelView: View {
                     HStack {
                         Label(Localizer.string("desktop.action"), systemImage: "menubar.dock.rectangle")
                         Spacer()
-                        Text("⌃⌥D").foregroundStyle(.secondary)
+                        Text("⌘D").foregroundStyle(.secondary)
                     }
                     .font(.system(size: 11, weight: .medium))
                     .padding(10)

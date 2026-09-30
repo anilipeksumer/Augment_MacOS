@@ -40,7 +40,7 @@ final class ShowDesktopService: ObservableObject {
         }, 1, &event, nil, &handler)
         guard status == noErr else { shortcutAvailable = false; return }
         let identifier = EventHotKeyID(signature: 0x41554454, id: 1)
-        shortcutAvailable = RegisterEventHotKey(UInt32(kVK_ANSI_D), UInt32(controlKey | optionKey),
+        shortcutAvailable = RegisterEventHotKey(UInt32(kVK_ANSI_D), UInt32(cmdKey),
                                                identifier, GetApplicationEventTarget(), 0, &hotKey) == noErr
         if !shortcutAvailable, let handler {
             RemoveEventHandler(handler)

@@ -50,11 +50,9 @@ struct WindowsPage: View {
                 ToggleRow(title: Localizer.string("desktop.title"),
                           subtitle: Localizer.string("desktop.description"),
                           systemImage: "menubar.dock.rectangle", tint: .cyan,
-                          isOn: $preferences.showDesktopEnabled)
-                    .disabled(!desktop.isSupported)
-                if !desktop.isSupported {
-                    Text(Localizer.string("desktop.unsupported")).foregroundStyle(.secondary)
-                } else if preferences.showDesktopEnabled && !desktop.shortcutAvailable {
+                          isOn: $preferences.showDesktopEnabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.showDesktopEnabled))
+                if preferences.showDesktopEnabled && !desktop.shortcutAvailable {
                     Text(Localizer.string("desktop.conflict")).foregroundStyle(.orange)
                 }
             }

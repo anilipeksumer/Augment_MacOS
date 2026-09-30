@@ -56,12 +56,16 @@ Then put the app in a DMG, sign the DMG with the Developer ID certificate, notar
 
 ### Show Desktop
 
-`ShowDesktopService` registers a Carbon global hotkey and dynamically resolves
-`CoreDockSendNotification` from HIServices to invoke the Dock's native desktop
-transition. This is an undocumented system entry point, also used by
-[Hammerspoon](https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/spaces/spaces.lua).
-If it is absent on a future macOS version, Settings disables the feature instead
-of failing app launch. No accessibility or screen recording permission is needed.
+`ShowDesktopService` registers a Carbon global hotkey and sets each application's
+window `AXMinimized` attribute through Accessibility. Cross-process calls run on
+a serial background queue with a per-call timeout; calls targeting Augment itself
+return to the main thread because they invoke AppKit directly. `DesktopWindowSession` tracks
+only successful minimizations, preserving windows that were already minimized.
+Full-screen windows and windows that reject minimization are left unchanged.
+The quick panel exposes a compact desktop/restore icon beside Settings.
+
+Run `open -n /Applications/Augment.app --args --functest --desktop` to verify
+real minimization/restoration using only temporary windows in the test process.
 
 For manual regression testing, enable Show Desktop in Settings → Windows and
 check the shortcut, Option-click on the menu bar icon, and quick panel button.

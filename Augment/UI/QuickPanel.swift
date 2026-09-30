@@ -220,20 +220,6 @@ private struct QuickPanelView: View {
                     awakeSection
                 }
             }
-            if preferences.showDesktopEnabled && ShowDesktopService.shared.isSupported {
-                Button { ShowDesktopService.shared.toggle() } label: {
-                    HStack {
-                        Label(Localizer.string("desktop.action"), systemImage: "menubar.dock.rectangle")
-                        Spacer()
-                        Text("⌘D").foregroundStyle(.secondary)
-                    }
-                    .font(.system(size: 11, weight: .medium))
-                    .padding(10)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(Localizer.string("desktop.description"))
-            }
             footer
         }
         .padding(12)
@@ -246,6 +232,9 @@ private struct QuickPanelView: View {
         HStack {
             Text("Augment").font(.system(size: 13, weight: .semibold))
             Spacer()
+            if preferences.showDesktopEnabled {
+                DesktopQuickButton()
+            }
             Button {
                 openSettings(nil)
             } label: {
@@ -648,5 +637,23 @@ private struct QuickPanelBackground: ViewModifier {
         } else {
             content.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
+    }
+}
+
+/// A small desktop control alongside Settings, with the same quiet visual weight.
+private struct DesktopQuickButton: View {
+    @ObservedObject private var desktop = ShowDesktopService.shared
+    var body: some View {
+        Button { desktop.toggle() } label: {
+            Image(systemName: desktop.hasWindowsToRestore ? "rectangle.on.rectangle" : "menubar.dock.rectangle")
+                .font(.system(size: 13))
+                .foregroundStyle(desktop.hasWindowsToRestore ? Color.accentColor : Color.primary)
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(desktop.isBusy)
+        .help(Localizer.string(desktop.hasWindowsToRestore ? "desktop.restore" : "desktop.title") + " · ⌘D")
+        .accessibilityLabel(Localizer.string(desktop.hasWindowsToRestore ? "desktop.restore" : "desktop.title"))
     }
 }

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AD1070000000000000000014 /* DesktopWindowSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000015 /* DesktopWindowSessionTests.swift */; };
+		AD1070000000000000000013 /* DesktopWindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000012 /* DesktopWindowSession.swift */; };
+		AD1070000000000000000011 /* DesktopWindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000012 /* DesktopWindowSession.swift */; };
 		AD1070000000000000000001 /* ShowDesktopService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000002 /* ShowDesktopService.swift */; };
 		3E8E8440A5034EA4A78E134F /* WindowSnappingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */; };
 		554664E9216AD4758CA6043F /* FileCutPasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */; };
@@ -142,6 +145,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AD1070000000000000000015 /* DesktopWindowSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWindowSessionTests.swift; sourceTree = "<group>"; };
+		AD1070000000000000000012 /* DesktopWindowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWindowSession.swift; sourceTree = "<group>"; };
 		AD1070000000000000000002 /* ShowDesktopService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowDesktopService.swift; sourceTree = "<group>"; };
 		12E36F08F0464D2BADD7B886 /* WindowSnappingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSnappingService.swift; sourceTree = "<group>"; };
 		E1BD7E45C1443A57D3E7D08A /* FileCutPasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCutPasteService.swift; sourceTree = "<group>"; };
@@ -361,6 +366,7 @@
 				1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */,
 				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
 				AD1070000000000000000002 /* ShowDesktopService.swift */,
+				AD1070000000000000000012 /* DesktopWindowSession.swift */,
 				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
 				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
 				BDB2266B94E2A8656939FB11 /* SystemStatsService.swift */,
@@ -462,6 +468,7 @@
 				TT01000000000000000000A1 /* DirectoryTreeBuilderTests.swift */,
 				TT01000000000000000000A2 /* FileTemplateFactoryTests.swift */,
 				TT01000000000000000000A3 /* PreferenceDefaultsTests.swift */,
+				AD1070000000000000000015 /* DesktopWindowSessionTests.swift */,
 				TT01000000000000000000A4 /* WindowSnappingServiceTests.swift */,
 				TT01000000000000000000A5 /* AXElementCoercionTests.swift */,
 			);
@@ -673,6 +680,7 @@
 				C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */,
 				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
 				AD1070000000000000000001 /* ShowDesktopService.swift in Sources */,
+				AD1070000000000000000011 /* DesktopWindowSession.swift in Sources */,
 				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
 				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
 				1F17DCCFEE7D9596E04918ED /* SystemStatsService.swift in Sources */,
@@ -732,6 +740,8 @@
 				TT0100000000000000000001 /* DirectoryTreeBuilderTests.swift in Sources */,
 				TT0100000000000000000002 /* FileTemplateFactoryTests.swift in Sources */,
 				TT0100000000000000000003 /* PreferenceDefaultsTests.swift in Sources */,
+				AD1070000000000000000013 /* DesktopWindowSession.swift in Sources */,
+				AD1070000000000000000014 /* DesktopWindowSessionTests.swift in Sources */,
 				TT0100000000000000000004 /* WindowSnappingServiceTests.swift in Sources */,
 				TT0100000000000000000005 /* AXElementCoercionTests.swift in Sources */,
 				TT0100000000000000000011 /* DirectoryTreeBuilder.swift in Sources */,

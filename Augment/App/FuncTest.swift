@@ -16,6 +16,11 @@ enum FuncTest {
 
     static func runAndExit() {
         Task { @MainActor in
+            if CommandLine.arguments.contains("--desktop") {
+                await testDesktopMinimization()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--displays") {
                 let service = DisplayBrightnessService.shared
                 service.refresh()
@@ -554,6 +559,42 @@ enum FuncTest {
     }
 
     // MARK: - Window snapping (⌘←)
+
+    /// Uses only this test process's windows; never touches the user's windows.
+    private static func testDesktopMinimization() async {
+        guard AXIsProcessTrusted() else {
+            fail("Desktop minimization", "Accessibility permission required")
+            return
+        }
+        NSApp.setActivationPolicy(.regular)
+        let windows = (0..<3).map { index -> NSWindow in
+            let window = NSWindow(contentRect: NSRect(x: 160 + index * 40, y: 200, width: 260, height: 180),
+                                  styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.title = "Augment Desktop Test \(index)"
+            window.orderFrontRegardless()
+            return window
+        }
+        defer { windows.forEach { $0.close() } }
+        windows[2].miniaturize(nil)
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        let worker = DesktopWindowWorker()
+        let pid = getpid()
+        func toggle() async {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    _ = worker.toggle(pids: [pid])
+                    continuation.resume()
+                }
+            }
+            try? await Task.sleep(nanoseconds: 800_000_000)
+        }
+        await toggle()
+        record("Desktop minimizes actual windows", windows.allSatisfy { $0.isMiniaturized }, "")
+        await toggle()
+        record("Desktop restores only its own minimizations",
+               !windows[0].isMiniaturized && !windows[1].isMiniaturized && windows[2].isMiniaturized, "")
+    }
 
     private static func testWindowSnapping() async {
         guard let window = await openFinderWindow() else {

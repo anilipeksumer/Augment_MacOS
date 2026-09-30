@@ -374,6 +374,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestPermissionsWhenEnabled(preferences.$dockClickBehaviorEnabled, key: AppGroupKey.dockClickBehaviorEnabled)
         requestPermissionsWhenEnabled(preferences.$windowSnappingEnabled, key: AppGroupKey.windowSnappingEnabled)
         requestPermissionsWhenEnabled(preferences.$fileCutPasteEnabled, key: AppGroupKey.fileCutPasteEnabled)
+        requestPermissionsWhenEnabled(preferences.$showDesktopEnabled, key: AppGroupKey.showDesktopEnabled)
         requestPermissionsWhenEnabled(preferences.$snapLayoutsEnabled, key: AppGroupKey.snapLayoutsEnabled)
         requestPermissionsWhenEnabled(preferences.$windowSwitcherEnabled, key: AppGroupKey.windowSwitcherEnabled)
         requestPermissionsWhenEnabled(preferences.$displayKeysEnabled, key: AppGroupKey.displayKeysEnabled)

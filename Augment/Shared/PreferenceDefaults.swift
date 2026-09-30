@@ -107,10 +107,9 @@ public enum Localizer {
     private static let translations: [String: [String: String]] = [
         "en": [
             "desktop.title": "Show Desktop",
-            "desktop.description": "Press ⌘D or Option-click Augment in the menu bar. Repeat to bring your windows back.",
-            "desktop.action": "Show / Restore Desktop",
+            "desktop.description": "Minimize all windows with ⌘D or Option-click on Augment. Repeat to restore only these windows. Requires Accessibility.",
+            "desktop.restore": "Restore Windows",
             "desktop.conflict": "⌘D is in use by another app. Option-click and the quick panel button are still available.",
-            "desktop.unsupported": "Show Desktop is unavailable on this version of macOS.",
 
             "menu.about": "About Augment",
             "menu.settings": "Settings…",
@@ -509,10 +508,9 @@ public enum Localizer {
         ],
         "tr": [
             "desktop.title": "Masaüstünü Göster",
-            "desktop.description": "⌘D tuşlarına basın veya menü çubuğundaki Augment simgesine Option tuşuyla tıklayın. Pencereleri geri getirmek için tekrarlayın.",
-            "desktop.action": "Masaüstünü Göster / Pencereleri Geri Getir",
+            "desktop.description": "⌘D veya Augment simgesine Option ile tıklayarak tüm pencereleri küçültün. Tekrarlayınca yalnızca bu pencereler geri gelir. Erişilebilirlik izni gerektirir.",
+            "desktop.restore": "Pencereleri Geri Getir",
             "desktop.conflict": "⌘D başka bir uygulama tarafından kullanılıyor. Option ile tıklama ve hızlı panel düğmesi kullanılabilir.",
-            "desktop.unsupported": "Masaüstünü gösterme bu macOS sürümünde kullanılamıyor.",
 
             "menu.about": "Augment Hakkında",
             "menu.settings": "Ayarlar…",

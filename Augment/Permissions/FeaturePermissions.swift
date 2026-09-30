@@ -75,6 +75,7 @@ enum FeatureRequirements {
         case AppGroupKey.dockClickBehaviorEnabled,
              AppGroupKey.windowSnappingEnabled,
              AppGroupKey.snapLayoutsEnabled,
+             AppGroupKey.showDesktopEnabled,
              AppGroupKey.displayKeysEnabled,
              AppGroupKey.clipboardPanelEnabled:
             return [.accessibility]

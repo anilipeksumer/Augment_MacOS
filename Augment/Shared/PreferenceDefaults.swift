@@ -107,7 +107,7 @@ public enum Localizer {
     private static let translations: [String: [String: String]] = [
         "en": [
             "desktop.title": "Show Desktop",
-            "desktop.description": "Minimize all windows with ⌘D or Option-click on Augment. Repeat to restore only these windows. Requires Accessibility.",
+            "desktop.description": "Minimize all windows with ⌘D or Option-click on Augment. When no windows are visible, restore windows minimized this way. Requires Accessibility.",
             "desktop.restore": "Restore Windows",
             "desktop.conflict": "⌘D is in use by another app. Option-click and the quick panel button are still available.",
 
@@ -508,7 +508,7 @@ public enum Localizer {
         ],
         "tr": [
             "desktop.title": "Masaüstünü Göster",
-            "desktop.description": "⌘D veya Augment simgesine Option ile tıklayarak tüm pencereleri küçültün. Tekrarlayınca yalnızca bu pencereler geri gelir. Erişilebilirlik izni gerektirir.",
+            "desktop.description": "⌘D veya Augment simgesine Option ile tıklayarak tüm pencereleri küçültün. Ekranda açık pencere yoksa bu şekilde küçülttükleriniz geri gelir. Erişilebilirlik izni gerektirir.",
             "desktop.restore": "Pencereleri Geri Getir",
             "desktop.conflict": "⌘D başka bir uygulama tarafından kullanılıyor. Option ile tıklama ve hızlı panel düğmesi kullanılabilir.",
 

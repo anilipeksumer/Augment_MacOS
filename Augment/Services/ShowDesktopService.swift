@@ -92,11 +92,6 @@ final class DesktopWindowWorker {
     private var session = DesktopWindowSession<AXUIElement>()
 
     func toggle(pids: [pid_t]) -> (restored: Bool, hasWindows: Bool) {
-        session.prune(isMinimized: Self.isMinimized)
-        if !session.windows.isEmpty {
-            session.restore(isMinimized: Self.isMinimized, setMinimized: Self.setMinimized)
-            return (true, !session.windows.isEmpty)
-        }
         let candidates = pids.flatMap { pid -> [AXUIElement] in
             // AX calls targeting this process invoke AppKit directly, so its
             // own windows must be handled on the main thread.
@@ -105,8 +100,28 @@ final class DesktopWindowWorker {
             }
             return Self.windows(for: pid)
         }
-        session.minimize(candidates, isMinimized: Self.isMinimized, setMinimized: Self.setMinimized)
-        return (false, !session.windows.isEmpty)
+        // Window-server visibility reflects the current desktop/Space, not
+        // whether we happen to have saved windows from an earlier press.
+        // Even a visible window that refuses minimization blocks restoration.
+        let visible = Self.hasVisibleWindows(pids: Set(pids))
+        let restored = session.toggle(candidates, hasVisibleWindows: visible,
+                                      isMinimized: Self.isMinimized, setMinimized: Self.setMinimized)
+        return (restored, !session.windows.isEmpty)
+    }
+
+    private static func hasVisibleWindows(pids: Set<pid_t>) -> Bool {
+        guard let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
+                                                       kCGNullWindowID) as? [[String: Any]] else {
+            // Do not reveal saved windows when visibility cannot be determined.
+            return true
+        }
+        return windows.contains { info in
+            guard let pid = info[kCGWindowOwnerPID as String] as? Int32,
+                  pids.contains(pid),
+                  (info[kCGWindowLayer as String] as? Int) == 0,
+                  (info[kCGWindowAlpha as String] as? Double ?? 1) > 0 else { return false }
+            return true
+        }
     }
 
     private static func windows(for pid: pid_t) -> [AXUIElement] {

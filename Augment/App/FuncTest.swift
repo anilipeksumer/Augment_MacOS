@@ -603,7 +603,7 @@ enum FuncTest {
             return
         }
         NSApp.setActivationPolicy(.regular)
-        let windows = (0..<3).map { index -> NSWindow in
+        var windows = (0..<3).map { index -> NSWindow in
             let window = NSWindow(contentRect: NSRect(x: 160 + index * 40, y: 200, width: 260, height: 180),
                                   styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
             window.isReleasedWhenClosed = false
@@ -627,9 +627,26 @@ enum FuncTest {
         }
         await toggle()
         record("Desktop minimizes actual windows", windows.allSatisfy { $0.isMiniaturized }, "")
+        let newWindow = NSWindow(contentRect: NSRect(x: 240, y: 240, width: 260, height: 180),
+                                 styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+        newWindow.isReleasedWhenClosed = false
+        newWindow.title = "New window after Show Desktop"
+        windows.append(newWindow)
+        newWindow.orderFrontRegardless()
+        try? await Task.sleep(nanoseconds: 800_000_000)
         await toggle()
-        record("Desktop restores only its own minimizations",
-               !windows[0].isMiniaturized && !windows[1].isMiniaturized && windows[2].isMiniaturized, "")
+        record("New window minimizes without restoring saved windows",
+               windows.allSatisfy { $0.isMiniaturized }, "")
+        await toggle()
+        record("Desktop restores original and newly minimized windows only",
+               !windows[0].isMiniaturized && !windows[1].isMiniaturized && windows[2].isMiniaturized
+                   && !newWindow.isMiniaturized, "")
+        await toggle()
+        windows[0].deminiaturize(nil)
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        await toggle()
+        record("Manually restored window minimizes without revealing other windows",
+               windows.allSatisfy { $0.isMiniaturized }, "")
     }
 
     private static func testWindowSnapping() async {

@@ -47,3 +47,64 @@ final class DesktopWindowSessionTests: XCTestCase {
         XCTAssertEqual(session.windows, [2])
     }
 }
+
+extension DesktopWindowSessionTests {
+    func testNewWindowMinimizesBeforeAnySavedWindowsRestore() {
+        var session = DesktopWindowSession<Int>()
+        var states = [1: false, 2: true]
+        func toggle(visible: Bool, reject: Int? = nil) -> Bool {
+            session.toggle(states.keys.sorted(), hasVisibleWindows: visible, isMinimized: { states[$0] }) { id, value in
+                guard id != reject else { return false }
+                states[id] = value
+                return true
+            }
+        }
+        XCTAssertFalse(toggle(visible: true))
+        states[3] = false
+        XCTAssertFalse(toggle(visible: true))
+        XCTAssertEqual(states, [1: true, 2: true, 3: true])
+        XCTAssertEqual(session.windows, [1, 3])
+        XCTAssertTrue(toggle(visible: false))
+        XCTAssertEqual(states, [1: false, 2: true, 3: false])
+    }
+
+    func testManuallyRestoredWindowIsMinimizedAgainWithoutDuplicates() {
+        var session = DesktopWindowSession<Int>()
+        var states = [1: false, 2: false]
+        func toggle(visible: Bool) {
+            session.toggle([1, 2], hasVisibleWindows: visible, isMinimized: { states[$0] }) { id, value in
+                states[id] = value
+                return true
+            }
+        }
+        toggle(visible: true)
+        states[1] = false
+        toggle(visible: true)
+        XCTAssertEqual(states, [1: true, 2: true])
+        XCTAssertEqual(Set(session.windows), [1, 2])
+        XCTAssertEqual(session.windows.count, 2)
+        toggle(visible: false)
+        XCTAssertEqual(states, [1: false, 2: false])
+    }
+
+    func testVisibleWindowThatCannotMinimizeDoesNotRestoreSavedGroup() {
+        var session = DesktopWindowSession<Int>()
+        var states = [1: false]
+        session.toggle([1], hasVisibleWindows: true, isMinimized: { states[$0] }) { id, value in
+            states[id] = value
+            return true
+        }
+        states[2] = false
+        let restored = session.toggle([1, 2], hasVisibleWindows: true, isMinimized: { states[$0] },
+                                      setMinimized: { _, _ in false })
+        XCTAssertFalse(restored)
+        XCTAssertEqual(states, [1: true, 2: false])
+        XCTAssertEqual(session.windows, [1])
+    }
+
+    func testEmptyDesktopWithoutSavedWindowsIsANoOp() {
+        var session = DesktopWindowSession<Int>()
+        XCTAssertFalse(session.toggle([], hasVisibleWindows: false, isMinimized: { _ in nil },
+                                      setMinimized: { _, _ in XCTFail("Unexpected mutation"); return false }))
+    }
+}

@@ -63,7 +63,7 @@ Click Augment in the menu bar:
 
 ## Windows & Dock
 
-- **Show Desktop** — enable it in Settings → Windows, then press ⌘D, Option-click Augment in the menu bar, or use the desktop icon beside Settings in the quick panel. Minimizes open windows to the Dock; repeat to restore only those windows. Requires Accessibility.
+- **Show Desktop** — enable it in Settings → Windows, then press ⌘D, Option-click Augment in the menu bar, or use the desktop icon beside Settings in the quick panel. Minimizes open windows to the Dock, including windows opened after an earlier press. Restores those windows only when the desktop is clear. Requires Accessibility.
 
 - **Dock previews** — hover an icon to see its windows, minimized ones included; close, minimize or zoom right there.
 - **⌥Tab switcher** with live thumbnails of every window and every open app.

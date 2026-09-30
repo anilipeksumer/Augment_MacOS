@@ -61,6 +61,9 @@ window `AXMinimized` attribute through Accessibility. Cross-process calls run on
 a serial background queue with a per-call timeout; calls targeting Augment itself
 return to the main thread because they invoke AppKit directly. `DesktopWindowSession` tracks
 only successful minimizations, preserving windows that were already minimized.
+Every invocation first checks Window Server visibility on the current desktop.
+Visible application windows take priority over saved history; newly minimized
+windows are added to the existing group. Only a clear desktop allows restoration.
 Full-screen windows and windows that reject minimization are left unchanged.
 The quick panel exposes a compact desktop/restore icon beside Settings.
 
@@ -71,7 +74,9 @@ remain isolated when both Carbon hotkey handlers are installed.
 
 For manual regression testing, enable Show Desktop in Settings → Windows and
 check the shortcut, Option-click on the menu bar icon, and quick panel button.
-Repeat each action to restore windows. Include already minimized windows,
+After minimizing, open a new window and invoke again: it must minimize without
+restoring the previous group. Invoke once more on the clear desktop to restore
+the combined group. Also manually restore one window and repeat. Include already minimized windows,
 multiple displays and Spaces. Holding the shortcut must only trigger once on
 release. Disabling the feature must release the hotkey; a conflicting app must
 produce a warning in Settings without disabling mouse access.

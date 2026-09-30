@@ -12,9 +12,9 @@ final class PreferenceDefaultsTests: XCTestCase {
         XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.hoverOpenDelay] as? Double, 0.4)
         XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.previewSize] as? String, "standard")
         XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.trafficLightSide] as? String, "trailing")
-        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.minimizeEffect] as? String, "system")
+        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.showDesktopEnabled] as? Bool, false)
         XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.windowSnappingShortcuts] as? String, "")
-        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.notchCalendarStyle] as? String, "compact")
-        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.notchBatteryStyle] as? String, "gauge")
+        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.notchCalendarStyle] as? String, "text")
+        XCTAssertEqual(PreferenceDefaults.registrationValues[AppGroupKey.notchBatteryStyle] as? String, "symbol")
     }
 }

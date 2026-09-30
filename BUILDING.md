@@ -53,3 +53,19 @@ xcodebuild -exportArchive -archivePath build/Augment.xcarchive -exportPath build
 ```
 
 Then put the app in a DMG, sign the DMG with the Developer ID certificate, notarize it with `xcrun notarytool submit … --wait` and staple the ticket with `xcrun stapler staple`.
+
+### Show Desktop
+
+`ShowDesktopService` registers a Carbon global hotkey and dynamically resolves
+`CoreDockSendNotification` from HIServices to invoke the Dock's native desktop
+transition. This is an undocumented system entry point, also used by
+[Hammerspoon](https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/spaces/spaces.lua).
+If it is absent on a future macOS version, Settings disables the feature instead
+of failing app launch. No accessibility or screen recording permission is needed.
+
+For manual regression testing, enable Show Desktop in Settings → Windows and
+check the shortcut, Option-click on the menu bar icon, and quick panel button.
+Repeat each action to restore windows. Include already minimized windows,
+multiple displays and Spaces. Holding the shortcut must only trigger once on
+release. Disabling the feature must release the hotkey; a conflicting app must
+produce a warning in Settings without disabling mouse access.

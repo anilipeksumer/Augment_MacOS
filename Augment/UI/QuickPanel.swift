@@ -220,6 +220,20 @@ private struct QuickPanelView: View {
                     awakeSection
                 }
             }
+            if preferences.showDesktopEnabled && ShowDesktopService.shared.isSupported {
+                Button { ShowDesktopService.shared.toggle() } label: {
+                    HStack {
+                        Label(Localizer.string("desktop.action"), systemImage: "menubar.dock.rectangle")
+                        Spacer()
+                        Text("⌃⌥D").foregroundStyle(.secondary)
+                    }
+                    .font(.system(size: 11, weight: .medium))
+                    .padding(10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(Localizer.string("desktop.description"))
+            }
             footer
         }
         .padding(12)

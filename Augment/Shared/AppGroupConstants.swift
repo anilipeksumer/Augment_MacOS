@@ -237,6 +237,7 @@ public enum AppGroupKey {
 
     // MARK: - Snap Layouts (⌃⌥Space)
     /// Master toggle for the Windows 11-style snap-zone picker flyout.
+    public static let showDesktopEnabled = "augment.showDesktopEnabled"
     public static let snapLayoutsEnabled = "augment.snapLayoutsEnabled"
 
     // MARK: - Window switcher (⌥Tab)

@@ -37,11 +37,26 @@ struct DockPage: View {
 }
 
 struct WindowsPage: View {
+    @EnvironmentObject private var preferences: SharedPreferences
+    @ObservedObject private var desktop = ShowDesktopService.shared
+
     var body: some View {
         Form {
             Section {
                 PaneHeader(title: Localizer.string("page.windows"), subtitle: Localizer.string("page.windows_sub"),
                            systemImage: "macwindow.on.rectangle", tint: .cyan)
+            }
+            Section {
+                ToggleRow(title: Localizer.string("desktop.title"),
+                          subtitle: Localizer.string("desktop.description"),
+                          systemImage: "menubar.dock.rectangle", tint: .cyan,
+                          isOn: $preferences.showDesktopEnabled)
+                    .disabled(!desktop.isSupported)
+                if !desktop.isSupported {
+                    Text(Localizer.string("desktop.unsupported")).foregroundStyle(.secondary)
+                } else if preferences.showDesktopEnabled && !desktop.shortcutAvailable {
+                    Text(Localizer.string("desktop.conflict")).foregroundStyle(.orange)
+                }
             }
             WindowSnappingSettingsSections()
         }

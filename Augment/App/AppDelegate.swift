@@ -185,6 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowSnappingService.stop()
         fileCutPasteService.stop()
         snapLayoutsService.stop()
+        ShowDesktopService.shared.stop()
         windowSwitcherService.stop()
         QuickPanelController.shared.close()
         DisplayBrightnessService.shared.restoreSoftwareDimming()
@@ -252,6 +253,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             QuickPanelController.shared.close()
             let menu = makeMenu()
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 5), in: button)
+        } else if preferences.showDesktopEnabled && event?.modifierFlags.contains(.option) == true {
+            ShowDesktopService.shared.toggle()
         } else {
             QuickPanelController.shared.toggle(below: button)
         }
@@ -494,6 +497,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func observeNewFeaturePreferences() {
+        preferences.$showDesktopEnabled
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { ShowDesktopService.shared.setEnabled($0) }
+            .store(in: &cancellables)
+
         // Window snapping toggle
         preferences.$windowSnappingEnabled
             .receive(on: DispatchQueue.main)

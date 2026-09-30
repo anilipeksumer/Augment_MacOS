@@ -33,6 +33,7 @@ public enum PreferenceDefaults {
         AppGroupKey.windowSnappingShortcuts: "",
         AppGroupKey.fileCutPasteEnabled: false,
         AppGroupKey.snapLayoutsEnabled: false,
+        AppGroupKey.showDesktopEnabled: false,
         AppGroupKey.windowSwitcherEnabled: false,
         AppGroupKey.volumeMixerEnabled: false,
         AppGroupKey.clipboardHistoryEnabled: false,
@@ -105,6 +106,12 @@ public enum Localizer {
 
     private static let translations: [String: [String: String]] = [
         "en": [
+            "desktop.title": "Show Desktop",
+            "desktop.description": "Press ⌃⌥D or Option-click Augment in the menu bar. Repeat to bring your windows back.",
+            "desktop.action": "Show / Restore Desktop",
+            "desktop.conflict": "⌃⌥D is in use by another app. Option-click and the quick panel button are still available.",
+            "desktop.unsupported": "Show Desktop is unavailable on this version of macOS.",
+
             "menu.about": "About Augment",
             "menu.settings": "Settings…",
             "menu.permissions": "Accessibility Permission…",
@@ -501,6 +508,12 @@ public enum Localizer {
             "effect.suck_subtitle": "Compact swirl into the Dock icon."
         ],
         "tr": [
+            "desktop.title": "Masaüstünü Göster",
+            "desktop.description": "⌃⌥D tuşlarına basın veya menü çubuğundaki Augment simgesine Option tuşuyla tıklayın. Pencereleri geri getirmek için tekrarlayın.",
+            "desktop.action": "Masaüstünü Göster / Pencereleri Geri Getir",
+            "desktop.conflict": "⌃⌥D başka bir uygulama tarafından kullanılıyor. Option ile tıklama ve hızlı panel düğmesi kullanılabilir.",
+            "desktop.unsupported": "Masaüstünü gösterme bu macOS sürümünde kullanılamıyor.",
+
             "menu.about": "Augment Hakkında",
             "menu.settings": "Ayarlar…",
             "menu.permissions": "Erişilebilirlik İzni…",

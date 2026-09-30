@@ -219,6 +219,10 @@ public final class SharedPreferences: ObservableObject {
         didSet { write(fileCutPasteEnabled, AppGroupKey.fileCutPasteEnabled) }
     }
 
+    @Published public var showDesktopEnabled: Bool {
+        didSet { write(showDesktopEnabled, AppGroupKey.showDesktopEnabled) }
+    }
+
     // MARK: - Snap Layouts
 
     /// Master toggle for the ⌃⌥Space snap-zone picker.
@@ -441,6 +445,7 @@ public final class SharedPreferences: ObservableObject {
         self.windowSnappingShortcuts = Self.loadString(AppGroupKey.windowSnappingShortcuts, reg) ?? ""
 
         self.fileCutPasteEnabled = Self.loadBool(AppGroupKey.fileCutPasteEnabled, reg)
+        self.showDesktopEnabled = Self.loadBool(AppGroupKey.showDesktopEnabled, reg)
         self.snapLayoutsEnabled = Self.loadBool(AppGroupKey.snapLayoutsEnabled, reg)
         self.windowSwitcherEnabled = Self.loadBool(AppGroupKey.windowSwitcherEnabled, reg)
         self.volumeMixerEnabled = Self.loadBool(AppGroupKey.volumeMixerEnabled, reg)

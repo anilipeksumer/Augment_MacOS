@@ -16,6 +16,11 @@ enum FuncTest {
 
     static func runAndExit() {
         Task { @MainActor in
+            if CommandLine.arguments.contains("--hotkey-routing") {
+                await testHotKeyRouting()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--desktop") {
                 await testDesktopMinimization()
                 finish()
@@ -559,6 +564,37 @@ enum FuncTest {
     }
 
     // MARK: - Window snapping (⌘←)
+
+    private static func testHotKeyRouting() async {
+        let clipboard = ClipboardPanelController.shared
+        clipboard.enable()
+        ShowDesktopService.shared.setEnabled(true)
+        defer {
+            clipboard.disable()
+            ShowDesktopService.shared.stop()
+        }
+        func send(signature: OSType, id: UInt32) async {
+            var event: EventRef?
+            guard CreateEvent(nil, OSType(kEventClassKeyboard), UInt32(kEventHotKeyPressed), 0, 0, &event) == noErr,
+                  let event else { fail("Hotkey event creation", "failed"); return }
+            defer { ReleaseEvent(event) }
+            var identifier = EventHotKeyID(signature: signature, id: id)
+            SetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              MemoryLayout<EventHotKeyID>.size, &identifier)
+            SendEventToEventTarget(event, GetApplicationEventTarget())
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        await send(signature: 0x41554454, id: 1) // Show Desktop key down
+        record("Command-D does not open clipboard", !clipboard.isOpen, "")
+        await send(signature: 0x41554754, id: 999) // Unregistered clipboard ID
+        record("Unknown hotkey ID does not open clipboard", !clipboard.isOpen, "")
+        await send(signature: 0x41554754, id: 1) // Clipboard's Command-Shift-V
+        record("Command-Shift-V opens clipboard", clipboard.isOpen, "")
+        await send(signature: 0x41554454, id: 1)
+        record("Command-D does not toggle an open clipboard", clipboard.isOpen, "")
+        await send(signature: 0x41554754, id: 1)
+        record("Command-Shift-V closes clipboard", !clipboard.isOpen, "")
+    }
 
     /// Uses only this test process's windows; never touches the user's windows.
     private static func testDesktopMinimization() async {

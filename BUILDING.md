@@ -66,6 +66,8 @@ The quick panel exposes a compact desktop/restore icon beside Settings.
 
 Run `open -n /Applications/Augment.app --args --functest --desktop` to verify
 real minimization/restoration using only temporary windows in the test process.
+Use `--functest --hotkey-routing` to verify that Command-D and Command-Shift-V
+remain isolated when both Carbon hotkey handlers are installed.
 
 For manual regression testing, enable Show Desktop in Settings → Windows and
 check the shortcut, Option-click on the menu bar icon, and quick panel button.

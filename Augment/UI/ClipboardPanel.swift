@@ -29,8 +29,13 @@ final class GlobalHotKey {
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
             var hotKeyID = EventHotKeyID()
-            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
-                              nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
+            // Numeric IDs are local to each signature. Show Desktop also uses
+            // id 1, but its 'AUDT' events must never open the 'AUGT' clipboard.
+            guard let event,
+                  GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                                    nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID) == noErr,
+                  hotKeyID.signature == OSType(0x41554754),
+                  GlobalHotKey.handlers[hotKeyID.id] != nil else { return OSStatus(eventNotHandledErr) }
             let id = hotKeyID.id
             DispatchQueue.main.async { GlobalHotKey.handlers[id]?() }
             return noErr

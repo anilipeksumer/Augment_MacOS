@@ -233,6 +233,7 @@ public enum AppGroupKey {
     // MARK: - File cut & paste (⌘X / ⌘V in Finder)
     /// Master toggle for a real Finder "Cut" (Finder natively only has
     /// Copy + ⌥⌘V paste-as-move).
+    public static let finderEnterBehavior = "augment.finderEnterBehavior"
     public static let fileCutPasteEnabled = "augment.fileCutPasteEnabled"
 
     // MARK: - Snap Layouts (⌃⌥Space)

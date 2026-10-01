@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AF1090000000000000000004 /* FinderOpenShortcutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000005 /* FinderOpenShortcutTests.swift */; };
+		AF1090000000000000000003 /* FinderOpenShortcutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000002 /* FinderOpenShortcutService.swift */; };
+		AF1090000000000000000001 /* FinderOpenShortcutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000002 /* FinderOpenShortcutService.swift */; };
 		AD1070000000000000000014 /* DesktopWindowSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000015 /* DesktopWindowSessionTests.swift */; };
 		AD1070000000000000000013 /* DesktopWindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000012 /* DesktopWindowSession.swift */; };
 		AD1070000000000000000011 /* DesktopWindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1070000000000000000012 /* DesktopWindowSession.swift */; };
@@ -145,6 +148,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AF1090000000000000000005 /* FinderOpenShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderOpenShortcutTests.swift; sourceTree = "<group>"; };
+		AF1090000000000000000002 /* FinderOpenShortcutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderOpenShortcutService.swift; sourceTree = "<group>"; };
 		AD1070000000000000000015 /* DesktopWindowSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWindowSessionTests.swift; sourceTree = "<group>"; };
 		AD1070000000000000000012 /* DesktopWindowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWindowSession.swift; sourceTree = "<group>"; };
 		AD1070000000000000000002 /* ShowDesktopService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowDesktopService.swift; sourceTree = "<group>"; };
@@ -366,6 +371,7 @@
 				1D62F6ECA77DE205959EA32E /* CaffeinateService.swift */,
 				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
 				AD1070000000000000000002 /* ShowDesktopService.swift */,
+				AF1090000000000000000002 /* FinderOpenShortcutService.swift */,
 				AD1070000000000000000012 /* DesktopWindowSession.swift */,
 				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
 				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
@@ -469,6 +475,7 @@
 				TT01000000000000000000A2 /* FileTemplateFactoryTests.swift */,
 				TT01000000000000000000A3 /* PreferenceDefaultsTests.swift */,
 				AD1070000000000000000015 /* DesktopWindowSessionTests.swift */,
+				AF1090000000000000000005 /* FinderOpenShortcutTests.swift */,
 				TT01000000000000000000A4 /* WindowSnappingServiceTests.swift */,
 				TT01000000000000000000A5 /* AXElementCoercionTests.swift */,
 			);
@@ -680,6 +687,7 @@
 				C0C2C1BA0089B6EEBDEA7C26 /* CaffeinateService.swift in Sources */,
 				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
 				AD1070000000000000000001 /* ShowDesktopService.swift in Sources */,
+				AF1090000000000000000001 /* FinderOpenShortcutService.swift in Sources */,
 				AD1070000000000000000011 /* DesktopWindowSession.swift in Sources */,
 				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
 				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
@@ -740,6 +748,8 @@
 				TT0100000000000000000001 /* DirectoryTreeBuilderTests.swift in Sources */,
 				TT0100000000000000000002 /* FileTemplateFactoryTests.swift in Sources */,
 				TT0100000000000000000003 /* PreferenceDefaultsTests.swift in Sources */,
+				AF1090000000000000000003 /* FinderOpenShortcutService.swift in Sources */,
+				AF1090000000000000000004 /* FinderOpenShortcutTests.swift in Sources */,
 				AD1070000000000000000013 /* DesktopWindowSession.swift in Sources */,
 				AD1070000000000000000014 /* DesktopWindowSessionTests.swift in Sources */,
 				TT0100000000000000000004 /* WindowSnappingServiceTests.swift in Sources */,
@@ -901,7 +911,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -912,7 +922,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -930,7 +940,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -941,7 +951,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -954,7 +964,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -964,7 +974,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -979,7 +989,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -989,7 +999,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.findersync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1005,7 +1015,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1015,7 +1025,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1031,7 +1041,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1041,7 +1051,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.quicklook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1055,7 +1065,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1063,7 +1073,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1077,7 +1087,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1085,7 +1095,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.anilipeksumer.augment.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

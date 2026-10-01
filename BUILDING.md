@@ -100,3 +100,19 @@ the combined group. Also manually restore one window and repeat. Include already
 multiple displays and Spaces. Holding the shortcut must only trigger once on
 release. Disabling the feature must release the hotkey; a conflicting app must
 produce a warning in Settings without disabling mouse access.
+
+### Finder Enter modes
+
+Settings → Finder offers native macOS behavior (default), Shift-Enter to open,
+and Enter to open with Shift-Enter to rename. The two custom modes require
+Accessibility only. Events are remapped to Finder's native Command-O or Return;
+[Apple documents Command-O as Open](https://support.apple.com/en-us/102650).
+Focused text controls and dialogs are excluded, and paired key-up events keep
+the action chosen on key-down. Other modifiers and applications pass through.
+
+Quit the normal Augment instance, then run
+`open -n /Applications/Augment.app --args --functest --finder-open` for the
+Finder integration checks. They create and clean up a temporary test folder and
+Finder window. They also open a temporary text file in its default application
+and close its document window via Accessibility. Test setup uses Finder Automation permission; the feature itself
+does not need Automation. Do not type or switch apps during this keyboard test.

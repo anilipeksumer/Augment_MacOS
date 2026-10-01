@@ -37,6 +37,7 @@ struct GeneralSettingsPane: View {
                 (Localizer.string("short.newfile"), preferences.finderNewFileMenuEnabled),
                 (Localizer.string("short.folderql"), preferences.folderQuickLookEnabled),
                 (Localizer.string("short.filecut"), preferences.fileCutPasteEnabled),
+                (Localizer.string("finder.shift_enter"), preferences.finderEnterBehavior != .system),
             ]),
             PageSummary(tab: .notch, features: [
                 (Localizer.string("short.notch"), preferences.notchEnabled),

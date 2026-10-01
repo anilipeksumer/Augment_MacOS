@@ -76,6 +76,7 @@ enum FeatureRequirements {
              AppGroupKey.windowSnappingEnabled,
              AppGroupKey.snapLayoutsEnabled,
              AppGroupKey.showDesktopEnabled,
+             AppGroupKey.finderEnterBehavior,
              AppGroupKey.displayKeysEnabled,
              AppGroupKey.clipboardPanelEnabled:
             return [.accessibility]

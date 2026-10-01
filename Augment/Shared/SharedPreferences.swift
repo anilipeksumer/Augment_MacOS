@@ -70,6 +70,12 @@ public enum TrafficLightSide: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+public enum FinderEnterBehavior: String, CaseIterable, Identifiable {
+    case system, shiftEnterOpens, enterOpens
+    public var id: String { rawValue }
+    public var title: String { Localizer.string("finder.enter_" + rawValue) }
+}
+
 /// Typed access to user preferences that live inside the App Group container.
 ///
 /// The store is intentionally focused on app-surface options rather than
@@ -212,7 +218,11 @@ public final class SharedPreferences: ObservableObject {
 
     /// Master toggle for ⌃⌘X (cut focused window) / ⌃⌘V (paste it under the cursor).
 
-    // MARK: - File cut & paste
+    // MARK: - Finder
+
+    @Published public var finderEnterBehavior: FinderEnterBehavior {
+        didSet { write(finderEnterBehavior.rawValue, AppGroupKey.finderEnterBehavior) }
+    }
 
     /// Master toggle for a real Finder "Cut" via ⌘X / ⌘V.
     @Published public var fileCutPasteEnabled: Bool {
@@ -444,6 +454,7 @@ public final class SharedPreferences: ObservableObject {
         self.windowSnappingEnabled = Self.loadBool(AppGroupKey.windowSnappingEnabled, reg)
         self.windowSnappingShortcuts = Self.loadString(AppGroupKey.windowSnappingShortcuts, reg) ?? ""
 
+        self.finderEnterBehavior = FinderEnterBehavior(rawValue: Self.loadString(AppGroupKey.finderEnterBehavior, reg) ?? "system") ?? .system
         self.fileCutPasteEnabled = Self.loadBool(AppGroupKey.fileCutPasteEnabled, reg)
         self.showDesktopEnabled = Self.loadBool(AppGroupKey.showDesktopEnabled, reg)
         self.snapLayoutsEnabled = Self.loadBool(AppGroupKey.snapLayoutsEnabled, reg)

@@ -32,6 +32,7 @@ public enum PreferenceDefaults {
         AppGroupKey.windowSnappingEnabled: false,
         AppGroupKey.windowSnappingShortcuts: "",
         AppGroupKey.fileCutPasteEnabled: false,
+        AppGroupKey.finderEnterBehavior: "system",
         AppGroupKey.snapLayoutsEnabled: false,
         AppGroupKey.showDesktopEnabled: false,
         AppGroupKey.windowSwitcherEnabled: false,
@@ -106,6 +107,11 @@ public enum Localizer {
 
     private static let translations: [String: [String: String]] = [
         "en": [
+            "finder.shift_enter": "Finder Enter key",
+            "finder.shift_enter_desc": "Choose how Return and keypad Enter behave when files or folders are selected. Text editing, search and dialogs keep their normal behavior.",
+            "finder.enter_system": "macOS — Enter renames",
+            "finder.enter_shiftEnterOpens": "Enter renames · Shift-Enter opens",
+            "finder.enter_enterOpens": "Enter opens · Shift-Enter renames",
             "desktop.title": "Show Desktop",
             "desktop.description": "Minimize all windows with ⌘D or Option-click on Augment. When no windows are visible, restore windows minimized this way. Requires Accessibility.",
             "desktop.restore": "Restore Windows",
@@ -507,6 +513,11 @@ public enum Localizer {
             "effect.suck_subtitle": "Compact swirl into the Dock icon."
         ],
         "tr": [
+            "finder.shift_enter": "Finder Enter Tuşu",
+            "finder.shift_enter_desc": "Dosya veya klasör seçiliyken Return ve sayısal tuş takımındaki Enter tuşunun davranışını seçin. Metin düzenleme, arama ve iletişim kutuları normal çalışır.",
+            "finder.enter_system": "macOS — Enter yeniden adlandırır",
+            "finder.enter_shiftEnterOpens": "Enter yeniden adlandırır · Shift-Enter açar",
+            "finder.enter_enterOpens": "Enter açar · Shift-Enter yeniden adlandırır",
             "desktop.title": "Masaüstünü Göster",
             "desktop.description": "⌘D veya Augment simgesine Option ile tıklayarak tüm pencereleri küçültün. Ekranda açık pencere yoksa bu şekilde küçülttükleriniz geri gelir. Erişilebilirlik izni gerektirir.",
             "desktop.restore": "Pencereleri Geri Getir",

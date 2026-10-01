@@ -8,6 +8,19 @@ struct FinderSettingsSections: View {
 
     var body: some View {
         Group {
+            Section {
+                Picker(Localizer.string("finder.shift_enter"), selection: $preferences.finderEnterBehavior) {
+                    ForEach(FinderEnterBehavior.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(Localizer.string("finder.shift_enter_desc"))
+                    .font(.caption).foregroundStyle(.secondary)
+                if preferences.finderEnterBehavior != .system {
+                    PermissionNotice(permissions: [.accessibility])
+                }
+            }
 
             Section {
                 ToggleRow(

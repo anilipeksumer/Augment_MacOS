@@ -72,6 +72,8 @@ Click Augment in the menu bar:
 
 ## Finder
 
+- **Choose your Enter key** — native macOS rename, Enter to rename / Shift-Enter to open, or Enter to open / Shift-Enter to rename. Set the mode in Settings → Finder; text editing keeps its normal behavior.
+
 - Right-click › **New File or Folder** from templates — code, Office documents, data, text.
 - **Copy Path** and **Open in Terminal**, in iCloud folders too.
 - A real **Cut ⌘X / Paste ⌘V** for files, with **⌘Z** to put them back.

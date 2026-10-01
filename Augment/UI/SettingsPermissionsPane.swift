@@ -17,7 +17,7 @@ struct PermissionsSettingsPane: View {
             Row(permission: .accessibility, usedBy: [
                 Localizer.string("feature.hover_title"), Localizer.string("feature.dockClick_title"),
                 Localizer.string("feature.snapping_title"), Localizer.string("snaplayouts.title"),
-                Localizer.string("desktop.title"),
+                Localizer.string("desktop.title"), Localizer.string("finder.shift_enter"),
                 Localizer.string("switcher.title"),
                 Localizer.string("cutpaste.file_title"),
             ]),

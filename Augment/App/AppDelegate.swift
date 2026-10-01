@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let dockService = DockInteractionService()
     private let windowDiscovery = WindowDiscoveryService()
     private let windowSnappingService = WindowSnappingService()
+    private let finderOpenShortcutService = FinderOpenShortcutService()
     private let fileCutPasteService = FileCutPasteService()
     private let snapLayoutsService = SnapLayoutsService()
     private lazy var windowSwitcherService = WindowSwitcherService(windowDiscovery: windowDiscovery)
@@ -150,6 +151,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // --- New feature services ---
         startWindowSnappingIfNeeded()
+        startFinderOpenShortcutIfNeeded()
         startFileCutPasteIfNeeded()
         startSnapLayoutsIfNeeded()
         startWindowSwitcherIfNeeded()
@@ -183,6 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         permissionCoordinator.stopPolling()
         dockPreviewCoordinator.stop()
         windowSnappingService.stop()
+        finderOpenShortcutService.stop()
         fileCutPasteService.stop()
         snapLayoutsService.stop()
         ShowDesktopService.shared.stop()
@@ -362,6 +365,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     // Features switched on while Accessibility was missing
                     // start now instead of needing an app relaunch.
                     self.startWindowSnappingIfNeeded()
+                    self.startFinderOpenShortcutIfNeeded()
                     self.startFileCutPasteIfNeeded()
                     self.startSnapLayoutsIfNeeded()
                     self.startWindowSwitcherIfNeeded()
@@ -373,6 +377,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         requestPermissionsWhenEnabled(preferences.$windowPreviewsEnabled, key: AppGroupKey.windowPreviewsEnabled)
         requestPermissionsWhenEnabled(preferences.$dockClickBehaviorEnabled, key: AppGroupKey.dockClickBehaviorEnabled)
         requestPermissionsWhenEnabled(preferences.$windowSnappingEnabled, key: AppGroupKey.windowSnappingEnabled)
+        preferences.$finderEnterBehavior
+            .dropFirst().removeDuplicates().filter { $0 != .system }
+            .receive(on: DispatchQueue.main)
+            .sink { _ in FeatureRequirements.requestMissing(forPreferenceKey: AppGroupKey.finderEnterBehavior) }
+            .store(in: &cancellables)
         requestPermissionsWhenEnabled(preferences.$fileCutPasteEnabled, key: AppGroupKey.fileCutPasteEnabled)
         requestPermissionsWhenEnabled(preferences.$showDesktopEnabled, key: AppGroupKey.showDesktopEnabled)
         requestPermissionsWhenEnabled(preferences.$snapLayoutsEnabled, key: AppGroupKey.snapLayoutsEnabled)
@@ -413,6 +422,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         guard permissionCoordinator.state == .granted else { return }
         windowSnappingService.start(shortcutsJSON: preferences.windowSnappingShortcuts)
+    }
+
+    private func startFinderOpenShortcutIfNeeded() {
+        guard preferences.finderEnterBehavior != .system, permissionCoordinator.state == .granted else {
+            finderOpenShortcutService.stop()
+            return
+        }
+        finderOpenShortcutService.start(mode: preferences.finderEnterBehavior)
     }
 
     private func startFileCutPasteIfNeeded() {
@@ -498,6 +515,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func observeNewFeaturePreferences() {
+        preferences.$finderEnterBehavior
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.startFinderOpenShortcutIfNeeded() }
+            .store(in: &cancellables)
+
         preferences.$showDesktopEnabled
             .removeDuplicates()
             .receive(on: DispatchQueue.main)

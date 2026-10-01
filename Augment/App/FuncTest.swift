@@ -21,6 +21,11 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--finder-open") {
+                await testFinderOpenShortcut()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--desktop") {
                 await testDesktopMinimization()
                 finish()
@@ -1168,6 +1173,132 @@ enum FuncTest {
         else { return }
         let dir = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
         try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("\(name).png"))
+    }
+
+    private static func testFinderOpenShortcut() async {
+        guard AXIsProcessTrusted() else { fail("Finder Shift-Enter", "Accessibility required"); return }
+        let previousApp = NSWorkspace.shared.frontmostApplication
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent("AugmentOpenTest-\(UUID().uuidString)")
+        let child = root.appendingPathComponent("Selected Folder")
+        try? FileManager.default.createDirectory(at: child, withIntermediateDirectories: true)
+        let service = FinderOpenShortcutService()
+        service.start(mode: .shiftEnterOpens)
+        record("Finder Shift-Enter starts", service.isRunning, "")
+        let windowID = runScript("""
+        tell application "Finder"
+            activate
+            set testWindow to make new Finder window to (POSIX file "\(root.path)" as alias)
+            return id of testWindow as text
+        end tell
+        """)
+        guard let windowID, Int(windowID) != nil else {
+            service.stop()
+            try? FileManager.default.removeItem(at: root)
+            fail("Finder Shift-Enter", "could not create test window")
+            return
+        }
+        defer {
+            service.stop()
+            _ = runScript("tell application \"Finder\" to close Finder window id \(windowID)")
+            try? FileManager.default.removeItem(at: root)
+            previousApp?.activate(options: [.activateIgnoringOtherApps])
+        }
+        func prepare(view: String = "icon view") async {
+            _ = runScript("""
+            tell application "Finder"
+                activate
+                set target of Finder window id \(windowID) to (POSIX file "\(root.path)" as alias)
+                set current view of Finder window id \(windowID) to \(view)
+                select (POSIX file "\(child.path)" as alias)
+            end tell
+            """)
+            try? await Task.sleep(nanoseconds: 600_000_000)
+
+        }
+        func currentFolder() -> String? {
+            runScript("tell application \"Finder\" to get POSIX path of (target of Finder window id \(windowID) as alias)")
+        }
+        func isAt(_ folder: URL) -> Bool {
+            currentFolder().map { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path }
+                == folder.resolvingSymlinksInPath().path
+        }
+        await prepare()
+        await press(keyCode: UInt16(kVK_ANSI_O), flags: .maskCommand)
+        record("Native Command-O baseline", isAt(child), "")
+        for view in ["icon view", "list view", "column view", "flow view"] {
+            await prepare(view: view)
+            await press(keyCode: UInt16(kVK_Return), flags: .maskShift)
+            record("Shift-Return opens folder in \(view)", isAt(child), currentFolder() ?? "nil")
+        }
+        await prepare()
+        await press(keyCode: UInt16(kVK_ANSI_KeypadEnter), flags: .maskShift)
+        record("Shift-keypad Enter opens folder", isAt(child), "")
+
+        // Open a real document with its default application, then close only
+        // the test document through Accessibility (no extra Automation grant).
+        let document = root.appendingPathComponent("Augment Shortcut Test.txt")
+        try? "Augment Finder shortcut test".write(to: document, atomically: true, encoding: .utf8)
+        let handlerID = NSWorkspace.shared.urlForApplication(toOpen: document).flatMap { Bundle(url: $0)?.bundleIdentifier }
+        await prepare()
+        _ = runScript("tell application \"Finder\" to select (POSIX file \"\(document.path)\" as alias)")
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        await press(keyCode: UInt16(kVK_Return), flags: .maskShift)
+        var documentWindow: AXUIElement?
+        for _ in 0..<20 {
+            if let handlerID, let app = NSRunningApplication.runningApplications(withBundleIdentifier: handlerID).first {
+                var windows: CFTypeRef?
+                AXUIElementCopyAttributeValue(AXUIElementCreateApplication(app.processIdentifier), kAXWindowsAttribute as CFString, &windows)
+                for window in (windows as? [AXUIElement]) ?? [] {
+                    var value: CFTypeRef?
+                    AXUIElementCopyAttributeValue(window, kAXDocumentAttribute as CFString, &value)
+                    if let value = value as? String, let url = URL(string: value),
+                       url.resolvingSymlinksInPath().path == document.resolvingSymlinksInPath().path {
+                        documentWindow = window
+                    }
+                }
+            }
+            if documentWindow != nil { break }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+        record("Shift-Enter opens file in default application", documentWindow != nil, handlerID ?? "no handler")
+        if let documentWindow {
+            var button: CFTypeRef?
+            AXUIElementCopyAttributeValue(documentWindow, kAXCloseButtonAttribute as CFString, &button)
+            if let button = AXElementCoercion.element(button) { AXUIElementPerformAction(button, kAXPressAction as CFString) }
+        }
+        await prepare()
+        await press(keyCode: UInt16(kVK_Return), flags: [])
+        if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
+            record("Return still enters rename", !FinderOpenShortcutService.canOpenSelection(pid: finder.processIdentifier)
+                   && isAt(root), "")
+            await press(keyCode: UInt16(kVK_Return), flags: .maskShift)
+            record("Shift-Return in rename does not open selection", isAt(root), "")
+        }
+        await press(keyCode: UInt16(kVK_Escape), flags: [])
+        await prepare()
+        service.start(mode: .enterOpens)
+        await press(keyCode: UInt16(kVK_Return), flags: [])
+        record("Mode 3 Enter opens folder", isAt(child), "")
+        await prepare()
+        await press(keyCode: UInt16(kVK_Return), flags: .maskShift)
+        if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
+            record("Mode 3 Shift-Enter enters rename", !FinderOpenShortcutService.canOpenSelection(pid: finder.processIdentifier)
+                   && isAt(root), "")
+        }
+        await press(keyCode: UInt16(kVK_Return), flags: [])
+        record("Mode 3 Enter commits rename without opening", isAt(root), "")
+        await press(keyCode: UInt16(kVK_Escape), flags: [])
+        await prepare()
+        await press(keyCode: UInt16(kVK_ANSI_G), flags: [.maskCommand, .maskShift])
+        if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
+            record("Go to Folder dialog is excluded", !FinderOpenShortcutService.canOpenSelection(pid: finder.processIdentifier), "")
+        }
+        await press(keyCode: UInt16(kVK_Escape), flags: [])
+        service.start(mode: .system)
+        record("System mode removes event tap", !service.isRunning, "")
+        await press(keyCode: UInt16(kVK_Return), flags: .maskShift)
+        record("Disabled shortcut does not open selection", isAt(root), "")
+        await press(keyCode: UInt16(kVK_Escape), flags: [])
     }
 
     private static func testFileCutPaste() async {

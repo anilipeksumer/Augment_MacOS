@@ -18,6 +18,8 @@ struct PermissionsSettingsPane: View {
                 Localizer.string("feature.hover_title"), Localizer.string("feature.dockClick_title"),
                 Localizer.string("feature.snapping_title"), Localizer.string("snaplayouts.title"),
                 Localizer.string("desktop.title"), Localizer.string("finder.shift_enter"),
+                Localizer.string("finder.backspace"), Localizer.string("finder.double_click"),
+                Localizer.string("finder.middle_click"), Localizer.string("finder.paste_image"), Localizer.string("finder.f2"),
                 Localizer.string("switcher.title"),
                 Localizer.string("cutpaste.file_title"),
             ]),
@@ -25,6 +27,7 @@ struct PermissionsSettingsPane: View {
                 Localizer.string("feature.hover_title"), Localizer.string("switcher.title"),
             ]),
             Row(permission: .finderAutomation, usedBy: [
+                Localizer.string("finder.middle_click"), Localizer.string("finder.paste_image"),
                 Localizer.string("cutpaste.file_title"),
             ]),
         ]

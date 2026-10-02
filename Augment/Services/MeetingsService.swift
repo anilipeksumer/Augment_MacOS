@@ -143,6 +143,7 @@ final class ScreenshotShelfWatcher {
     private var startedAt = Date()
     private var seen = Set<String>()
     private var scanWork: DispatchWorkItem?
+    private var folderRefreshTimer: Timer?
 
     /// Where screenshots are saved right now.
     static var screenshotFolder: URL {
@@ -172,9 +173,18 @@ final class ScreenshotShelfWatcher {
         src.resume()
         source = src
         watchedFolder = folder
+        if override == nil {
+            let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.start() }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            folderRefreshTimer = timer
+        }
     }
 
     func stop() {
+        folderRefreshTimer?.invalidate()
+        folderRefreshTimer = nil
         source?.cancel()
         source = nil
         watchedFolder = nil

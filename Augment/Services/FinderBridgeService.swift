@@ -129,6 +129,8 @@ final class FinderBridgeService {
                 let src = CGEventSource(stateID: .hidSystemState)
                 let down = CGEvent(keyboardEventSource: src, virtualKey: returnCode, keyDown: true)
                 let up = CGEvent(keyboardEventSource: src, virtualKey: returnCode, keyDown: false)
+                down?.setIntegerValueField(.eventSourceUserData, value: FinderOpenShortcutService.syntheticEventTag)
+                up?.setIntegerValueField(.eventSourceUserData, value: FinderOpenShortcutService.syntheticEventTag)
                 down?.post(tap: .cghidEventTap)
                 up?.post(tap: .cghidEventTap)
             }

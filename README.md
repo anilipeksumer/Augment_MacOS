@@ -38,7 +38,7 @@ Move the pointer to the notch and it opens into a small control center.
 - **File shelf** with real thumbnails and Quick Look — drop files on the notch to keep them, **AirDrop** them or **zip** them.
 - **Clipboard, Note and Pomodoro** a click away, plus a **Mirror** to check yourself before a call.
 - **Upcoming meeting** with a **Join** button, five minutes before it starts.
-- **Screenshots** land on the shelf automatically.
+- **Screenshots** land on the shelf automatically, with a small arrival animation beside the closed notch.
 - Brightness, volume and **Keep Awake** at the bottom.
 
 <table>
@@ -74,6 +74,9 @@ Click Augment in the menu bar:
 
 - **Choose your Enter key** — native macOS rename, Enter to rename / Shift-Enter to open, or Enter to open / Shift-Enter to rename. Set the mode in Settings → Finder; text editing keeps its normal behavior.
 
+- **Backspace** or **double-click empty space** to go to the parent folder.
+- **Middle-click a folder** to open it in a new tab; **F2** to rename independently of your Enter mode.
+- **Paste a clipboard image with ⌘V** to save a PNG in the current folder without overwriting existing files. Each Finder enhancement has its own switch.
 - Right-click › **New File or Folder** from templates — code, Office documents, data, text.
 - **Copy Path** and **Open in Terminal**, in iCloud folders too.
 - A real **Cut ⌘X / Paste ⌘V** for files, with **⌘Z** to put them back.
@@ -85,7 +88,7 @@ Click Augment in the menu bar:
 - **Day and night brightness** that fades on schedule.
 - **Keep Awake** like Amphetamine: for a while, while certain apps are open, on power, or until a download finishes — even with the lid closed on power.
 - **Pause music when headphones are removed**, even while the mixer is in use.
-- **Clipboard history** with search and pins — ⇧⌘V.
+- **Clipboard history** with search, pins and image thumbnails — ⇧⌘V. New screenshots saved by macOS join the history too, and remain available after the original file is deleted.
 
 <details>
 <summary><b>All features</b></summary>
@@ -99,8 +102,8 @@ Click Augment in the menu bar:
 | Keep Awake | Manual, timed, while apps run, on power, while downloading; display may sleep; lid closed on power |
 | Dock | Window previews (incl. minimized), window controls, click to minimize, Dock lock to a screen |
 | Windows | ⌥Tab switcher, ⌘-arrow snapping, layout picker |
-| Finder | New file & folder templates, Copy Path, Open in Terminal (menu + Services), Cut & Paste with undo, folder Quick Look |
-| Clipboard | History panel with search, pins, ⌘1–⌘9 |
+| Finder | Enter modes, Backspace / empty-space double-click to go up, middle-click new tabs, F2 rename, paste images as PNG, file templates, Copy Path, Open in Terminal, Cut & Paste with undo, folder Quick Look |
+| Clipboard | Text, files, images and screenshots; search, pins, ⌘1–⌘9 |
 
 </details>
 
@@ -125,9 +128,9 @@ Only the features you switch on ask, and only for what they need:
 
 | Permission | For |
 | --- | --- |
-| Accessibility | Dock previews and clicks, window switcher, snapping, layouts, Finder cut & paste, display keys, clipboard panel |
+| Accessibility | Dock previews and clicks, window switcher, snapping, layouts, Finder keyboard and mouse enhancements, cut & paste, display keys, clipboard panel |
 | Screen & System Audio Recording | Window thumbnails; the volume mixer |
-| Automation → Finder | Finder cut & paste |
+| Automation → Finder | Finder cut & paste, image paste, middle-click new tabs |
 | Calendars | Upcoming meetings |
 | Camera | Mirror |
 

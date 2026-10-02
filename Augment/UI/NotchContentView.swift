@@ -78,6 +78,24 @@ struct NotchContentView: View {
                     .frame(width: isOpen ? expandedWidth : notchRect.width)
                     .animation(.interpolatingSpring(stiffness: 340, damping: 30), value: isOpen)
 
+                if !isOpen, let arrival = viewModel.screenshotArrival {
+                    HStack(spacing: 4) {
+                        Image(systemName: "camera.fill").font(.system(size: 13, weight: .semibold))
+                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundStyle(.mint)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .frame(height: max(22, notchRect.height - 4))
+                    .background(.black, in: Capsule())
+                    .overlay(Capsule().strokeBorder(.mint.opacity(0.4), lineWidth: 1))
+                    .shadow(color: .mint.opacity(0.25), radius: 5)
+                    .offset(x: notchRect.width / 2 + 26, y: 2)
+                    .id(arrival)
+                    .transition(.opacity.combined(with: .scale(scale: 0.6, anchor: .leading)))
+                    .allowsHitTesting(false)
+                    .accessibilityLabel(Localizer.string("clip.screenshot"))
+                }
+
                 if isOpen {
                     expandedLayout
                         .frame(width: expandedWidth)
@@ -953,7 +971,7 @@ struct NotchContentView: View {
                         ForEach(filteredClipboard) { item in
                             let url = ShelfPreview.previewURL(for: item)
                             shelfTile(selected: preview.currentURL == url, title: item.previewText.replacingOccurrences(of: "\n", with: " ")) {
-                                if item.kind == .fileURL {
+                                if item.kind == .fileURL || item.kind == .image {
                                     ShelfThumbnail(url: url)
                                 } else {
                                     Text(item.value)
@@ -1158,6 +1176,7 @@ final class ShelfPreview: NSObject, ObservableObject, QLPreviewPanelDataSource, 
     /// Text copied to the clipboard is previewed from a small temp file.
     static func previewURL(for item: ClipboardHistoryItem) -> URL {
         if item.kind == .fileURL { return URL(fileURLWithPath: item.value) }
+        if let image = ClipboardHistoryService.shared.imageURL(for: item) { return image }
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentClipboardPreview", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let url = dir.appendingPathComponent("\(item.id.uuidString).txt")

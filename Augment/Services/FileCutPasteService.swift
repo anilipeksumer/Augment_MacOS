@@ -18,6 +18,7 @@ final class FileCutPasteService {
     private(set) var isRunning = false
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var cutChangeCount = NSPasteboard.general.changeCount
     private var cutURLs: [URL] = [] {
         didSet { publishCutSet() }
     }
@@ -100,6 +101,11 @@ final class FileCutPasteService {
             return Unmanaged.passUnretained(event)
         }
 
+        // A newly copied screenshot/text/file supersedes an older Cut.
+        if !cutURLs.isEmpty && NSPasteboard.general.changeCount != cutChangeCount {
+            cutURLs = []
+            lastMove = nil
+        }
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         let flags = event.flags.intersection([.maskCommand, .maskShift, .maskAlternate, .maskControl])
 
@@ -148,6 +154,7 @@ final class FileCutPasteService {
     // MARK: - Cut / paste
 
     private func markSelectionForCut() {
+        let changeCount = NSPasteboard.general.changeCount
         let script = """
         tell application "Finder"
             set sel to selection
@@ -160,6 +167,8 @@ final class FileCutPasteService {
         """
         Self.runAppleScriptAsync(script) { [weak self] raw in
             guard let self else { return }
+            guard NSPasteboard.general.changeCount == changeCount else { return }
+            self.cutChangeCount = changeCount
             self.lastMove = nil
             self.cutURLs = (raw ?? "")
                 .split(separator: "\n")

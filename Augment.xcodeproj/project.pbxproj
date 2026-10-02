@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        AF1091000000000000000001 /* ClipboardImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1091000000000000000003; };
+        AF1091000000000000000002 /* ClipboardImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1091000000000000000003; };
+
 		AF1090000000000000000004 /* FinderOpenShortcutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000005 /* FinderOpenShortcutTests.swift */; };
 		AF1090000000000000000003 /* FinderOpenShortcutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000002 /* FinderOpenShortcutService.swift */; };
 		AF1090000000000000000001 /* FinderOpenShortcutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1090000000000000000002 /* FinderOpenShortcutService.swift */; };
@@ -148,6 +151,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+        AF1091000000000000000003 /* ClipboardImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImageStore.swift; sourceTree = "<group>"; };
+
 		AF1090000000000000000005 /* FinderOpenShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderOpenShortcutTests.swift; sourceTree = "<group>"; };
 		AF1090000000000000000002 /* FinderOpenShortcutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderOpenShortcutService.swift; sourceTree = "<group>"; };
 		AD1070000000000000000015 /* DesktopWindowSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWindowSessionTests.swift; sourceTree = "<group>"; };
@@ -372,6 +377,7 @@
 				F61EB05C69A93F366DCB4A28 /* SnapLayoutsService.swift */,
 				AD1070000000000000000002 /* ShowDesktopService.swift */,
 				AF1090000000000000000002 /* FinderOpenShortcutService.swift */,
+                AF1091000000000000000003 /* ClipboardImageStore.swift */,
 				AD1070000000000000000012 /* DesktopWindowSession.swift */,
 				EFE000523334D93C58DCCF3C /* WindowSwitcherService.swift */,
 				BE1E595A301027BC8D0D3843 /* SystemControlsService.swift */,
@@ -688,6 +694,7 @@
 				8FE40C95F4D325608464BB43 /* SnapLayoutsService.swift in Sources */,
 				AD1070000000000000000001 /* ShowDesktopService.swift in Sources */,
 				AF1090000000000000000001 /* FinderOpenShortcutService.swift in Sources */,
+                AF1091000000000000000001 /* ClipboardImageStore.swift in Sources */,
 				AD1070000000000000000011 /* DesktopWindowSession.swift in Sources */,
 				0E2CE5D098313C52DA5B40BB /* WindowSwitcherService.swift in Sources */,
 				61DF44EC59BFD918993EEFA6 /* SystemControlsService.swift in Sources */,
@@ -749,6 +756,7 @@
 				TT0100000000000000000002 /* FileTemplateFactoryTests.swift in Sources */,
 				TT0100000000000000000003 /* PreferenceDefaultsTests.swift in Sources */,
 				AF1090000000000000000003 /* FinderOpenShortcutService.swift in Sources */,
+                AF1091000000000000000002 /* ClipboardImageStore.swift in Sources */,
 				AF1090000000000000000004 /* FinderOpenShortcutTests.swift in Sources */,
 				AD1070000000000000000013 /* DesktopWindowSession.swift in Sources */,
 				AD1070000000000000000014 /* DesktopWindowSessionTests.swift in Sources */,
@@ -911,7 +919,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -940,7 +948,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -964,7 +972,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -989,7 +997,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = AugmentFinder/AugmentFinder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1015,7 +1023,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1041,7 +1049,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = AugmentQL/AugmentQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1065,7 +1073,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1087,7 +1095,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = LUPJND3R24;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -216,6 +216,10 @@ struct NotchExtrasSections: View {
                 isOn: $preferences.clipboardPanelEnabled,
                 requires: [.accessibility]
             )
+            ToggleRow(title: Localizer.string("clip.screenshots"),
+                      subtitle: Localizer.string("clip.screenshots_desc"),
+                      systemImage: "photo.stack", tint: .teal,
+                      isOn: $preferences.clipboardScreenshotsEnabled)
         } header: {
             Text(Localizer.string("clip.section"))
         }

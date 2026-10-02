@@ -220,6 +220,30 @@ public final class SharedPreferences: ObservableObject {
 
     // MARK: - Finder
 
+    @Published public var finderBackspaceEnabled: Bool {
+        didSet { write(finderBackspaceEnabled, AppGroupKey.finderBackspaceEnabled) }
+    }
+
+    @Published public var finderBlankDoubleClickEnabled: Bool {
+        didSet { write(finderBlankDoubleClickEnabled, AppGroupKey.finderBlankDoubleClickEnabled) }
+    }
+
+    @Published public var finderMiddleClickEnabled: Bool {
+        didSet { write(finderMiddleClickEnabled, AppGroupKey.finderMiddleClickEnabled) }
+    }
+
+    @Published public var finderPasteImageEnabled: Bool {
+        didSet { write(finderPasteImageEnabled, AppGroupKey.finderPasteImageEnabled) }
+    }
+
+    @Published public var finderF2Enabled: Bool {
+        didSet { write(finderF2Enabled, AppGroupKey.finderF2Enabled) }
+    }
+
+    @Published public var clipboardScreenshotsEnabled: Bool {
+        didSet { write(clipboardScreenshotsEnabled, AppGroupKey.clipboardScreenshotsEnabled) }
+    }
+
     @Published public var finderEnterBehavior: FinderEnterBehavior {
         didSet { write(finderEnterBehavior.rawValue, AppGroupKey.finderEnterBehavior) }
     }
@@ -454,6 +478,12 @@ public final class SharedPreferences: ObservableObject {
         self.windowSnappingEnabled = Self.loadBool(AppGroupKey.windowSnappingEnabled, reg)
         self.windowSnappingShortcuts = Self.loadString(AppGroupKey.windowSnappingShortcuts, reg) ?? ""
 
+        self.finderBackspaceEnabled = Self.loadBool(AppGroupKey.finderBackspaceEnabled, reg)
+        self.finderBlankDoubleClickEnabled = Self.loadBool(AppGroupKey.finderBlankDoubleClickEnabled, reg)
+        self.finderMiddleClickEnabled = Self.loadBool(AppGroupKey.finderMiddleClickEnabled, reg)
+        self.finderPasteImageEnabled = Self.loadBool(AppGroupKey.finderPasteImageEnabled, reg)
+        self.finderF2Enabled = Self.loadBool(AppGroupKey.finderF2Enabled, reg)
+        self.clipboardScreenshotsEnabled = Self.loadBool(AppGroupKey.clipboardScreenshotsEnabled, reg)
         self.finderEnterBehavior = FinderEnterBehavior(rawValue: Self.loadString(AppGroupKey.finderEnterBehavior, reg) ?? "system") ?? .system
         self.fileCutPasteEnabled = Self.loadBool(AppGroupKey.fileCutPasteEnabled, reg)
         self.showDesktopEnabled = Self.loadBool(AppGroupKey.showDesktopEnabled, reg)

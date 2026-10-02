@@ -217,13 +217,21 @@ private struct ClipboardPanelView: View {
 
     private func row(_ item: ClipboardHistoryItem, index: Int, selected: Bool) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: item.kind == .fileURL ? "doc" : "text.alignleft")
-                .foregroundStyle(.secondary)
-                .frame(width: 18)
-            Text(item.previewText.replacingOccurrences(of: "\n", with: " "))
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .font(.system(size: 13))
+            if item.kind == .image, let image = history.thumbnail(for: item) {
+                Image(nsImage: image).resizable().scaledToFit()
+                    .frame(width: 56, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+            } else {
+                Image(systemName: item.kind == .fileURL ? "doc" : "text.alignleft")
+                    .foregroundStyle(.secondary).frame(width: 18)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.previewText.replacingOccurrences(of: "\n", with: " "))
+                    .lineLimit(1).truncationMode(.tail).font(.system(size: 13))
+                if item.kind == .image {
+                    Text(item.capturedAt, style: .time).font(.system(size: 10)).foregroundStyle(.secondary)
+                }
+            }
             Spacer(minLength: 6)
             if index < 9 {
                 Text("⌘\(index + 1)")
@@ -243,7 +251,7 @@ private struct ClipboardPanelView: View {
             .help(Localizer.string("clip.pin"))
         }
         .padding(.horizontal, 10)
-        .frame(height: 32)
+        .frame(height: item.kind == .image ? 56 : 32)
         .background(selected ? Color.accentColor.opacity(0.22) : .clear,
                     in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())

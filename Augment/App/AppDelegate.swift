@@ -382,6 +382,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { _ in FeatureRequirements.requestMissing(forPreferenceKey: AppGroupKey.finderEnterBehavior) }
             .store(in: &cancellables)
+        requestPermissionsWhenEnabled(preferences.$finderBackspaceEnabled, key: AppGroupKey.finderBackspaceEnabled)
+        requestPermissionsWhenEnabled(preferences.$finderBlankDoubleClickEnabled, key: AppGroupKey.finderBlankDoubleClickEnabled)
+        requestPermissionsWhenEnabled(preferences.$finderMiddleClickEnabled, key: AppGroupKey.finderMiddleClickEnabled)
+        requestPermissionsWhenEnabled(preferences.$finderPasteImageEnabled, key: AppGroupKey.finderPasteImageEnabled)
+        requestPermissionsWhenEnabled(preferences.$finderF2Enabled, key: AppGroupKey.finderF2Enabled)
         requestPermissionsWhenEnabled(preferences.$fileCutPasteEnabled, key: AppGroupKey.fileCutPasteEnabled)
         requestPermissionsWhenEnabled(preferences.$showDesktopEnabled, key: AppGroupKey.showDesktopEnabled)
         requestPermissionsWhenEnabled(preferences.$snapLayoutsEnabled, key: AppGroupKey.snapLayoutsEnabled)
@@ -425,11 +430,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startFinderOpenShortcutIfNeeded() {
-        guard preferences.finderEnterBehavior != .system, permissionCoordinator.state == .granted else {
+        let enabled = preferences.finderEnterBehavior != .system || preferences.finderBackspaceEnabled
+            || preferences.finderBlankDoubleClickEnabled || preferences.finderMiddleClickEnabled
+            || preferences.finderPasteImageEnabled || preferences.finderF2Enabled
+        guard enabled, permissionCoordinator.state == .granted else {
             finderOpenShortcutService.stop()
             return
         }
-        finderOpenShortcutService.start(mode: preferences.finderEnterBehavior)
+        finderOpenShortcutService.start(mode: preferences.finderEnterBehavior,
+                                       backspace: preferences.finderBackspaceEnabled,
+                                       blankDoubleClick: preferences.finderBlankDoubleClickEnabled,
+                                       middleClick: preferences.finderMiddleClickEnabled,
+                                       pasteImage: preferences.finderPasteImageEnabled,
+                                       f2: preferences.finderF2Enabled)
     }
 
     private func startFileCutPasteIfNeeded() {
@@ -496,9 +509,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         preferences.clipboardPanelEnabled ? ClipboardPanelController.shared.enable() : ClipboardPanelController.shared.disable()
         preferences.meetingsEnabled ? MeetingsService.shared.start() : MeetingsService.shared.stop()
 
-        if preferences.screenshotShelfEnabled {
+        if preferences.screenshotShelfEnabled || (preferences.clipboardScreenshotsEnabled && (preferences.clipboardHistoryEnabled || preferences.clipboardPanelEnabled)) {
             ScreenshotShelfWatcher.shared.onScreenshot = { [weak self] url in
-                self?.notchService.addToShelf(url, peek: true)
+                guard let self else { return }
+                if self.preferences.screenshotShelfEnabled { self.notchService.addToShelf(url) }
+                if self.preferences.clipboardScreenshotsEnabled && (self.preferences.clipboardHistoryEnabled || self.preferences.clipboardPanelEnabled) {
+                    ClipboardHistoryService.shared.captureScreenshot(url)
+                }
+                self.notchService.showScreenshotArrival()
             }
             ScreenshotShelfWatcher.shared.start()
         } else {
@@ -515,6 +533,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func observeNewFeaturePreferences() {
+        Publishers.MergeMany(
+            preferences.$finderBackspaceEnabled.map { _ in () }.eraseToAnyPublisher(),
+            preferences.$finderBlankDoubleClickEnabled.map { _ in () }.eraseToAnyPublisher(),
+            preferences.$finderMiddleClickEnabled.map { _ in () }.eraseToAnyPublisher(),
+            preferences.$finderPasteImageEnabled.map { _ in () }.eraseToAnyPublisher(),
+            preferences.$finderF2Enabled.map { _ in () }.eraseToAnyPublisher()
+        ).receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.startFinderOpenShortcutIfNeeded() }
+            .store(in: &cancellables)
+
         preferences.$finderEnterBehavior
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.startFinderOpenShortcutIfNeeded() }
@@ -602,6 +630,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             preferences.$brightnessScheduleEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
             preferences.$clipboardPanelEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
             preferences.$meetingsEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            preferences.$clipboardScreenshotsEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
             preferences.$screenshotShelfEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher()
         )
         .receive(on: DispatchQueue.main)
@@ -613,7 +642,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         preferences.$clipboardHistoryEnabled
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.startClipboardHistoryIfNeeded() }
+            .sink { [weak self] _ in self?.startClipboardHistoryIfNeeded(); self?.startExtrasIfNeeded() }
             .store(in: &cancellables)
 
         // Notch toggle

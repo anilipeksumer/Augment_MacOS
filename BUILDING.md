@@ -116,3 +116,31 @@ Finder integration checks. They create and clean up a temporary test folder and
 Finder window. They also open a temporary text file in its default application
 and close its document window via Accessibility. Test setup uses Finder Automation permission; the feature itself
 does not need Automation. Do not type or switch apps during this keyboard test.
+
+
+### Finder extras and image clipboard
+
+Quit the normal app before running
+`open -n /Applications/Augment.app --args --functest --finder-extras`.
+This exercises Backspace, F2, image paste with duplicate names, middle-click
+new tabs, empty-space double-click, image history persistence and a real
+screenshot imported from a temporary folder. It preserves the general
+pasteboard and uses a separate history store for image tests.
+
+Finder image paste and new-tab navigation use Finder Automation outside the
+event tap. The other shortcuts use Accessibility. Synthesized Finder events
+are tagged to bypass Augment's own Enter modes and window snapping.
+
+Image bytes are normalized to PNG and stored by content hash under
+`Shared/ClipboardImages`. History metadata stays in the existing plist.
+Images over 32 MiB or 64 megapixels are skipped. The image store is capped at
+200 MiB by removing the oldest unpinned image entries; the existing 40-entry
+limit for unpinned history also applies. Deleting or clearing an entry removes
+its stored image, while pinned entries survive clearing. Screenshot import
+watches macOS's configured screenshot folder and does not scan older captures
+or require Spotlight indexing. Clipboard screenshots (Control-Shift-Command-3/4)
+are captured through the ordinary image pasteboard path.
+
+Use `--functest --screenshot-feedback` to verify the collapsed arrival animation,
+its timeout and repeated captures, preservation of an open notch tab, and image
+clipboard persistence. It does not type into Finder or other applications.

@@ -23,6 +23,34 @@ struct FinderSettingsSections: View {
             }
 
             Section {
+                ToggleRow(title: Localizer.string("finder.backspace"),
+                          subtitle: Localizer.string("finder.backspace_desc"),
+                          systemImage: "delete.left", tint: .green,
+                          isOn: $preferences.finderBackspaceEnabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.finderBackspaceEnabled))
+                ToggleRow(title: Localizer.string("finder.double_click"),
+                          subtitle: Localizer.string("finder.double_click_desc"),
+                          systemImage: "cursorarrow.click.2", tint: .green,
+                          isOn: $preferences.finderBlankDoubleClickEnabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.finderBlankDoubleClickEnabled))
+                ToggleRow(title: Localizer.string("finder.middle_click"),
+                          subtitle: Localizer.string("finder.middle_click_desc"),
+                          systemImage: "computermouse", tint: .green,
+                          isOn: $preferences.finderMiddleClickEnabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.finderMiddleClickEnabled))
+                ToggleRow(title: Localizer.string("finder.paste_image"),
+                          subtitle: Localizer.string("finder.paste_image_desc"),
+                          systemImage: "photo.badge.plus", tint: .green,
+                          isOn: $preferences.finderPasteImageEnabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.finderPasteImageEnabled))
+                ToggleRow(title: Localizer.string("finder.f2"),
+                          subtitle: Localizer.string("finder.f2_desc"),
+                          systemImage: "character.cursor.ibeam", tint: .green,
+                          isOn: $preferences.finderF2Enabled,
+                          requires: FeatureRequirements.permissions(forPreferenceKey: AppGroupKey.finderF2Enabled))
+            }
+
+            Section {
                 ToggleRow(
                     title: Localizer.string("finder.menu"),
                     subtitle: Localizer.string("finder.menu_desc"),

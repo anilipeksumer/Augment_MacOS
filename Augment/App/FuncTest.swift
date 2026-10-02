@@ -21,6 +21,18 @@ enum FuncTest {
                 finish()
                 return
             }
+            if CommandLine.arguments.contains("--screenshot-feedback") {
+                await testScreenshotFeedback()
+                await testClipboardImages()
+                finish()
+                return
+            }
+            if CommandLine.arguments.contains("--finder-extras") {
+                await testFinderExtras()
+                await testClipboardImages()
+                finish()
+                return
+            }
             if CommandLine.arguments.contains("--finder-open") {
                 await testFinderOpenShortcut()
                 finish()
@@ -1175,6 +1187,111 @@ enum FuncTest {
         try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("\(name).png"))
     }
 
+    private static func testFinderExtras() async {
+        guard AXIsProcessTrusted() else { fail("Finder extras", "Accessibility required"); return }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentExtras-\(UUID().uuidString)")
+        let child = root.appendingPathComponent("Selected Folder")
+        try? FileManager.default.createDirectory(at: child, withIntermediateDirectories: true)
+        let previousApp = NSWorkspace.shared.frontmostApplication
+        let savedClipboard = NSPasteboard.general.pasteboardItems?.map { item in
+            item.types.compactMap { type in item.data(forType: type).map { (type, $0) } }
+        } ?? []
+        let service = FinderOpenShortcutService()
+        service.start(mode: .system, backspace: true, blankDoubleClick: true, middleClick: true, pasteImage: true, f2: true)
+        let windowID = runScript("""
+        tell application "Finder"
+            activate
+            set w to make new Finder window to (POSIX file "\(root.path)" as alias)
+            set current view of w to icon view
+            select (POSIX file "\(child.path)" as alias)
+            return id of w as text
+        end tell
+        """)
+        defer {
+            service.stop()
+            if let windowID, Int(windowID) != nil { _ = runScript("tell application \"Finder\" to close Finder window id \(windowID)") }
+            try? FileManager.default.removeItem(at: root)
+            NSPasteboard.general.clearContents()
+            let restored = savedClipboard.map { values -> NSPasteboardItem in
+                let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item
+            }
+            NSPasteboard.general.writeObjects(restored)
+            previousApp?.activate(options: [.activateIgnoringOtherApps])
+        }
+        guard let windowID, Int(windowID) != nil,
+              let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first else { fail("Finder fixture", "could not open window"); return }
+        let pid = finder.processIdentifier
+        func prepare(_ url: URL = root) async {
+            _ = runScript("tell application \"Finder\"\nset target of Finder window id \(windowID) to (POSIX file \"\(url.path)\" as alias)\nset index of Finder window id \(windowID) to 1\nactivate\nend tell")
+            finder.activate(options: [.activateIgnoringOtherApps])
+            try? await Task.sleep(nanoseconds: 500_000_000)
+        }
+        func isAt(_ url: URL) -> Bool {
+            let path = runScript("tell application \"Finder\" to get POSIX path of (target of front Finder window as alias)")
+            return path.map { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path } == url.resolvingSymlinksInPath().path
+        }
+        await prepare(child)
+        await press(keyCode: UInt16(kVK_Delete), flags: [])
+        record("Backspace goes to parent", isAt(root), "")
+        await prepare()
+        _ = runScript("tell application \"Finder\" to select (POSIX file \"\(child.path)\" as alias)")
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        await press(keyCode: UInt16(kVK_F2), flags: [])
+        record("F2 enters rename in system mode", !FinderOpenShortcutService.canOpenSelection(pid: pid), "")
+        await press(keyCode: UInt16(kVK_Escape), flags: [])
+        let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 12, pixelsHigh: 10, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        for x in 0..<12 { for y in 0..<10 { bitmap.setColor(.systemPurple, atX: x, y: y) } }
+        let png = bitmap.representation(using: .png, properties: [:])!
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setData(png, forType: .png)
+        await press(keyCode: UInt16(kVK_ANSI_V), flags: .maskCommand)
+        await press(keyCode: UInt16(kVK_ANSI_V), flags: .maskCommand)
+        let pasted = (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil))?.filter { $0.pathExtension == "png" } ?? []
+        record("Command-V creates two PNG files without overwrite", pasted.count == 2 && pasted.allSatisfy { NSImage(contentsOf: $0) != nil && $0.lastPathComponent.hasPrefix(Localizer.string("finder.image_name")) }, "count=\(pasted.count) names=\(pasted.map(\.lastPathComponent))")
+
+        let app = AXUIElementCreateApplication(pid)
+        guard let window = AXElementCoercion.element(FinderOpenShortcutService.attribute(app, kAXFocusedWindowAttribute)) else { return }
+        func findIcon(_ element: AXUIElement, depth: Int = 0) -> AXUIElement? {
+            guard depth < 10 else { return nil }
+            if FinderOpenShortcutService.attribute(element, kAXTitleAttribute) as? String == "Selected Folder",
+               FinderOpenShortcutService.attribute(element, kAXRoleAttribute) as? String == kAXImageRole { return element }
+            for child in ((FinderOpenShortcutService.attribute(element, kAXChildrenAttribute) as? [AXUIElement]) ?? []) {
+                if let found = findIcon(child, depth: depth + 1) { return found }
+            }
+            return nil
+        }
+        if let icon = findIcon(window), let rect = frame(of: icon) {
+            let point = CGPoint(x: rect.midX, y: rect.midY)
+            for type in [CGEventType.otherMouseDown, .otherMouseUp] {
+                let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .center)
+                event?.flags = []
+                event?.post(tap: .cghidEventTap)
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            let newWindow = AXElementCoercion.element(FinderOpenShortcutService.attribute(app, kAXFocusedWindowAttribute))
+            record("Middle-click opens folder in a new tab", FinderOpenShortcutService.tabCount(in: newWindow) >= 2 && isAt(child), "tabs=\(FinderOpenShortcutService.tabCount(in: newWindow))")
+            if FinderOpenShortcutService.tabCount(in: newWindow) >= 2 {
+                await press(keyCode: UInt16(kVK_ANSI_W), flags: .maskCommand)
+            }
+        }
+        await prepare(child)
+        if let window = AXElementCoercion.element(FinderOpenShortcutService.attribute(app, kAXFocusedWindowAttribute)), let rect = frame(of: window) {
+            let point = CGPoint(x: rect.maxX - 70, y: rect.maxY - 90)
+            for click in 1...2 {
+                for type in [CGEventType.leftMouseDown, .leftMouseUp] {
+                    let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)
+                    event?.flags = []
+                    event?.setIntegerValueField(.mouseEventClickState, value: Int64(click))
+                    event?.post(tap: .cghidEventTap)
+                    try? await Task.sleep(nanoseconds: 60_000_000)
+                }
+            }
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            record("Double-click blank space goes up", isAt(root), runScript("tell application \"Finder\" to get POSIX path of (target of front Finder window as alias)") ?? "nil")
+        }
+
+    }
+
     private static func testFinderOpenShortcut() async {
         guard AXIsProcessTrusted() else { fail("Finder Shift-Enter", "Accessibility required"); return }
         let previousApp = NSWorkspace.shared.frontmostApplication
@@ -1353,6 +1470,94 @@ enum FuncTest {
     }
 
     // MARK: - Clipboard history
+
+    private static func testScreenshotFeedback() async {
+        let service = NotchService()
+        let originalShelf = SharedPreferences.shared.notchShelfURLs
+        let originalPointer = ScreenGeometry.convertToCG(NSEvent.mouseLocation)
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("Augment-arrival-\(UUID().uuidString).txt")
+        try? "Screenshot arrival test".write(to: file, atomically: true, encoding: .utf8)
+        if let screen = NSScreen.main {
+            moveCursor(to: ScreenGeometry.convertToCG(CGPoint(x: screen.frame.maxX - 40, y: screen.frame.midY)))
+        }
+        service.start(preferences: SharedPreferences.shared)
+        let model = service.viewModelForTesting
+        defer {
+            service.stop()
+            SharedPreferences.shared.notchShelfURLs = originalShelf
+            try? FileManager.default.removeItem(at: file)
+            moveCursor(to: originalPointer)
+        }
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        service.addToShelf(file)
+        service.showScreenshotArrival()
+        try? await Task.sleep(nanoseconds: 350_000_000)
+        record("Screenshot arrival stays collapsed", !model.isExpanded && model.screenshotArrival != nil, "")
+        record("Screenshot feedback remains click-through", service.passesClicksThroughForTesting, "")
+        record("Screenshot joins shelf", model.shelfItems.contains { $0.url == file }, "")
+        if let panel = NSApp.windows.first(where: { $0 is NSPanel && $0.frame.width == 420 }),
+           let image = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(panel.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+            let dir = AppGroup.sharedDirectory.deletingLastPathComponent().appendingPathComponent("shots")
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("screenshot-arrival.png"))
+        }
+        let first = model.screenshotArrival
+        service.showScreenshotArrival()
+        record("Consecutive screenshot restarts feedback", model.screenshotArrival != first && !model.isExpanded, "")
+        try? await Task.sleep(nanoseconds: 1_800_000_000)
+        record("Screenshot feedback disappears automatically", model.screenshotArrival == nil && !model.isExpanded, "")
+        model.isExpanded = true
+        model.lowerTab = .note
+        service.addToShelf(file)
+        service.showScreenshotArrival()
+        record("Screenshot preserves an open notch tab", model.isExpanded && model.lowerTab == .note, "")
+    }
+
+    private static func testClipboardImages() async {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("AugmentImages-\(UUID().uuidString)")
+        let key = "augment.test.clipboard.\(UUID().uuidString)"
+        let board = NSPasteboard.withUniqueName()
+        let history = ClipboardHistoryService(pasteboard: board, imageDirectory: root, storageKey: key)
+        defer {
+            history.stop()
+            AppGroup.setSuiteValue(nil, forKey: key)
+            board.releaseGlobally()
+            try? FileManager.default.removeItem(at: root)
+        }
+        let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 8, pixelsHigh: 8, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        for x in 0..<8 { for y in 0..<8 { bitmap.setColor(.systemBlue, atX: x, y: y) } }
+        let png = bitmap.representation(using: .png, properties: [:])!
+        board.clearContents()
+        board.setData(png, forType: .png)
+        history.pollPasteboard()
+        for _ in 0..<20 where history.items.isEmpty { try? await Task.sleep(nanoseconds: 100_000_000) }
+        record("Clipboard captures image with thumbnail", history.items.first.map { $0.kind == .image && history.thumbnail(for: $0) != nil } == true, "")
+        guard let item = history.items.first else { return }
+        let imageURL = history.imageURL(for: item)!
+        record("Clipboard restores image data", history.copyToPasteboard(item) && board.data(forType: .png) != nil && board.data(forType: .tiff) != nil, "")
+        let reloaded = ClipboardHistoryService(pasteboard: board, imageDirectory: root, storageKey: key)
+        record("Clipboard images survive reload", reloaded.items.first?.value == item.value, "")
+        history.togglePin(item); history.clear()
+        record("Pinned image survives clear", history.items.count == 1 && FileManager.default.fileExists(atPath: imageURL.path), "")
+        history.togglePin(history.items[0]); history.clear()
+        record("Clearing removes image file", history.items.isEmpty && !FileManager.default.fileExists(atPath: imageURL.path), "")
+
+        let shotDir = root.appendingPathComponent("Screenshots")
+        try? FileManager.default.createDirectory(at: shotDir, withIntermediateDirectories: true)
+        let watcher = ScreenshotShelfWatcher.shared
+        watcher.onScreenshot = { history.captureScreenshot($0) }
+        watcher.start(folder: shotDir)
+        defer { watcher.stop(); watcher.onScreenshot = nil }
+        let shot = shotDir.appendingPathComponent("Test Screenshot.png")
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        task.arguments = ["-x", "-R", "0,0,40,40", shot.path]
+        try? task.run(); task.waitUntilExit()
+        for _ in 0..<30 where history.items.isEmpty { try? await Task.sleep(nanoseconds: 200_000_000) }
+        record("Screenshot file appears in clipboard as an image", history.items.first?.kind == .image && history.items.first?.sourceName == shot.lastPathComponent, "")
+        try? FileManager.default.removeItem(at: shot)
+        record("Screenshot history survives deleting original", history.items.first.map { history.copyToPasteboard($0) } == true, "")
+    }
 
     private static func testClipboardHistory() async {
         let pasteboard = NSPasteboard.general

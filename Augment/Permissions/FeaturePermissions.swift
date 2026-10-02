@@ -77,10 +77,13 @@ enum FeatureRequirements {
              AppGroupKey.snapLayoutsEnabled,
              AppGroupKey.showDesktopEnabled,
              AppGroupKey.finderEnterBehavior,
+             AppGroupKey.finderBackspaceEnabled,
+             AppGroupKey.finderBlankDoubleClickEnabled,
+             AppGroupKey.finderF2Enabled,
              AppGroupKey.displayKeysEnabled,
              AppGroupKey.clipboardPanelEnabled:
             return [.accessibility]
-        case AppGroupKey.fileCutPasteEnabled:
+        case AppGroupKey.fileCutPasteEnabled, AppGroupKey.finderMiddleClickEnabled, AppGroupKey.finderPasteImageEnabled:
             return [.accessibility, .finderAutomation]
         default:
             return []

@@ -72,6 +72,7 @@ extension BatteryInfo {
 @MainActor
 final class NotchViewModel: ObservableObject {
     @Published var isExpanded = false
+    @Published var screenshotArrival: UUID?
     @Published var mediaInfo: MediaInfo?
     @Published var ambientColor: Color = .white.opacity(0.5)
     @Published var availableSources: [MediaInfo] = []
@@ -363,6 +364,9 @@ final class NotchService {
     func stop() {
         guard isRunning else { return }
         isRunning = false
+        screenshotArrivalTask?.cancel()
+        screenshotArrivalTask = nil
+        viewModel.screenshotArrival = nil
         overlayWindow?.orderOut(nil)
         overlayWindow = nil
         mouseMonitors.forEach { NSEvent.removeMonitor($0) }
@@ -498,11 +502,27 @@ final class NotchService {
         }
     }
 
-    /// Adds a file to the shelf (screenshots) and briefly shows it.
-    func addToShelf(_ url: URL, peek shouldPeek: Bool) {
+    /// Screenshots join the shelf without opening it or switching an open tab.
+    func addToShelf(_ url: URL) {
         viewModel.addShelfItem(url: url)
-        viewModel.lowerTab = .files
-        if shouldPeek { peek(seconds: 4) }
+        if !viewModel.isExpanded { viewModel.lowerTab = .files }
+    }
+
+    private var screenshotArrivalTask: Task<Void, Never>?
+
+    /// A compact, click-through acknowledgement beside the closed notch.
+    /// Repeated captures restart the animation instead of opening the panel.
+    func showScreenshotArrival() {
+        guard isRunning else { return }
+        screenshotArrivalTask?.cancel()
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) {
+            viewModel.screenshotArrival = UUID()
+        }
+        screenshotArrivalTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.25)) { self?.viewModel.screenshotArrival = nil }
+        }
     }
 
     private var peekWork: DispatchWorkItem?

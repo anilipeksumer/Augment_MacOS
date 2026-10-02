@@ -2,19 +2,20 @@ import AppKit
 import Combine
 import Foundation
 
-/// One entry in the clipboard history. Only plain text and copied file URLs
-/// are tracked — images are skipped to keep the persisted history small and
-/// avoid holding onto large blobs in memory indefinitely.
+/// A clipboard entry. Image values are filenames in our private image store;
+/// image bytes are never embedded in the preferences plist.
 struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
     enum Kind: String, Codable {
         case text
         case fileURL
+        case image
     }
 
     let id: UUID
     let kind: Kind
     let value: String
     let capturedAt: Date
+    var sourceName: String?
     /// Pinned items stay at the top and are never dropped.
     var isPinned: Bool
 
@@ -32,6 +33,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         kind = try c.decode(Kind.self, forKey: .kind)
         value = try c.decode(String.self, forKey: .value)
         capturedAt = try c.decode(Date.self, forKey: .capturedAt)
+        sourceName = try c.decodeIfPresent(String.self, forKey: .sourceName)
         isPinned = try c.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
     }
 
@@ -39,6 +41,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         switch kind {
         case .text: return value
         case .fileURL: return URL(fileURLWithPath: value).lastPathComponent
+        case .image: return sourceName ?? Localizer.string("clip.image")
         }
     }
 }
@@ -53,18 +56,31 @@ final class ClipboardHistoryService: ObservableObject {
 
     @Published private(set) var items: [ClipboardHistoryItem] = []
 
-    private let pasteboard = NSPasteboard.general
+    private let pasteboard: NSPasteboard
+    let imageStore: ClipboardImageStore
+    private let thumbnails = NSCache<NSString, NSImage>()
+    private var generation = UUID()
+    private let imageQueue = DispatchQueue(label: "augment.clipboard-images", qos: .utility)
     private var lastChangeCount: Int
     private var timer: Timer?
     private var isRunning = false
 
     private let maxItems = 40
     private let maxTextLength = 8000
-    private let storageKey = "augment.clipboardHistory.v1"
+    private let storageKey: String
 
-    private init() {
+    init(pasteboard: NSPasteboard = .general,
+         imageDirectory: URL = ClipboardImageStore.defaultDirectory,
+         storageKey: String = "augment.clipboardHistory.v1") {
+        self.pasteboard = pasteboard
+        self.storageKey = storageKey
+        imageStore = ClipboardImageStore(directory: imageDirectory)
+        thumbnails.countLimit = 48
         lastChangeCount = pasteboard.changeCount
-        items = Self.loadPersisted(from: storageKey)
+        items = Self.loadPersisted(from: storageKey).filter {
+            $0.kind != .image || imageStore.url(for: $0.value).map { FileManager.default.fileExists(atPath: $0.path) } == true
+        }
+        imageStore.prune(keeping: Set(items.filter { $0.kind == .image }.map(\.value)))
     }
 
     func start() {
@@ -78,12 +94,13 @@ final class ClipboardHistoryService: ObservableObject {
     }
 
     func stop() {
+        generation = UUID()
         timer?.invalidate()
         timer = nil
         isRunning = false
     }
 
-    private func pollPasteboard() {
+    func pollPasteboard() {
         let count = pasteboard.changeCount
         guard count != lastChangeCount else { return }
         lastChangeCount = count
@@ -93,10 +110,52 @@ final class ClipboardHistoryService: ObservableObject {
             addItem(.init(kind: .fileURL, value: first.path))
             return
         }
+        if let data = ClipboardImageStore.data(from: pasteboard) {
+            captureImage(data)
+            return
+        }
         if let text = pasteboard.string(forType: .string), !text.isEmpty {
             let trimmed = text.count > maxTextLength ? String(text.prefix(maxTextLength)) : text
             addItem(.init(kind: .text, value: trimmed))
         }
+    }
+
+    func captureScreenshot(_ url: URL) {
+        let name = url.lastPathComponent
+        let token = generation
+        imageQueue.async { [weak self] in
+            guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+                  size <= ClipboardImageStore.maxImageBytes,
+                  let data = try? Data(contentsOf: url), let png = ClipboardImageStore.pngData(data) else { return }
+            DispatchQueue.main.async { self?.acceptImage(png, name: name, generation: token) }
+        }
+    }
+
+    func captureImage(_ data: Data) {
+        let token = generation
+        imageQueue.async { [weak self] in
+            guard let png = ClipboardImageStore.pngData(data) else { return }
+            DispatchQueue.main.async { self?.acceptImage(png, name: nil, generation: token) }
+        }
+    }
+
+    private func acceptImage(_ data: Data, name: String?, generation token: UUID) {
+        guard token == generation, let file = try? imageStore.save(data) else { return }
+        var item = ClipboardHistoryItem(kind: .image, value: file)
+        item.sourceName = name
+        addItem(item)
+    }
+
+    func imageURL(for item: ClipboardHistoryItem) -> URL? {
+        item.kind == .image ? imageStore.url(for: item.value) : nil
+    }
+
+    func thumbnail(for item: ClipboardHistoryItem) -> NSImage? {
+        guard item.kind == .image else { return nil }
+        if let image = thumbnails.object(forKey: item.value as NSString) { return image }
+        guard let image = imageStore.thumbnail(named: item.value) else { return nil }
+        thumbnails.setObject(image, forKey: item.value as NSString)
+        return image
     }
 
     private func addItem(_ item: ClipboardHistoryItem) {
@@ -119,15 +178,25 @@ final class ClipboardHistoryService: ObservableObject {
         persist()
     }
 
-    func copyToPasteboard(_ item: ClipboardHistoryItem) {
+    @discardableResult
+    func copyToPasteboard(_ item: ClipboardHistoryItem) -> Bool {
+        var image: NSImage?
+        if item.kind == .image {
+            guard let url = imageURL(for: item), let loaded = NSImage(contentsOf: url) else { return false }
+            image = loaded
+        }
         pasteboard.clearContents()
         switch item.kind {
         case .text:
             pasteboard.setString(item.value, forType: .string)
         case .fileURL:
             pasteboard.writeObjects([URL(fileURLWithPath: item.value) as NSURL])
+        case .image:
+            if let image { pasteboard.writeObjects([image]) }
+            if let url = imageURL(for: item), let data = try? Data(contentsOf: url) { pasteboard.setData(data, forType: .png) }
         }
         lastChangeCount = pasteboard.changeCount
+        return true
     }
 
     func togglePin(_ item: ClipboardHistoryItem) {
@@ -141,7 +210,7 @@ final class ClipboardHistoryService: ObservableObject {
 
     /// Puts the item on the clipboard and pastes it into the frontmost app.
     func paste(_ item: ClipboardHistoryItem) {
-        copyToPasteboard(item)
+        guard copyToPasteboard(item) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             let source = CGEventSource(stateID: .combinedSessionState)
             let v: CGKeyCode = 9
@@ -149,8 +218,8 @@ final class ClipboardHistoryService: ObservableObject {
             let up = CGEvent(keyboardEventSource: source, virtualKey: v, keyDown: false)
             down?.flags = .maskCommand
             up?.flags = .maskCommand
-            down?.post(tap: .cgAnnotatedSessionEventTap)
-            up?.post(tap: .cgAnnotatedSessionEventTap)
+            down?.post(tap: .cghidEventTap)
+            up?.post(tap: .cghidEventTap)
         }
     }
 
@@ -160,6 +229,7 @@ final class ClipboardHistoryService: ObservableObject {
     }
 
     func clear() {
+        generation = UUID()
         items.removeAll { !$0.isPinned }
         persist()
     }
@@ -167,6 +237,18 @@ final class ClipboardHistoryService: ObservableObject {
     // MARK: - Persistence
 
     private func persist() {
+        var sizes: [String: Int] = [:]
+        for item in items where item.kind == .image {
+            if let url = imageURL(for: item) { sizes[item.value] = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0 }
+        }
+        var bytes = sizes.values.reduce(0, +)
+        while bytes > ClipboardImageStore.maxTotalBytes,
+              let index = items.lastIndex(where: { $0.kind == .image && !$0.isPinned }) {
+            bytes -= sizes[items[index].value] ?? 0
+            items.remove(at: index)
+        }
+        imageStore.prune(keeping: Set(items.filter { $0.kind == .image }.map(\.value)))
+        thumbnails.removeAllObjects()
         guard let data = try? JSONEncoder().encode(items) else { return }
         AppGroup.setSuiteValue(data as CFData, forKey: storageKey)
     }

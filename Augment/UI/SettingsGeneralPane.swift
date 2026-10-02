@@ -38,6 +38,11 @@ struct GeneralSettingsPane: View {
                 (Localizer.string("short.folderql"), preferences.folderQuickLookEnabled),
                 (Localizer.string("short.filecut"), preferences.fileCutPasteEnabled),
                 (Localizer.string("finder.shift_enter"), preferences.finderEnterBehavior != .system),
+                (Localizer.string("finder.backspace"), preferences.finderBackspaceEnabled),
+                (Localizer.string("finder.double_click"), preferences.finderBlankDoubleClickEnabled),
+                (Localizer.string("finder.middle_click"), preferences.finderMiddleClickEnabled),
+                (Localizer.string("finder.paste_image"), preferences.finderPasteImageEnabled),
+                (Localizer.string("finder.f2"), preferences.finderF2Enabled),
             ]),
             PageSummary(tab: .notch, features: [
                 (Localizer.string("short.notch"), preferences.notchEnabled),

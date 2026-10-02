@@ -157,7 +157,7 @@ final class WindowSnappingService {
             return Unmanaged.passUnretained(event)
         }
 
-        guard type == .keyDown else {
+        guard type == .keyDown, event.getIntegerValueField(.eventSourceUserData) != FinderOpenShortcutService.syntheticEventTag else {
             return Unmanaged.passUnretained(event)
         }
 
